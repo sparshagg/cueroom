@@ -11,7 +11,7 @@
   "dependencies": {
     "@cueroom/security": "workspace:*",
     "@cueroom/shared": "workspace:*",
-    "esbuild": "^0.25.5"
+    "esbuild": "^0.28.0"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.318",
