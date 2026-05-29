@@ -52,6 +52,7 @@ for (const requiredFile of [
   "README.md",
   "SHA256SUMS",
   "chrome-web-store-listing.md",
+  "chrome-web-store-privacy-answers.md",
   "chrome-web-store-review.md",
   "manifest-audit.txt",
   "manifest.json",
@@ -63,10 +64,17 @@ for (const requiredFile of [
 
 await requireCopiedFile("PRIVACY.md", "PRIVACY.md");
 await requireCopiedFile("docs/release/chrome-web-store-listing.md", "chrome-web-store-listing.md");
+await requireCopiedFile(
+  "docs/release/chrome-web-store-privacy-answers.md",
+  "chrome-web-store-privacy-answers.md"
+);
 await requireCopiedFile("docs/security/chrome-web-store-review.md", "chrome-web-store-review.md");
 await requireCopiedFile("docs/release/public-beta-checklist.md", "public-beta-checklist.md");
 
 const listing = await readText(path.join(artifactDir, "chrome-web-store-listing.md"));
+const privacyAnswers = await readText(
+  path.join(artifactDir, "chrome-web-store-privacy-answers.md")
+);
 const review = await readText(path.join(artifactDir, "chrome-web-store-review.md"));
 const privacy = await readText(path.join(artifactDir, "PRIVACY.md"));
 
@@ -91,6 +99,18 @@ for (const privacyBoundary of [
   "- [x] No Netflix screenshots, frames, video, or audio."
 ]) {
   requireText(privacy, privacyBoundary);
+}
+for (const privacyAnswer of [
+  "Website content: Yes. CueRoom reads only Netflix watch-page playback metadata needed for sync",
+  "Personally identifiable information: Yes, only when a host chooses account auth.",
+  "Authentication information: Yes, only CueRoom room/account session tokens and magic-link/passkey auth material",
+  "User communications: Yes, room chat messages while a room is active; chat is not persisted by default.",
+  "CueRoom does not collect browsing history and observes only the active Netflix watch page after user pairing.",
+  "CueRoom does not use or transfer extension data for personalized advertising.",
+  "Source policy: `PRIVACY.md`.",
+  "Limited Use disclosure appears in `PRIVACY.md`."
+]) {
+  requireText(privacyAnswers, privacyAnswer);
 }
 
 await requirePngDimensions("images/room-ui-1280x800.png", 1280, 800);

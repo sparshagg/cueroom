@@ -60,6 +60,10 @@ await cp(
   path.join(artifactDir, "chrome-web-store-listing.md")
 );
 await cp(
+  path.join(repoRoot, "docs/release/chrome-web-store-privacy-answers.md"),
+  path.join(artifactDir, "chrome-web-store-privacy-answers.md")
+);
+await cp(
   path.join(repoRoot, "docs/release/public-beta-checklist.md"),
   path.join(artifactDir, "public-beta-checklist.md")
 );
@@ -79,6 +83,7 @@ await writeFile(
         "manifest-audit.txt",
         "PRIVACY.md",
         "chrome-web-store-listing.md",
+        "chrome-web-store-privacy-answers.md",
         "chrome-web-store-review.md",
         "public-beta-checklist.md"
       ]
@@ -98,7 +103,7 @@ await writeFile(
     "- Upload the ZIP itself; the manifest is at the ZIP root.",
     "- Verify `SHA256SUMS` before submission.",
     "- Store screenshots and promo tiles are in `images/`.",
-    "- Use the included privacy policy, listing draft, and review checklist for Developer Dashboard fields."
+    "- Use the included privacy policy, listing draft, privacy answers draft, and review checklist for Developer Dashboard fields."
   ].join("\n") + "\n"
 );
 

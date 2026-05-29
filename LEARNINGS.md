@@ -316,3 +316,7 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: ZAP's PII Disclosure rule flags payment-card-like digit sequences in responses and treats high-confidence matches as high risk.
   - Impact: CueRoom encodes CSP nonces with base64url and rejects long digit runs so nonce randomness does not create false PII Disclosure failures.
+- [ ] Source: https://developer.chrome.com/docs/webstore/cws-dashboard-privacy
+  - Stale-by: 2026-08-30
+  - Learning: Chrome Web Store requires publishers to fill out Privacy practices dashboard fields with data collection disclosures and Limited Use certification before publishing or updating an item.
+  - Impact: CueRoom adds a dedicated privacy answers draft that is copied into review artifacts and checked by `pnpm store:check-package`.

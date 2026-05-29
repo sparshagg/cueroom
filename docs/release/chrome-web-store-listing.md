@@ -19,6 +19,7 @@
 - [x] Disclose room chat messages as transient room data with no default persistence.
 - [x] Certify that data is not sold, not used for personalized advertising, and not transferred except to provide room sync/calling, protect security, comply with law, or operate the service.
 - [x] Use `PRIVACY.md` as the source for the hosted privacy policy.
+- [x] Use `docs/release/chrome-web-store-privacy-answers.md` as the dashboard-answer source.
 
 ## Tester Instructions
 

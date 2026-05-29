@@ -279,3 +279,12 @@
 - [x] Reason: The nonce stays random and CSP-compatible while avoiding a noisy DAST false positive without weakening the PII gate.
 - [x] Security/privacy impact: Keeps nonce-based CSP enforcement and preserves DAST blocking for real PII disclosures.
 - [x] Rollback trigger: ZAP PII detection no longer flags nonce-like values or the CSP runtime rejects base64url nonces.
+
+## ADR-032: Chrome Web Store Privacy Answers Source
+
+- [x] Problem: The project had privacy policy and listing drafts, but the Chrome Web Store dashboard privacy answers were only summarized, making dashboard drift harder to catch before submission.
+- [x] Options: leave answers in release notes, add a dedicated answer source, or wait for manual dashboard entry.
+- [x] Decision: Add `docs/release/chrome-web-store-privacy-answers.md`, copy it into store package evidence, and make `pnpm store:check-package` verify key privacy-answer claims.
+- [x] Reason: A dedicated source file lets legal/privacy reviewers compare dashboard answers against implementation and `PRIVACY.md` without relying on memory.
+- [x] Security/privacy impact: Reduces risk of Chrome Web Store privacy disclosure drift for website content access, auth data, transient chat, Limited Use, and no Netflix sensitive-data collection.
+- [x] Rollback trigger: Chrome Web Store API automation replaces the manual dashboard answer source with generated submission data.

@@ -19,6 +19,7 @@
 - [x] Wrong-title handling shows a manual link to the expected Netflix title and never auto-navigates.
 - [x] Store privacy form draft: disclose playback metadata, room-pairing token use, optional auth data, transient chat, and no advertising use.
 - [x] Privacy policy source: `PRIVACY.md`.
+- [x] Privacy answers source: `docs/release/chrome-web-store-privacy-answers.md`.
 - [ ] Privacy policy: publish final hosted policy URL before submission.
 
 ## Review Package
@@ -30,6 +31,7 @@
 - [x] Attach latest DAST artifact summary.
 - [x] Attach deterministic release notes from `pnpm release:notes` to the GitHub prerelease.
 - [x] Include tester instructions from `docs/release/chrome-web-store-listing.md`.
+- [x] Include privacy answers from `docs/release/chrome-web-store-privacy-answers.md`.
 - [x] Include non-affiliation statement: CueRoom is not affiliated with Netflix.
 - [x] Latest local package review: deterministic `cueroom-extension-0.1.0.zip` SHA-256 `f7efbbf59784ff3e845d8400f4445e0c7d8c043373a49543950bf8f5e6c0c8d8`; `SHA256SUMS` verified; manifest audit passed; screenshots/promos are `1280x800`, `640x400`, `440x280`, and `1400x560`.
 - [ ] Verify GitHub artifact attestation for the release ZIP before Chrome Web Store submission.

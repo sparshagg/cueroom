@@ -22,7 +22,7 @@ This file records human review evidence before the first public beta. Do not che
 ## Privacy Checklist
 
 - [ ] `PRIVACY.md` matches the current implementation.
-- [ ] Chrome Web Store privacy answers match `PRIVACY.md`.
+- [ ] Chrome Web Store privacy answers in `docs/release/chrome-web-store-privacy-answers.md` match `PRIVACY.md`.
 - [ ] Extension data handling matches `docs/security/chrome-web-store-review.md`.
 - [ ] Room chat remains transient by default.
 - [ ] Abuse reports persist only bounded report metadata and optional reporter-provided details.

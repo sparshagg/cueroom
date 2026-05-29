@@ -156,6 +156,7 @@
 - [ ] Verify minimum permissions.
 - [ ] Review `docs/security/chrome-web-store-review.md` and the `cueroom-chrome-web-store-review` CI artifact.
 - [ ] Verify `PRIVACY.md` and Limited Use disclosure match Chrome Web Store privacy form answers.
+- [ ] Verify `docs/release/chrome-web-store-privacy-answers.md` matches the Developer Dashboard Privacy practices answers.
 - [ ] Verify `docs/release/chrome-web-store-listing.md` matches the current manifest and release package.
 - [ ] Verify non-affiliation language.
 - [ ] Attach versioned extension zip from `artifacts/chrome-web-store` or CI artifact.
