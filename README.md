@@ -6,12 +6,12 @@ CueRoom does not stream Netflix content. Every participant watches through their
 
 ## Status
 
-- [x] Monorepo scaffold.
-- [x] Web UI v0.
-- [x] API room/sync skeleton.
+- [x] Monorepo structure.
+- [x] Web UI for room creation, joining, calls, chat, sync health, and extension pairing.
+- [x] API room, auth, realtime sync, report, and LiveKit token paths.
 - [x] Postgres-backed room/session persistence.
-- [x] Chrome/Edge MV3 extension skeleton.
-- [x] Docker and CI skeleton.
+- [x] Chrome/Edge MV3 extension pairing, popup, Netflix playback observation, and sync relay.
+- [x] Docker stack and CI/release security gates.
 - [x] Redis presence/rate limits/sync counters.
 - [x] Passkey and magic-link auth foundation.
 - [x] SMTP-backed magic-link delivery and account UI.
@@ -19,9 +19,9 @@ CueRoom does not stream Netflix content. Every participant watches through their
 
 ## Apps
 
-- [ ] `apps/web`: Next.js app for lobby, room, call controls, chat, and extension pairing.
-- [ ] `apps/api`: Fastify API for rooms, invites, sync authorization, and LiveKit tokens.
-- [ ] `apps/extension`: Chrome/Edge MV3 extension for Netflix playback observation.
+- [x] `apps/web`: Next.js app for lobby, room, call controls, chat, and extension pairing.
+- [x] `apps/api`: Fastify API for rooms, invites, auth, sync authorization, reports, and LiveKit tokens.
+- [x] `apps/extension`: Chrome/Edge MV3 extension for Netflix playback observation, pairing, popup state, and room sync relay.
 
 ## Quick Start
 
@@ -50,6 +50,7 @@ To build the Chrome Web Store beta package:
 
 ```bash
 pnpm extension:package
+pnpm store:check-package
 ```
 
 The package and review evidence are written under `artifacts/chrome-web-store`.
@@ -62,13 +63,13 @@ pnpm release:notes -- --tag v0.1.0 --output artifacts/release-notes/v0.1.0.md
 
 ## Security Promise
 
-- [ ] No Netflix credentials.
-- [ ] No Netflix cookies.
-- [ ] No video/audio capture from Netflix.
-- [ ] No DRM bypass.
-- [ ] No call recording.
-- [ ] No chat persistence by default.
-- [ ] Minimum extension permissions only.
+- [x] No Netflix credentials.
+- [x] No Netflix cookies.
+- [x] No video/audio capture from Netflix.
+- [x] No DRM bypass.
+- [x] No call recording.
+- [x] No chat persistence by default.
+- [x] Minimum extension permissions only.
 
 ## Non-Affiliation
 

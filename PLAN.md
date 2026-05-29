@@ -49,6 +49,7 @@
 
 - [x] Add threat model.
 - [x] Add cleanup check and docs freshness check.
+- [x] Block stale scaffold language in source-of-truth docs.
 - [x] Add CodeQL and dependency workflows.
 - [x] Add PostgreSQL/Redis integration tests.
 - [x] Serialize Postgres migrations for parallel API workers.

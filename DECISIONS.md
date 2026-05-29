@@ -288,3 +288,12 @@
 - [x] Reason: A dedicated source file lets legal/privacy reviewers compare dashboard answers against implementation and `PRIVACY.md` without relying on memory.
 - [x] Security/privacy impact: Reduces risk of Chrome Web Store privacy disclosure drift for website content access, auth data, transient chat, Limited Use, and no Netflix sensitive-data collection.
 - [x] Rollback trigger: Chrome Web Store API automation replaces the manual dashboard answer source with generated submission data.
+
+## ADR-033: Source-Of-Truth Stale Language Gate
+
+- [x] Problem: `README.md` and `AGENTS.md` still described completed beta surfaces as skeletons or stubs, which could mislead contributors and agents.
+- [x] Options: manually update docs only, add a broad prose linter, or extend the existing docs freshness check with a narrow stale-language guard.
+- [x] Decision: Update the source-of-truth docs and fail `pnpm docs:freshness` when `README.md` or `AGENTS.md` reintroduce scaffold terms for implemented surfaces.
+- [x] Reason: A narrow repo-owned guard prevents obvious stale beta-readiness language without adding another dependency.
+- [x] Security/privacy impact: Keeps contributor instructions aligned with the implemented auth, extension, sync, and release boundaries instead of implying unfinished placeholders.
+- [x] Rollback trigger: A maintained documentation policy tool replaces the custom stale-language check.
