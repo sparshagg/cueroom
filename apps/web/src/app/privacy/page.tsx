@@ -54,6 +54,7 @@ const usage = [
 const limitedUse = [
   "CueRoom uses Chrome extension data only to provide or improve the single user-facing purpose of private co-watch rooms with playback sync.",
   "CueRoom transfers extension data only when necessary to provide the room sync feature, protect security, comply with law, or operate the open-source service.",
+  "CueRoom does not sell personal data, use personal data for targeted advertising, or transfer extension user data to advertising platforms or data brokers.",
   "CueRoom does not use or transfer extension data for personalized advertising.",
   "CueRoom does not allow humans to read room data except with user consent for support, for security investigation, to comply with law, or in aggregated/anonymized operational form.",
   "CueRoom's use of information received from Chrome extension APIs adheres to the Chrome Web Store User Data Policy, including the Limited Use requirements."

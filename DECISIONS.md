@@ -333,3 +333,12 @@
 - [x] Reason: This preserves the human-review boundary while making checkbox-only beta sign-off fail before tagging.
 - [x] Security/privacy impact: Reduces the chance of publishing a beta with unreviewed non-affiliation language, mismatched privacy disclosures, or missing hosted policy ownership evidence.
 - [x] Rollback trigger: A maintained release governance system records equivalent reviewer, domain, and privacy-dashboard evidence before release tags are accepted.
+
+## ADR-038: Privacy Disclosure Parity Guard
+
+- [x] Problem: `PRIVACY.md`, the in-app `/privacy` route, and the Chrome Web Store privacy answers could drift while still leaving the human privacy-review checkbox unchecked until late in release.
+- [x] Options: rely on legal review only, copy all policy text manually into every surface, or add source-level parity checks for the high-risk disclosure claims.
+- [x] Decision: Extend `pnpm docs:freshness` to check policy checklist items on the `/privacy` route and to require Chrome Web Store answer coverage for handled data, no-sensitive-Netflix-data exclusions, no-sale/no-ads claims, transient chat, abuse-report metadata, and Limited Use.
+- [x] Reason: A source-level guard catches local disclosure drift before package generation while still leaving external dashboard and human review as explicit blockers.
+- [x] Security/privacy impact: Reduces risk of inconsistent privacy disclosures for Chrome Web Store users without broadening data collection or extension permissions.
+- [x] Rollback trigger: Chrome Web Store API submission automation generates privacy answers directly from a typed privacy manifest with equivalent source and route checks.

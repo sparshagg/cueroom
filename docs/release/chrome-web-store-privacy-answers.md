@@ -7,7 +7,7 @@ This checklist is the source of truth for Chrome Web Store Privacy practices ans
 - [x] Website content: Yes. CueRoom reads only Netflix watch-page playback metadata needed for sync: watch URL fingerprint, title hint, paused state, current time, duration, playback rate, buffering state, timestamp, and sequence number.
 - [x] Personally identifiable information: Yes, only when a host chooses account auth. CueRoom may handle an email address or passkey credential metadata for authentication.
 - [x] Authentication information: Yes, only CueRoom room/account session tokens and magic-link/passkey auth material; CueRoom does not collect Netflix credentials, Netflix cookies, or Netflix account data.
-- [x] User activity: Yes, limited to room presence, sync state, call state, transient chat, and abuse report metadata needed to provide private co-watch rooms.
+- [x] User activity: Yes, limited to room IDs, invite codes, participant display names, participant roles, room lock state, room presence, sync state, call metadata, transient chat state, abuse report metadata, minimal audit events, and rate-limit state needed to provide and protect private co-watch rooms.
 - [x] User communications: Yes, room chat messages while a room is active; chat is not persisted by default.
 - [x] Location: No.
 - [x] Web history: No. CueRoom does not collect browsing history and observes only the active Netflix watch page after user pairing.
@@ -43,3 +43,4 @@ This checklist is the source of truth for Chrome Web Store Privacy practices ans
 - [x] Limited Use disclosure appears in `PRIVACY.md`.
 - [x] Data handled matches the `Data CueRoom Handles` section in `PRIVACY.md`.
 - [x] Data not handled matches the `Data CueRoom Does Not Handle` section in `PRIVACY.md`.
+- [x] Data use, transfer, retention, no-sale, no-ads, and no-sensitive-Netflix-data statements match `PRIVACY.md`.

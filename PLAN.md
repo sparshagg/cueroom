@@ -79,6 +79,7 @@
 - [x] Generate Chrome Web Store screenshot and promo assets.
 - [x] Add deterministic release notes generation from Conventional Commits.
 - [x] Add release gate for concrete legal/privacy review evidence before beta tagging.
+- [x] Add source-level privacy parity checks for policy, in-app route, and Chrome Web Store answers.
 - [ ] Complete human legal/privacy review.
 - [x] Publish public repository.
 - [ ] Tag first signed release.

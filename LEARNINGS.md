@@ -371,3 +371,11 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-30
   - Learning: LiveKit's sample configuration supports Redis `username` and `password` fields and documents ICE/TCP fallback, UDP port ranges, and optional TURN server settings.
   - Impact: CueRoom's production LiveKit example includes a Redis password placeholder and TURN comments instead of assuming unauthenticated Redis.
+- [ ] Source: https://developer.chrome.com/docs/webstore/cws-dashboard-privacy
+  - Stale-by: 2026-08-30
+  - Learning: Chrome Web Store privacy practice disclosures shown to users should be consistent with the privacy policy URL supplied in the Developer Dashboard.
+  - Impact: `pnpm docs:freshness` now checks source-level parity between `PRIVACY.md`, the in-app `/privacy` route, and the Chrome Web Store privacy answers draft.
+- [ ] Source: https://developer.chrome.com/docs/webstore/program-policies/user-data-faq
+  - Stale-by: 2026-08-30
+  - Learning: The Chrome Web Store User Data FAQ expects privacy policies to explain what data is collected, how it is used, what is shared, retention, security handling, and Limited Use constraints for personal or sensitive user data.
+  - Impact: CueRoom treats privacy disclosure categories, no-sale/no-ads claims, transient chat, abuse-report metadata, and no-sensitive-Netflix-data exclusions as checked release evidence.
