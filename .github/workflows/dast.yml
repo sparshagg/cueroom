@@ -31,7 +31,10 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - name: Start CueRoom web and API
         env:
-          AUTH_REQUIRED: "false"
+          AUTH_DEV_MAGIC_LINKS: "true"
+          AUTH_ORIGIN: http://127.0.0.1:3000
+          AUTH_REQUIRED: "true"
+          AUTH_RP_ID: 127.0.0.1
           HOST: 127.0.0.1
           LIVEKIT_API_KEY: devkey
           LIVEKIT_API_SECRET: secret
@@ -70,6 +73,7 @@ jobs:
       - name: Authenticated create/join/report flow through ZAP
         env:
           DAST_API_ORIGIN: http://127.0.0.1:4000
+          DAST_ACCOUNT_AUTH: "true"
           DAST_OUTPUT_DIR: artifacts/dast
           DAST_PROXY: http://127.0.0.1:8090
           DAST_WEB_ORIGIN: http://127.0.0.1:3000
@@ -79,6 +83,7 @@ jobs:
         env:
           DAST_API_ORIGIN: http://127.0.0.1:4000
           DAST_OUTPUT_DIR: artifacts/dast
+          DAST_REQUIRE_ACCOUNT_AUTH_ZAP: "true"
           DAST_REQUIRE_AUTHENTICATED_ZAP: "true"
           DAST_WEB_ORIGIN: http://127.0.0.1:3000
           DAST_ZAP_ORIGIN: http://127.0.0.1:8090

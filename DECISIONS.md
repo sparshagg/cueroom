@@ -387,3 +387,12 @@
 - [x] Reason: Chrome Web Store review and MV3 security both care about source behavior, not only manifest permissions; a narrow source audit catches high-risk drift before packaging.
 - [x] Security/privacy impact: Reduces risk of accidentally adding remote code execution, forbidden Chrome APIs, cookie/storage reads, subtitle/track inspection, screenshots, or media capture to the Netflix content boundary.
 - [x] Rollback trigger: A stronger AST-based extension source scanner replaces the regex guard while proving the same or broader forbidden-behavior coverage.
+
+## ADR-044: Account-Authenticated DAST Flow
+
+- [x] Problem: The ZAP-authenticated browser flow exercised room-session create/join/report behavior with `AUTH_REQUIRED=false`, leaving the production account-session room-creation path to API tests and manual release review.
+- [x] Options: keep API-only auth coverage, add a separate DAST job for auth, or extend the existing DAST browser flow with a magic-link sign-in prelude.
+- [x] Decision: Run the DAST app with `AUTH_REQUIRED=true` and `AUTH_DEV_MAGIC_LINKS=true`, then have `scripts/dast-authenticated-flows.mjs` sign in through the UI before creating the room; exported ZAP evidence requires the magic-link request and verify endpoints when `DAST_REQUIRE_ACCOUNT_AUTH_ZAP=true`.
+- [x] Reason: This keeps the DAST surface close to the real browser workflow while avoiding real SMTP secrets or external identity providers in CI.
+- [x] Security/privacy impact: Increases confidence that account-session authorization, redaction, and ZAP coverage work together for production-style room creation without uploading raw proxy traffic or real magic-link delivery artifacts.
+- [x] Rollback trigger: A dedicated production-staging DAST environment with real email test inboxes replaces dev magic links and proves equivalent auth-required coverage.

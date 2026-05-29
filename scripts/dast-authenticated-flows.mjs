@@ -9,6 +9,7 @@ const apiOrigin = normalizeOrigin(
 const proxyServer = process.env.DAST_PROXY?.trim();
 const outputDir = path.resolve(process.env.DAST_OUTPUT_DIR ?? "artifacts/dast");
 const outputPath = path.join(outputDir, "authenticated-flow.json");
+const requireAccountAuth = process.env.DAST_ACCOUNT_AUTH === "true";
 const reportDetails = "DAST bounded smoke report; no user content.";
 
 const observedRequests = new Set();
@@ -87,6 +88,11 @@ async function main() {
     captureRequests(hostPage);
     await hostPage.goto(webOrigin, { waitUntil: "load" });
     await hostPage.waitForLoadState("networkidle");
+
+    if (requireAccountAuth) {
+      await signInHostWithMagicLink(hostPage);
+    }
+
     await hostPage.getByRole("textbox", { name: "Host name" }).fill("DAST Host");
     await hostPage.getByRole("textbox", { name: "Room title" }).fill("DAST Report Room");
 
@@ -135,6 +141,7 @@ async function main() {
       generatedAt: new Date().toISOString(),
       webOrigin,
       apiOrigin,
+      accountAuthRequired: requireAccountAuth,
       proxyEnabled: Boolean(proxyServer),
       participantCount: guestSession.room.participants.length,
       reportCreated: Boolean(report.report?.id),
@@ -143,6 +150,36 @@ async function main() {
   } finally {
     await browser.close();
   }
+}
+
+async function signInHostWithMagicLink(page) {
+  const accountForm = page
+    .locator("form")
+    .filter({ has: page.getByRole("textbox", { name: "Email" }) })
+    .first();
+  await accountForm.getByRole("textbox", { name: "Email" }).fill("dast-host@example.com");
+  await accountForm.getByRole("textbox", { name: "Display name" }).fill("DAST Account Host");
+
+  const magicLinkResponse = waitForApiPost(page, "/v1/auth/magic-link/request");
+  await accountForm.getByRole("button", { name: /^Sign in$/ }).click();
+  const magicLink = await assertOk(await magicLinkResponse, "magic-link request");
+  const devLink = typeof magicLink.devLink === "string" ? magicLink.devLink : "";
+  if (!devLink) {
+    throw new Error("Account-auth DAST requires AUTH_DEV_MAGIC_LINKS=true.");
+  }
+
+  const verifyResponse = waitForApiPost(page, "/v1/auth/magic-link/verify");
+  await page.goto(devLink, { waitUntil: "load" });
+  const accountSession = await assertOk(await verifyResponse, "magic-link verification");
+  if (typeof accountSession.accountSessionToken !== "string") {
+    throw new Error("Magic-link verification did not return an account session.");
+  }
+
+  await page.getByRole("button", { name: /^Continue$/ }).click();
+  await page.waitForURL((url) => url.origin === webOrigin && url.pathname === "/", {
+    timeout: 15_000
+  });
+  await page.waitForLoadState("networkidle");
 }
 
 function captureRequests(page) {
@@ -202,6 +239,12 @@ function observedRequestPaths() {
 function assertObservedEndpoints() {
   const observed = observedRequestPaths();
   const required = [
+    ...(requireAccountAuth
+      ? [
+          `POST ${apiOrigin}/v1/auth/magic-link/request`,
+          `POST ${apiOrigin}/v1/auth/magic-link/verify`
+        ]
+      : []),
     `POST ${apiOrigin}/v1/rooms`,
     `POST ${apiOrigin}/v1/rooms/join`,
     `POST ${apiOrigin}/v1/rooms/{roomId}/report`
@@ -235,7 +278,10 @@ function shouldRecordRequest(url) {
   }
   return (
     url.origin === webOrigin &&
-    (url.pathname === "/" || url.pathname.startsWith("/join/") || url.pathname.startsWith("/room/"))
+    (url.pathname === "/" ||
+      url.pathname === "/auth/magic-link" ||
+      url.pathname.startsWith("/join/") ||
+      url.pathname.startsWith("/room/"))
   );
 }
 

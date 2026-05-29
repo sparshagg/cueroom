@@ -403,3 +403,7 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-30
   - Learning: Chrome Web Store MV3 policy requires extension functionality to be discernible from submitted code and treats remote logic execution mechanisms such as remote scripts and string execution as common violations.
   - Impact: CueRoom treats extension source scanning as Chrome Web Store release evidence, not only a manifest permission review.
+- [ ] Source: https://playwright.dev/docs/network
+  - Stale-by: 2026-08-30
+  - Learning: Playwright can monitor page request/response events, wait for specific responses after UI actions, route or abort requests through a browser context, and configure a browser or context HTTP proxy; blocking service workers keeps routed network traffic visible.
+  - Impact: CueRoom's DAST flow now drives magic-link sign-in through the browser UI, waits for API responses, blocks service workers, and sends the account-authenticated room flow through the configured ZAP proxy.

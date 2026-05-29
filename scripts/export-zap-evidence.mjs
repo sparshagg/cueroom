@@ -5,6 +5,7 @@ import { setTimeout } from "node:timers/promises";
 const zapOrigin = normalizeOrigin(process.env.DAST_ZAP_ORIGIN ?? "http://127.0.0.1:8090");
 const outputDir = path.resolve(process.env.DAST_OUTPUT_DIR ?? "artifacts/dast");
 const requireCoverage = process.env.DAST_REQUIRE_AUTHENTICATED_ZAP !== "false";
+const requireAccountAuthCoverage = process.env.DAST_REQUIRE_ACCOUNT_AUTH_ZAP === "true";
 
 const webBaseUrl = normalizeOrigin(process.env.DAST_WEB_ORIGIN ?? "http://127.0.0.1:3000");
 const apiBaseUrl = normalizeOrigin(process.env.DAST_API_ORIGIN ?? "http://127.0.0.1:4000");
@@ -90,7 +91,7 @@ async function fetchZapJson(endpoint, searchParams = {}) {
 }
 
 function summarizeCoverage(urls) {
-  return {
+  const coverage = {
     webHome: urls.some((url) => safeUrl(url)?.pathname === "/"),
     webJoin: urls.some((url) => /^\/join\/[A-Za-z0-9_-]{8,}$/.test(safeUrl(url)?.pathname ?? "")),
     webRoom: urls.some((url) => /^\/room\/room_[^/]+$/.test(safeUrl(url)?.pathname ?? "")),
@@ -99,6 +100,19 @@ function summarizeCoverage(urls) {
     apiReportUser: urls.some((url) =>
       /^\/v1\/rooms\/room_[^/]+\/report$/.test(safeUrl(url)?.pathname ?? "")
     )
+  };
+
+  if (!requireAccountAuthCoverage) {
+    return coverage;
+  }
+
+  return {
+    webMagicLink: urls.some((url) => safeUrl(url)?.pathname === "/auth/magic-link"),
+    apiMagicLinkRequest: urls.some(
+      (url) => safeUrl(url)?.pathname === "/v1/auth/magic-link/request"
+    ),
+    apiMagicLinkVerify: urls.some((url) => safeUrl(url)?.pathname === "/v1/auth/magic-link/verify"),
+    ...coverage
   };
 }
 
