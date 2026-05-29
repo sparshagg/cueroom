@@ -11,13 +11,15 @@ on:
         required: true
 
 permissions:
-  attestations: write
-  contents: write
-  id-token: write
+  contents: read
 
 jobs:
-  beta-release:
+  build-package:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      zip_name: ${{ steps.packaged-extension.outputs.zip_name }}
     services:
       postgres:
         image: postgres:16-alpine
@@ -85,11 +87,55 @@ jobs:
           test -f "$ZIP_PATH"
           grep -F "  cueroom-extension-${VERSION}.zip" artifacts/chrome-web-store/SHA256SUMS
           echo "zip_path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
+          echo "zip_name=cueroom-extension-${VERSION}.zip" >> "$GITHUB_OUTPUT"
       - name: Upload Chrome Web Store release package
         uses: actions/upload-artifact@v4
         with:
           name: cueroom-chrome-web-store-${{ env.RELEASE_TAG }}
           path: artifacts/chrome-web-store
+          if-no-files-found: error
+
+  publish-prerelease:
+    needs: build-package
+    runs-on: ubuntu-latest
+    permissions:
+      attestations: write
+      contents: write
+      id-token: write
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+      ZIP_PATH: artifacts/chrome-web-store/${{ needs.build-package.outputs.zip_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+      - run: git fetch origin main --tags --force
+      - name: Check release gates before publishing
+        run: >
+          node scripts/check-release-readiness.mjs --
+          --tag "$RELEASE_TAG"
+          --require-annotated-tag
+          --require-main
+          --require-beta-gates
+      - name: Download Chrome Web Store release package
+        uses: actions/download-artifact@v4
+        with:
+          name: cueroom-chrome-web-store-${{ env.RELEASE_TAG }}
+          path: artifacts/chrome-web-store
+      - name: Verify downloaded checksum
+        run: cd artifacts/chrome-web-store && sha256sum -c SHA256SUMS
+      - name: Resolve downloaded extension
+        id: packaged-extension
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          ZIP_PATH="artifacts/chrome-web-store/cueroom-extension-${VERSION}.zip"
+          ZIP_COUNT="$(find artifacts/chrome-web-store -maxdepth 1 -type f -name 'cueroom-extension-*.zip' | wc -l | tr -d ' ')"
+          test "$ZIP_COUNT" = "1"
+          test -f "$ZIP_PATH"
+          test "$ZIP_PATH" = "${{ env.ZIP_PATH }}"
+          grep -F "  cueroom-extension-${VERSION}.zip" artifacts/chrome-web-store/SHA256SUMS
+          echo "zip_path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
       - name: Generate artifact attestation
         uses: actions/attest@v4
         with:

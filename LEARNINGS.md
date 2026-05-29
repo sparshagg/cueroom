@@ -304,3 +304,7 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: `gh attestation verify` can bind verification to a repository, signer workflow, and source ref with `--repo`, `--signer-workflow`, and `--source-ref`.
   - Impact: CueRoom's runbook verifies the extension ZIP provenance against the release workflow and release tag before Chrome Web Store upload.
+- [ ] Source: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions
+  - Stale-by: 2026-08-29
+  - Learning: GitHub Actions supports job-specific `GITHUB_TOKEN` permissions, and unspecified scopes are set to `none` when permissions are explicitly declared.
+  - Impact: CueRoom splits the release workflow so package build/test steps run with read-only contents access and only the publish job can create releases or attest artifacts.

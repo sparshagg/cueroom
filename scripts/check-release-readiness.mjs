@@ -151,20 +151,62 @@ function requireReleaseWorkflowIntegrity(filePath) {
   requireWorkflowNeedle(
     content,
     filePath,
+    "permissions:\n  contents: read",
+    "default release workflow permissions to read-only contents access"
+  );
+  requireWorkflowNeedle(
+    content,
+    filePath,
+    "build-package:",
+    "build the release package in a dedicated job"
+  );
+  requireWorkflowNeedle(
+    content,
+    filePath,
+    "permissions:\n      contents: read",
+    "keep the release package build job read-only"
+  );
+  requireWorkflowNeedle(
+    content,
+    filePath,
+    "publish-prerelease:",
+    "publish the GitHub prerelease in a dedicated job"
+  );
+  requireWorkflowNeedle(
+    content,
+    filePath,
+    "needs: build-package",
+    "publish only after the package build job succeeds"
+  );
+  requireWorkflowNeedle(
+    content,
+    filePath,
+    "zip_name: ${{ steps.packaged-extension.outputs.zip_name }}",
+    "expose the resolved package filename as a build job output"
+  );
+  requireWorkflowNeedle(
+    content,
+    filePath,
+    "needs.build-package.outputs.zip_name",
+    "consume the package filename output in the publish job"
+  );
+  requireWorkflowNeedle(
+    content,
+    filePath,
     "attestations: write",
-    "release workflow can write artifact attestations"
+    "grant artifact attestation write access only on the publish job"
   );
   requireWorkflowNeedle(
     content,
     filePath,
     "contents: write",
-    "release workflow can create GitHub releases"
+    "grant GitHub release write access only on the publish job"
   );
   requireWorkflowNeedle(
     content,
     filePath,
     "id-token: write",
-    "release workflow can mint OIDC tokens for attestations"
+    "grant OIDC token minting only on the publish job"
   );
 
   requireOrderedWorkflowNeedles(filePath, content, [
@@ -182,6 +224,10 @@ function requireReleaseWorkflowIntegrity(filePath) {
     ],
     ["sha256sum -c SHA256SUMS", "verify packaged checksums"],
     ["actions/upload-artifact@v4", "upload Chrome Web Store evidence artifact"],
+    ["publish-prerelease:", "enter the write-scoped publish job only after the build job"],
+    ["node scripts/check-release-readiness.mjs --", "re-run release gates before publishing"],
+    ["actions/download-artifact@v4", "download the package artifact in the publish job"],
+    ["Verify downloaded checksum", "verify downloaded checksums before attestation"],
     ["actions/attest@v4", "generate package provenance attestation"],
     [
       "subject-path: ${{ steps.packaged-extension.outputs.zip_path }}",
@@ -225,6 +271,12 @@ function requireReleaseWorkflowIntegrity(filePath) {
     filePath,
     'grep -F "  cueroom-extension-${VERSION}.zip" artifacts/chrome-web-store/SHA256SUMS',
     "confirm the selected extension ZIP is listed in SHA256SUMS"
+  );
+  requireWorkflowNeedle(
+    content,
+    filePath,
+    'test "$ZIP_PATH" = "${{ env.ZIP_PATH }}"',
+    "confirm the downloaded extension path matches the build job output"
   );
   if (content.includes("ls artifacts/chrome-web-store/cueroom-extension-*.zip")) {
     failures.push(`${filePath} must not select the extension ZIP with ls/head glob ordering.`);

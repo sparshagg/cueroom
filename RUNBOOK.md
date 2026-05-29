@@ -103,6 +103,7 @@
 - [ ] Run `git verify-tag v0.1.0` for signed tags.
 - [ ] Push the release tag with `git push origin v0.1.0`.
 - [ ] Confirm the release workflow runs `pnpm release:check -- --require-annotated-tag --require-main --require-beta-gates`.
+- [ ] Confirm the release workflow keeps package build/test steps in the read-only `build-package` job and restricts release/attestation scopes to `publish-prerelease`.
 - [ ] Confirm the release workflow attaches `release-notes.md` and uses it as the GitHub prerelease body.
 - [ ] Download the release artifact and run `gh attestation verify cueroom-extension-0.1.0.zip --repo sparshagg/cueroom --signer-workflow sparshagg/cueroom/.github/workflows/release.yml --source-ref refs/tags/v0.1.0`.
 - [ ] Confirm the GitHub prerelease includes the extension ZIP, `SHA256SUMS`, and `release-manifest.json`.

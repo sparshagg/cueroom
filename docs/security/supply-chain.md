@@ -10,7 +10,8 @@
 - [x] Dependency audit: `pnpm security:audit`.
 - [x] Release workflow runs `pnpm security:supply-chain` before building release artifacts.
 - [x] Release readiness check fails if the release workflow drops checksum verification, artifact upload, attestation, or prerelease attachment steps.
-- [x] Release workflow uses write/OIDC scopes only for the tag release path that must publish and attest artifacts.
+- [x] Release workflow keeps install, test, build, package, and artifact upload steps in a read-only `build-package` job.
+- [x] Release workflow uses write/OIDC scopes only in the `publish-prerelease` job that verifies the downloaded artifact, attests it, and creates the prerelease.
 
 ## License Policy
 

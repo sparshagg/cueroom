@@ -252,3 +252,12 @@
 - [x] Reason: A small repo-owned gate keeps the beta release path auditable without adding another parser dependency or network-dependent check.
 - [x] Security/privacy impact: Reduces the chance of shipping an extension ZIP without checksum verification, artifact provenance, reviewed release notes, or tag/main beta gates.
 - [x] Rollback trigger: A maintained workflow policy engine replaces these string invariants with equal or stronger release-provenance enforcement.
+
+## ADR-029: Release Permission Split
+
+- [x] Problem: The release workflow previously ran dependency install, Playwright setup, supply-chain checks, verification, and packaging with the same token scopes needed to create releases and attest artifacts.
+- [x] Options: keep one job, split build and publish jobs, or move publishing to a manual maintainer workstation.
+- [x] Decision: Use a read-only `build-package` job for install/test/package/upload, then a write-scoped `publish-prerelease` job that downloads the artifact, rechecks checksums, attests the exact ZIP, and creates the prerelease.
+- [x] Reason: Job-level permissions are the smallest workflow-native boundary that reduces release-token exposure without losing automated provenance.
+- [x] Security/privacy impact: Compromised install/build/test steps no longer receive `contents: write`, `attestations: write`, or `id-token: write`; the publish job revalidates the package before attestation.
+- [x] Rollback trigger: GitHub adds step-level permissions or a trusted reusable release workflow replaces the two-job boundary.
