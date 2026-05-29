@@ -49,6 +49,21 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm verify
+      - name: Build Chrome Web Store review evidence
+        run: |
+          pnpm --filter @cueroom/shared build
+          pnpm --filter @cueroom/security build
+          pnpm --filter @cueroom/extension build
+          mkdir -p artifacts/chrome-web-store
+          (cd apps/extension/dist && zip -qr ../../../artifacts/chrome-web-store/cueroom-extension.zip .)
+          cp apps/extension/dist/manifest.json artifacts/chrome-web-store/manifest.json
+          cp docs/security/chrome-web-store-review.md artifacts/chrome-web-store/chrome-web-store-review.md
+          pnpm security:extension > artifacts/chrome-web-store/manifest-audit.txt
+      - name: Upload Chrome Web Store review evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: cueroom-chrome-web-store-review
+          path: artifacts/chrome-web-store
 
   docker:
     runs-on: ubuntu-latest

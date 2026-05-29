@@ -50,8 +50,8 @@
 - [x] Add threat model.
 - [x] Add cleanup check and docs freshness check.
 - [x] Add CodeQL and dependency workflows.
-- [ ] Add PostgreSQL/Redis integration tests.
-- [ ] Add DAST and extension store review checklist evidence.
+- [x] Add PostgreSQL/Redis integration tests.
+- [x] Add DAST and extension store review checklist evidence.
 - [ ] Run independent security review.
 
 ## M6: Public Beta

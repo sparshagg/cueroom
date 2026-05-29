@@ -18,7 +18,7 @@
     "test": "turbo test",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
-    "security:extension": "node scripts/audit-extension.mjs",
+    "security:extension": "pnpm --filter @cueroom/security build && node scripts/audit-extension.mjs",
     "cleanup:check": "node scripts/cleanup-check.mjs",
     "docs:freshness": "node scripts/check-docs-freshness.mjs",
     "verify": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm security:extension && pnpm cleanup:check && pnpm docs:freshness"

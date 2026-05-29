@@ -116,3 +116,27 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: `@fastify/websocket` exposes route-level `{ websocket: true }` handlers and `injectWS` for endpoint tests.
   - Impact: The API exposes an authenticated room realtime endpoint and tests server-vetted playback state and command broadcasts without opening a network port.
+- [ ] Source: https://github.com/zaproxy/action-baseline/releases
+  - Stale-by: 2026-08-29
+  - Learning: The current ZAP baseline action release checked for this slice is v0.15.0 and uses Node 24.
+  - Impact: CueRoom adds a separate DAST workflow pinned to `zaproxy/action-baseline@v0.15.0`.
+- [ ] Source: https://developer.chrome.com/docs/webstore/review-process/
+  - Stale-by: 2026-08-29
+  - Learning: Chrome Web Store reviews use automated and manual checks, and broad host permissions or sensitive execution permissions can increase review scrutiny and time.
+  - Impact: CueRoom records store-review evidence proving narrow Netflix watch-page scope and no sensitive extension permissions.
+- [ ] Source: https://nextjs.org/docs/app/api-reference/config/next-config-js/headers
+  - Stale-by: 2026-08-29
+  - Learning: Next.js supports project-wide custom HTTP headers through the `headers()` function in `next.config`.
+  - Impact: CueRoom adds baseline browser security headers for the web app before enabling DAST evidence.
+- [ ] Source: https://developer.chrome.com/docs/extensions/reference/api/tabs
+  - Stale-by: 2026-08-29
+  - Learning: Chrome's Tabs API namespace is available to extension service workers without the `tabs` permission; the `tabs` permission only grants access to sensitive tab properties unless host permissions already cover the page.
+  - Impact: CueRoom removes `activeTab` and relies on the narrow Netflix watch-page host permission for the paired tab flow.
+- [ ] Source: https://developer.chrome.com/docs/webstore/cws-dashboard-privacy
+  - Stale-by: 2026-08-29
+  - Learning: Chrome Web Store submissions require privacy disclosure fields for data collection and usage.
+  - Impact: CueRoom keeps a store-review checklist for playback metadata and room-pairing token disclosure before submission.
+- [ ] Source: https://developer.chrome.com/docs/webstore/program-policies/policies
+  - Stale-by: 2026-08-29
+  - Learning: Chrome Web Store policy review includes permission/data-use review and bars misleading or undisclosed behavior.
+  - Impact: CueRoom records non-affiliation, least-permission, and no-sensitive-Netflix-data evidence as release gates.

@@ -98,3 +98,12 @@
 - [x] Reason: Drift policy belongs at the same authorization boundary as room membership, while warnings can be shown without opening a second room socket from the web app.
 - [x] Security/privacy impact: Guests cannot establish playback authority, corrections include the expected watch ID, the content script refuses mismatched watch IDs, and wrong-title states produce warnings instead of automatic navigation.
 - [x] Rollback trigger: Multi-process realtime scaling requires moving host authority from process memory to Redis pub/sub/state.
+
+## ADR-012: DAST Baseline
+
+- [x] Problem: Add dynamic security evidence without making local development depend on a slow scanner.
+- [x] Options: run ZAP inside `pnpm verify`, run a separate ZAP workflow, defer DAST until beta.
+- [x] Decision: Add a separate GitHub Actions ZAP baseline workflow with artifacts and non-blocking findings for first triage.
+- [x] Reason: The scanner needs a running web/API pair and produces evidence better suited to CI artifacts than local source checks.
+- [x] Security/privacy impact: Web security headers are set before scanning; DAST artifacts become part of the release review path.
+- [x] Rollback trigger: Baseline findings are triaged and the workflow can be promoted to fail on medium/high alerts.

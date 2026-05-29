@@ -67,6 +67,7 @@
 ## Release
 
 - [ ] Run `pnpm verify`.
+- [ ] Review the latest DAST workflow artifacts and `docs/security/dast.md`.
 - [ ] Review `LEARNINGS.md` for stale sources.
 - [ ] Review `THREAT_MODEL.md` for changed assumptions.
 - [ ] Confirm no Netflix sensitive data is logged or stored.
@@ -107,6 +108,7 @@
 ## Chrome Web Store Submission
 
 - [ ] Verify minimum permissions.
+- [ ] Review `docs/security/chrome-web-store-review.md` and the `cueroom-chrome-web-store-review` CI artifact.
 - [ ] Verify privacy policy and Limited Use disclosure.
 - [ ] Verify non-affiliation language.
 - [ ] Attach extension zip from CI artifact.
