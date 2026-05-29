@@ -1,50 +1,94 @@
 import crypto from "node:crypto";
-import type { Participant, Room, RoomRole, SyncCommand } from "@cueroom/shared";
+import type { Participant, Room, RoomRole, RoomSession, SyncCommand } from "@cueroom/shared";
 
 type SessionRecord = {
   roomId: string;
   participantId: string;
-  token: string;
   expiresAt: number;
 };
 
-type CreateRoomInput = {
+export type ActiveSession = {
+  room: Room;
+  participant: Participant;
+};
+
+export type CreateRoomInput = {
   hostName: string;
   title: string;
 };
 
-type JoinRoomInput = {
+export type JoinRoomInput = {
   inviteCode: string;
   displayName: string;
 };
 
-export type RoomStore = ReturnType<typeof createRoomStore>;
+export type StoreError = {
+  error: string;
+};
 
-const roomTtlMs = 6 * 60 * 60 * 1000;
-const sessionTtlMs = 2 * 60 * 60 * 1000;
+type Awaitable<T> = T | Promise<T>;
 
-export function createRoomStore() {
+export type RoomStore = {
+  createRoom(input: CreateRoomInput): Awaitable<RoomSession>;
+  joinRoom(input: JoinRoomInput): Awaitable<RoomSession | StoreError>;
+  getRoom(roomId: string): Awaitable<Room | undefined>;
+  requireSession(roomId: string, sessionToken: string): Awaitable<ActiveSession | null>;
+  requireRole(
+    roomId: string,
+    sessionToken: string,
+    allowedRoles: RoomRole[]
+  ): Awaitable<ActiveSession | null>;
+  setLocked(
+    roomId: string,
+    sessionToken: string,
+    locked: boolean
+  ): Awaitable<{ room: Room } | StoreError>;
+  kick(
+    roomId: string,
+    sessionToken: string,
+    participantId: string
+  ): Awaitable<{ room: Room; removedParticipantIds: string[] } | StoreError>;
+  rotateInvite(roomId: string, sessionToken: string): Awaitable<{ room: Room } | StoreError>;
+  acceptSyncCommand(
+    roomId: string,
+    sessionToken: string,
+    command: SyncCommand
+  ): Awaitable<{ accepted: true; command: SyncCommand } | StoreError>;
+  close?(): Promise<void>;
+};
+
+export const roomTtlMs = 6 * 60 * 60 * 1000;
+export const sessionTtlMs = 2 * 60 * 60 * 1000;
+
+export function createParticipant(displayName: string, role: RoomRole): Participant {
+  return {
+    id: `p_${crypto.randomUUID()}`,
+    displayName,
+    role,
+    joinedAt: new Date().toISOString(),
+    muted: false,
+    cameraEnabled: true
+  };
+}
+
+export function createSessionToken() {
+  return `crs_${crypto.randomBytes(32).toString("base64url")}`;
+}
+
+export function createInviteCode() {
+  return crypto.randomBytes(8).toString("base64url");
+}
+
+export function createRoomStore(): RoomStore {
   const rooms = new Map<string, Room>();
   const sessions = new Map<string, SessionRecord>();
   const lastSyncSequenceByRoom = new Map<string, number>();
 
-  function createParticipant(displayName: string, role: RoomRole): Participant {
-    return {
-      id: `p_${crypto.randomUUID()}`,
-      displayName,
-      role,
-      joinedAt: new Date().toISOString(),
-      muted: false,
-      cameraEnabled: true
-    };
-  }
-
   function createSession(roomId: string, participantId: string) {
-    const token = `crs_${crypto.randomBytes(32).toString("base64url")}`;
+    const token = createSessionToken();
     sessions.set(token, {
       roomId,
       participantId,
-      token,
       expiresAt: Date.now() + sessionTtlMs
     });
     return token;
@@ -54,12 +98,12 @@ export function createRoomStore() {
     return [...rooms.values()].find((room) => room.inviteCode === inviteCode);
   }
 
-  return {
-    createRoom(input: CreateRoomInput) {
+  const store: RoomStore = {
+    createRoom(input) {
       const host = createParticipant(input.hostName, "host");
       const room: Room = {
         id: `room_${crypto.randomUUID()}`,
-        inviteCode: crypto.randomBytes(8).toString("base64url"),
+        inviteCode: createInviteCode(),
         title: input.title,
         locked: false,
         createdAt: new Date().toISOString(),
@@ -74,16 +118,16 @@ export function createRoomStore() {
       };
     },
 
-    joinRoom(input: JoinRoomInput) {
+    joinRoom(input) {
       const room = findByInvite(input.inviteCode);
       if (!room) {
-        return { error: "Invite not found" as const };
+        return { error: "Invite not found" };
       }
       if (room.locked) {
-        return { error: "Room is locked" as const };
+        return { error: "Room is locked" };
       }
       if (Date.parse(room.expiresAt) < Date.now()) {
-        return { error: "Invite expired" as const };
+        return { error: "Invite expired" };
       }
 
       const guest = createParticipant(input.displayName, "guest");
@@ -95,44 +139,53 @@ export function createRoomStore() {
       };
     },
 
-    getRoom(roomId: string) {
+    getRoom(roomId) {
       return rooms.get(roomId);
     },
 
-    requireSession(roomId: string, sessionToken: string) {
+    requireSession(roomId, sessionToken) {
       const session = sessions.get(sessionToken);
       if (!session || session.roomId !== roomId || session.expiresAt < Date.now()) {
         return null;
       }
       const room = rooms.get(roomId);
-      const participant = room?.participants.find((entry) => entry.id === session.participantId);
-      if (!room || !participant) {
+      if (!room || Date.parse(room.expiresAt) < Date.now()) {
         return null;
       }
-      return { room, participant, session };
+      const participant = room.participants.find((entry) => entry.id === session.participantId);
+      if (!participant) {
+        return null;
+      }
+      return { room, participant };
     },
 
-    requireRole(roomId: string, sessionToken: string, allowedRoles: RoomRole[]) {
-      const activeSession = this.requireSession(roomId, sessionToken);
+    requireRole(roomId, sessionToken, allowedRoles) {
+      const activeSession = this.requireSession(roomId, sessionToken) as ActiveSession | null;
       if (!activeSession || !allowedRoles.includes(activeSession.participant.role)) {
         return null;
       }
       return activeSession;
     },
 
-    setLocked(roomId: string, sessionToken: string, locked: boolean) {
-      const activeSession = this.requireRole(roomId, sessionToken, ["host", "cohost"]);
+    setLocked(roomId, sessionToken, locked) {
+      const activeSession = this.requireRole(roomId, sessionToken, [
+        "host",
+        "cohost"
+      ]) as ActiveSession | null;
       if (!activeSession) {
-        return { error: "Forbidden" as const };
+        return { error: "Forbidden" };
       }
       activeSession.room.locked = locked;
       return { room: activeSession.room };
     },
 
-    kick(roomId: string, sessionToken: string, participantId: string) {
-      const activeSession = this.requireRole(roomId, sessionToken, ["host", "cohost"]);
+    kick(roomId, sessionToken, participantId) {
+      const activeSession = this.requireRole(roomId, sessionToken, [
+        "host",
+        "cohost"
+      ]) as ActiveSession | null;
       if (!activeSession) {
-        return { error: "Forbidden" as const };
+        return { error: "Forbidden" };
       }
       const removedParticipantIds = activeSession.room.participants
         .filter((participant) => participant.id === participantId && participant.role !== "host")
@@ -148,33 +201,41 @@ export function createRoomStore() {
       return { room: activeSession.room, removedParticipantIds };
     },
 
-    rotateInvite(roomId: string, sessionToken: string) {
-      const activeSession = this.requireRole(roomId, sessionToken, ["host", "cohost"]);
+    rotateInvite(roomId, sessionToken) {
+      const activeSession = this.requireRole(roomId, sessionToken, [
+        "host",
+        "cohost"
+      ]) as ActiveSession | null;
       if (!activeSession) {
-        return { error: "Forbidden" as const };
+        return { error: "Forbidden" };
       }
-      activeSession.room.inviteCode = crypto.randomBytes(8).toString("base64url");
+      activeSession.room.inviteCode = createInviteCode();
       return { room: activeSession.room };
     },
 
-    acceptSyncCommand(roomId: string, sessionToken: string, command: SyncCommand) {
-      const activeSession = this.requireRole(roomId, sessionToken, ["host", "cohost"]);
+    acceptSyncCommand(roomId, sessionToken, command) {
+      const activeSession = this.requireRole(roomId, sessionToken, [
+        "host",
+        "cohost"
+      ]) as ActiveSession | null;
       if (!activeSession) {
-        return { error: "Forbidden" as const };
+        return { error: "Forbidden" };
       }
       if (command.roomId !== roomId || command.actorId !== activeSession.participant.id) {
-        return { error: "Command actor mismatch" as const };
+        return { error: "Command actor mismatch" };
       }
       const maxClockSkewMs = 30_000;
       if (Math.abs(Date.now() - command.issuedAt) > maxClockSkewMs) {
-        return { error: "Stale command" as const };
+        return { error: "Stale command" };
       }
       const lastSequence = lastSyncSequenceByRoom.get(roomId) ?? -1;
       if (command.sequence <= lastSequence) {
-        return { error: "Replay detected" as const };
+        return { error: "Replay detected" };
       }
       lastSyncSequenceByRoom.set(roomId, command.sequence);
-      return { accepted: true as const, command };
+      return { accepted: true, command };
     }
   };
+
+  return store;
 }

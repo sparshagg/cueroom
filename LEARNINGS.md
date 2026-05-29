@@ -36,3 +36,15 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: Netflix content and account access are governed by restrictive terms and content protection rules.
   - Impact: CueRoom never relays content and requires legal review before public extension release.
+- [ ] Source: https://node-postgres.com/features/queries
+  - Stale-by: 2026-08-29
+  - Learning: node-postgres supports parameterized queries so application values are sent separately from SQL text.
+  - Impact: Postgres room/session persistence uses placeholders for all user-controlled values.
+- [ ] Source: https://node-postgres.com/apis/pool
+  - Stale-by: 2026-08-29
+  - Learning: `pool.query` is suitable for single queries, but transactions must use one checked-out client.
+  - Impact: Multi-step room mutations use an explicit client transaction helper.
+- [ ] Source: https://hub.docker.com/_/postgres/
+  - Stale-by: 2026-08-29
+  - Learning: The official Postgres image initializes databases from `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB`, and can run SQL files from the init directory on first start.
+  - Impact: Docker dev keeps the official image and passes container-network Postgres URLs to the API service.

@@ -9,9 +9,11 @@ CueRoom does not stream Netflix content. Every participant watches through their
 - [x] Monorepo scaffold.
 - [x] Web UI v0.
 - [x] API room/sync skeleton.
+- [x] Postgres-backed room/session persistence.
 - [x] Chrome/Edge MV3 extension skeleton.
 - [x] Docker and CI skeleton.
-- [ ] Production auth and persistence.
+- [ ] Redis presence/rate limits/sync counters.
+- [ ] Production auth.
 - [ ] Public beta.
 
 ## Apps
@@ -32,6 +34,12 @@ Then open:
 
 - Web: http://localhost:3000
 - API health: http://localhost:4000/health
+
+For the containerized stack with Postgres, Redis, and LiveKit:
+
+```bash
+docker compose -f infra/docker/compose.dev.yml up --build
+```
 
 ## Security Promise
 

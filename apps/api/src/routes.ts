@@ -6,8 +6,8 @@ import {
   syncCommandSchema
 } from "@cueroom/shared";
 import { z } from "zod";
-import { createLiveKitToken, removeLiveKitParticipant } from "./livekit";
-import type { RoomStore } from "./room-store";
+import { createLiveKitToken, removeLiveKitParticipant } from "./livekit.js";
+import type { RoomStore } from "./room-store.js";
 
 const sessionBodySchema = z.object({
   sessionToken: z.string().min(24)
@@ -39,7 +39,7 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore) {
     const sessionToken = authHeader?.startsWith("Bearer ")
       ? authHeader.slice("Bearer ".length)
       : "";
-    const activeSession = store.requireSession(roomId, sessionToken);
+    const activeSession = await store.requireSession(roomId, sessionToken);
     if (!activeSession) {
       return reply.code(403).send({ error: "Forbidden" });
     }
@@ -54,7 +54,7 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore) {
         .code(400)
         .send({ error: "Invalid join request", details: parsed.error.flatten() });
     }
-    const result = store.joinRoom(parsed.data);
+    const result = await store.joinRoom(parsed.data);
     if ("error" in result) {
       return reply.code(403).send(result);
     }
@@ -67,7 +67,7 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore) {
     if (!body.success) {
       return reply.code(400).send({ error: "Invalid lock request", details: body.error.flatten() });
     }
-    const result = store.setLocked(roomId, body.data.sessionToken, body.data.locked);
+    const result = await store.setLocked(roomId, body.data.sessionToken, body.data.locked);
     if ("error" in result) {
       return reply.code(403).send(result);
     }
@@ -80,7 +80,7 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore) {
     if (!body.success) {
       return reply.code(400).send({ error: "Invalid kick request", details: body.error.flatten() });
     }
-    const result = store.kick(roomId, body.data.sessionToken, body.data.participantId);
+    const result = await store.kick(roomId, body.data.sessionToken, body.data.participantId);
     if ("error" in result) {
       return reply.code(403).send(result);
     }
@@ -100,7 +100,7 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore) {
         .code(400)
         .send({ error: "Invalid rotate request", details: body.error.flatten() });
     }
-    const result = store.rotateInvite(roomId, body.data.sessionToken);
+    const result = await store.rotateInvite(roomId, body.data.sessionToken);
     if ("error" in result) {
       return reply.code(403).send(result);
     }
@@ -114,7 +114,7 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore) {
         .code(400)
         .send({ error: "Invalid token request", details: parsed.error.flatten() });
     }
-    const activeSession = store.requireSession(parsed.data.roomId, parsed.data.sessionToken);
+    const activeSession = await store.requireSession(parsed.data.roomId, parsed.data.sessionToken);
     if (!activeSession || activeSession.participant.id !== parsed.data.participantId) {
       return reply.code(403).send({ error: "Forbidden" });
     }
@@ -138,7 +138,7 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore) {
       return reply.code(400).send({ error: "Invalid sync command", details: body.error.flatten() });
     }
 
-    const result = store.acceptSyncCommand(roomId, body.data.sessionToken, body.data.command);
+    const result = await store.acceptSyncCommand(roomId, body.data.sessionToken, body.data.command);
     if ("error" in result) {
       return reply.code(403).send(result);
     }

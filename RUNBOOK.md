@@ -6,6 +6,7 @@
 - [ ] Run `nvm use` or `fnm use` from the repo root when your shell supports it.
 - [ ] Run `pnpm install`.
 - [ ] Copy `.env.example` to `.env`.
+- [ ] Keep `ROOM_STORE=memory` for the fastest local API loop.
 - [ ] Run `pnpm dev`.
 - [ ] Open web app at `http://localhost:3000`.
 - [ ] Open API health at `http://localhost:4000/health`.
@@ -14,7 +15,14 @@
 
 - [ ] Run `docker compose -f infra/docker/compose.dev.yml up --build`.
 - [ ] Confirm Postgres, Redis, LiveKit, API, and web containers are healthy.
+- [ ] Confirm the API container uses `ROOM_STORE=postgres` and `POSTGRES_URL=postgres://cueroom:cueroom@postgres:5432/cueroom`.
 - [ ] Use local LiveKit keys from `.env.example` only for development.
+
+## Postgres Verification
+
+- [ ] Start Postgres with `docker compose -f infra/docker/compose.dev.yml up -d postgres`.
+- [ ] Run `POSTGRES_TEST_URL=postgres://cueroom:cueroom@localhost:5432/cueroom pnpm --filter @cueroom/api test`.
+- [ ] Confirm session token rows are stored as hashes, not raw `crs_` tokens.
 
 ## Extension Development
 

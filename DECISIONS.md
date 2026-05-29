@@ -44,3 +44,12 @@
 - [x] Reason: Silent source deletion is unsafe in open-source projects.
 - [x] Security/privacy impact: Reduces supply-chain and availability risk.
 - [x] Rollback trigger: Maintainers opt into trusted auto-PR infrastructure.
+
+## ADR-006: Room Persistence Boundary
+
+- [x] Problem: Make room membership and sessions survive API restarts without persisting chat, call media, or watch history.
+- [x] Options: keep in-memory only, persist all room state in Postgres, split durable metadata in Postgres and ephemeral presence/sync in Redis.
+- [x] Decision: Persist rooms, participants, and hashed session tokens in Postgres; keep presence, rate limits, and sync counters ephemeral until the Redis slice.
+- [x] Reason: Durable authorization state is needed before real calls and extension sync can be trusted across restarts.
+- [x] Security/privacy impact: Session tokens are stored as SHA-256 hashes only; CueRoom still does not persist chat, media, credentials, cookies, DRM data, subtitles, screenshots, or Netflix streams.
+- [x] Rollback trigger: Operational review finds Postgres too heavy for the beta path or a managed auth/database service is selected.

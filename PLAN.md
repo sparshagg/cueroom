@@ -6,8 +6,8 @@
 - [x] Create monorepo workspace structure.
 - [x] Add Apache-2.0 license and open-source governance docs.
 - [x] Add CI, security, cleanup, and docs freshness checks.
-- [ ] Create personal GitHub repository and push first commit.
-- [ ] Configure branch protection and secret scanning in GitHub settings after remote creation.
+- [x] Create personal GitHub repository and push first commit.
+- [x] Configure branch protection and secret scanning in GitHub settings after remote creation.
 
 ## M1: Web Shell
 
@@ -22,7 +22,7 @@
 - [x] Create API service with health, rooms, join, lock, kick, rotate invite, and LiveKit token endpoints.
 - [x] Add shared contracts and runtime validation.
 - [x] Add in-memory store for local development.
-- [ ] Add PostgreSQL persistence.
+- [x] Add PostgreSQL persistence.
 - [ ] Add Redis-backed presence, invites, rate limits, and sync counters.
 - [ ] Add passkey and magic-link auth.
 
@@ -57,6 +57,6 @@
 
 - [ ] Complete legal/privacy review.
 - [ ] Package Chrome Web Store artifact.
-- [ ] Publish public repository.
+- [x] Publish public repository.
 - [ ] Tag first signed release.
 - [ ] Open beta with incident response and disclosure process ready.

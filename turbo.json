@@ -1,5 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalPassThroughEnv": ["POSTGRES_TEST_URL"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
