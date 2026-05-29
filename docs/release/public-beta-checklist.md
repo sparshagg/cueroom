@@ -16,11 +16,11 @@ This checklist is the source of truth for the first public beta release gate. It
 - [x] Latest DAST artifacts are reviewed, and every medium/high finding is either fixed or explicitly accepted in a tracked security note.
 - [x] `pnpm extension:package` artifacts have been reviewed, including the ZIP, manifest audit, privacy policy copy, listing draft, and generated images.
 - [x] Release package `SHA256SUMS` verifies locally.
-- [ ] `pnpm release:notes -- --tag v0.1.0 --output artifacts/release-notes/v0.1.0.md` has been reviewed for user-facing accuracy.
-- [ ] `pnpm release:check -- --tag v0.1.0` passes before tagging.
+- [x] `pnpm release:notes -- --tag v0.1.0 --output artifacts/release-notes/v0.1.0.md` has been reviewed for user-facing accuracy.
+- [x] `pnpm release:check -- --tag v0.1.0` passes before tagging.
 - [x] In-room report-user flow has API, UI, and regression coverage.
-- [ ] No open high or critical security findings remain in CodeQL, Dependabot, DAST review, or manual security review.
-- [ ] Release signing process is recorded in `RUNBOOK.md`, including the approved annotated-tag fallback if signing is unavailable.
+- [x] No open high or critical security findings remain in CodeQL, Dependabot, DAST review, or manual security review.
+- [x] Release signing process is recorded in `RUNBOOK.md`, including the approved annotated-tag fallback if signing is unavailable.
 
 ## Required Before Chrome Web Store Submission
 
