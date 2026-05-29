@@ -379,3 +379,7 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-30
   - Learning: The Chrome Web Store User Data FAQ expects privacy policies to explain what data is collected, how it is used, what is shared, retention, security handling, and Limited Use constraints for personal or sensitive user data.
   - Impact: CueRoom treats privacy disclosure categories, no-sale/no-ads claims, transient chat, abuse-report metadata, and no-sensitive-Netflix-data exclusions as checked release evidence.
+- [ ] Source: https://help.netflix.com/en/legal/termsofuse
+  - Stale-by: 2026-08-30
+  - Learning: Netflix Terms continue to restrict redistribution, reproduction, modification, public performance, content protection circumvention, automated access, and code/product manipulation of the Netflix service.
+  - Impact: `pnpm docs:freshness` now checks public CueRoom surfaces for non-affiliation language, negative Netflix content-boundary statements, and possible positive Netflix streaming/redistribution/bypass claims.

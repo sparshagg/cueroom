@@ -342,3 +342,12 @@
 - [x] Reason: A source-level guard catches local disclosure drift before package generation while still leaving external dashboard and human review as explicit blockers.
 - [x] Security/privacy impact: Reduces risk of inconsistent privacy disclosures for Chrome Web Store users without broadening data collection or extension permissions.
 - [x] Rollback trigger: Chrome Web Store API submission automation generates privacy answers directly from a typed privacy manifest with equivalent source and route checks.
+
+## ADR-039: Legal Copy Drift Guard
+
+- [x] Problem: User-facing CueRoom copy could drift into missing non-affiliation language or positive Netflix streaming/redistribution/bypass claims before human legal review.
+- [x] Options: rely on manual review, keep a static checklist only, or add narrow source checks for required legal boundary copy.
+- [x] Decision: Extend `pnpm docs:freshness` to require non-affiliation and negative Netflix content-boundary copy in README, Chrome Web Store listing, web UI, privacy route, extension popup, and manifest sources, and to flag likely positive Netflix content claims.
+- [x] Reason: This catches obvious legal-copy regressions early while preserving qualified human legal review as the release blocker.
+- [x] Security/privacy impact: Reduces user-confusion and content-handling risk without changing runtime data collection, sync behavior, or extension permissions.
+- [x] Rollback trigger: A dedicated legal-copy policy checker replaces the repo-owned regex guard with equal or stronger surface coverage.

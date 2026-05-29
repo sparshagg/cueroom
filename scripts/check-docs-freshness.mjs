@@ -7,6 +7,7 @@ const today = new Date();
 const missingOrInvalid = [];
 const stale = [];
 const staleLanguageFindings = [];
+const legalCopyFindings = [];
 const privacyPageFindings = [];
 const privacyDisclosureFindings = [];
 
@@ -54,6 +55,10 @@ const privacyPolicy = await readFile("PRIVACY.md", "utf8");
 const privacyAnswers = await readFile("docs/release/chrome-web-store-privacy-answers.md", "utf8");
 const privacyPage = await readFile("apps/web/src/app/privacy/page.tsx", "utf8");
 const homePage = await readFile("apps/web/src/app/page.tsx", "utf8");
+const readme = await readFile("README.md", "utf8");
+const storeListing = await readFile("docs/release/chrome-web-store-listing.md", "utf8");
+const extensionManifest = await readFile("apps/extension/src/manifest.json", "utf8");
+const extensionPopup = await readFile("apps/extension/src/popup.html", "utf8");
 const privacyChecklistItems = [...privacyPolicy.matchAll(/^- \[x\] (.+)$/gm)].map(
   (match) => match[1]
 );
@@ -159,6 +164,60 @@ for (const requirement of [
   }
 }
 
+for (const requirement of [
+  {
+    filePath: "README.md",
+    content: readme,
+    nonAffiliation:
+      "CueRoom is not affiliated with, endorsed by, sponsored by, or approved by Netflix.",
+    boundary: "CueRoom does not stream Netflix content."
+  },
+  {
+    filePath: "docs/release/chrome-web-store-listing.md",
+    content: storeListing,
+    nonAffiliation:
+      "CueRoom is not affiliated with, endorsed by, sponsored by, or approved by Netflix.",
+    boundary:
+      "CueRoom does not stream Netflix content, capture video/audio, read credentials, read cookies, bypass DRM, or record calls."
+  },
+  {
+    filePath: "apps/web/src/app/page.tsx",
+    content: homePage,
+    nonAffiliation: "Non-affiliated Netflix companion",
+    boundary: "CueRoom does not proxy, record, capture, or decrypt Netflix content."
+  },
+  {
+    filePath: "apps/web/src/app/privacy/page.tsx",
+    content: privacyPage,
+    nonAffiliation:
+      "CueRoom is not affiliated with, endorsed by, sponsored by, or approved by Netflix.",
+    boundary: "CueRoom does not stream, record, inspect, or redistribute Netflix video or audio."
+  },
+  {
+    filePath: "apps/extension/src/popup.html",
+    content: extensionPopup,
+    nonAffiliation: "CueRoom is not affiliated with Netflix.",
+    boundary:
+      "CueRoom never reads Netflix credentials, cookies, video, audio, subtitles, or DRM data."
+  },
+  {
+    filePath: "apps/extension/src/manifest.json",
+    content: extensionManifest,
+    nonAffiliation: "Not affiliated with Netflix.",
+    boundary: "Private co-watch companion extension for local playback sync."
+  }
+]) {
+  if (!normalizedIncludes(requirement.content, requirement.nonAffiliation)) {
+    legalCopyFindings.push(`${requirement.filePath} missing: ${requirement.nonAffiliation}`);
+  }
+  if (!normalizedIncludes(requirement.content, requirement.boundary)) {
+    legalCopyFindings.push(`${requirement.filePath} missing: ${requirement.boundary}`);
+  }
+  for (const finding of findPositiveNetflixClaims(requirement.content, requirement.filePath)) {
+    legalCopyFindings.push(finding);
+  }
+}
+
 if (!homePage.includes('href="/privacy"')) {
   privacyPageFindings.push("apps/web/src/app/page.tsx must link to /privacy from the home page.");
 }
@@ -167,6 +226,11 @@ if (staleLanguageFindings.length > 0) {
   console.error(
     `Source-of-truth docs contain stale scaffold language:\n${staleLanguageFindings.join("\n")}`
   );
+  process.exit(1);
+}
+
+if (legalCopyFindings.length > 0) {
+  console.error(`Legal copy drift found:\n${legalCopyFindings.join("\n")}`);
   process.exit(1);
 }
 
@@ -188,4 +252,23 @@ function normalizedIncludes(content, expectedText) {
 
 function normalizePolicyText(value) {
   return value.replaceAll("`", "").replace(/\s+/g, " ").trim();
+}
+
+function findPositiveNetflixClaims(content, filePath) {
+  const findings = [];
+  const claimPattern =
+    /\b(?:stream|proxy|capture|record|download|redistribute|decrypt|bypass|circumvent)\b.{0,60}\bNetflix\b|\bNetflix\s+(?:video|audio|content|stream|download|recording|redistribution|DRM bypass)\b/i;
+  const negativePattern =
+    /\b(?:does not|do not|never|no|not|without|doesn't|cannot|can't|will not|won't)\b/i;
+  const lines = content.split("\n");
+  for (const [index, line] of lines.entries()) {
+    const normalizedLine = normalizePolicyText(line);
+    const context = normalizePolicyText(`${lines[index - 1] ?? ""} ${line}`);
+    if (claimPattern.test(normalizedLine) && !negativePattern.test(context)) {
+      findings.push(
+        `${filePath}:${index + 1}: possible positive Netflix content claim: ${line.trim()}`
+      );
+    }
+  }
+  return findings;
 }
