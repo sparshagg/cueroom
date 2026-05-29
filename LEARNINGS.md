@@ -280,3 +280,15 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: `X-Content-Type-Options: nosniff` tells browsers to respect declared MIME types instead of sniffing response bodies.
   - Impact: CueRoom's API now sends `nosniff` on responses to close the ZAP low-risk API finding.
+- [ ] Source: https://nextjs.org/docs/app/guides/content-security-policy
+  - Stale-by: 2026-08-29
+  - Learning: Next.js App Router can apply CSP nonces from a per-request `Content-Security-Policy` header, but nonce-based CSP requires dynamic rendering.
+  - Impact: CueRoom now generates a per-request web CSP nonce in `src/proxy.ts` and calls `connection()` on App Router pages so production CSP can avoid `unsafe-inline`.
+- [ ] Source: https://nextjs.org/docs/app/api-reference/file-conventions/proxy
+  - Stale-by: 2026-08-29
+  - Learning: Next.js `proxy.ts` may live inside `src` when `src/app` is used, at the same level as the `app` directory, and can set request/response headers before route rendering.
+  - Impact: CueRoom uses `apps/web/src/proxy.ts` as the web CSP boundary instead of a static `next.config.ts` CSP, allowing request-specific nonces.
+- [ ] Source: https://www.postgresql.org/docs/current/static/sql-createtable.html
+  - Stale-by: 2026-08-29
+  - Learning: PostgreSQL `CREATE TABLE IF NOT EXISTS` avoids an error when the table already exists, and a `PRIMARY KEY` provides unique/not-null enforcement backed by an index.
+  - Impact: CueRoom records applied migration filenames in a `schema_migrations` table so startup/test workers skip already-applied DDL instead of replaying it under load.

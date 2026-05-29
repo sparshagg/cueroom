@@ -206,3 +206,22 @@
 - [x] Reason: Application-owned headers keep local, CI, Docker, and production behavior aligned without depending on a specific edge proxy.
 - [x] Security/privacy impact: Reduces XSS, clickjacking, object embedding, and MIME-sniffing risk without changing CueRoom's no-Netflix-media/no-credentials data boundary.
 - [x] Rollback trigger: A deployment edge policy or nonce-based CSP replaces these app-level defaults with equal or stronger coverage.
+- [x] Superseded scope: ADR-024 replaces the static web CSP portion with a nonce-based CSP; the API `nosniff` hook remains current.
+
+## ADR-024: Nonce-Based Web CSP
+
+- [x] Problem: Authenticated DAST confirmed the static web CSP exists but still reports medium-risk findings for `script-src 'unsafe-inline'` and `style-src 'unsafe-inline'`.
+- [x] Options: accept the findings for beta, switch to experimental SRI, or use the documented Next.js App Router nonce flow through `proxy.ts` plus dynamic rendering.
+- [x] Decision: Generate a per-request nonce in `apps/web/src/proxy.ts`, set the CSP on the request and response, and opt CueRoom pages into dynamic rendering with `connection()`.
+- [x] Reason: The nonce path closes inline-script/style findings without relying on experimental SRI and keeps the production policy independent of a hosting edge proxy.
+- [x] Security/privacy impact: Removes production `unsafe-inline` from web CSP while preserving the existing no-Netflix-media/no-credentials data boundary.
+- [x] Rollback trigger: Next.js nonce handling regresses or a stable SRI path gives equivalent CSP strictness with lower rendering cost.
+
+## ADR-025: Postgres Migration Journal
+
+- [x] Problem: Parallel Postgres tests can deadlock when one worker replays idempotent DDL after another worker has already migrated and started exercising DML.
+- [x] Options: force serial API tests, add broad advisory locks around test DML, or record applied migration files and skip already-applied DDL under the existing migration advisory lock.
+- [x] Decision: Add a `schema_migrations` table managed by `runPostgresMigrations` and execute only migration files that are not recorded.
+- [x] Reason: A migration journal is the smallest production-relevant fix: it preserves parallel tests, keeps startup idempotent, and avoids replaying table-altering DDL on every pool initialization.
+- [x] Security/privacy impact: Reduces deployment/test reliability risk without changing auth tokens, room data, extension permissions, or CueRoom's Netflix data boundary.
+- [x] Rollback trigger: CueRoom adopts an external migration tool with an equivalent applied-migration ledger and locking behavior.

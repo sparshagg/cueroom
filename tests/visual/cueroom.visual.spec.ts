@@ -51,7 +51,10 @@ test.describe("CueRoom visual contracts", () => {
   test("home page renders the beta entry points without layout overflow", async ({ page }) => {
     const response = await page.goto("/");
 
-    expect(response?.headers()["content-security-policy"]).toContain("default-src 'self'");
+    const csp = response?.headers()["content-security-policy"];
+    expect(csp).toContain("default-src 'self'");
+    expect(csp).toContain("script-src 'self' 'nonce-");
+    expect(csp).not.toContain("unsafe-inline");
     await expect(
       page.getByRole("heading", {
         name: /Private watch rooms with calls, chat, and local sync/i
@@ -66,7 +69,9 @@ test.describe("CueRoom visual contracts", () => {
   test("room page keeps call controls, chat, and sync health visible", async ({ page }) => {
     const response = await page.goto("/room/visual-regression-room");
 
-    expect(response?.headers()["content-security-policy"]).toContain("frame-ancestors 'none'");
+    const csp = response?.headers()["content-security-policy"];
+    expect(csp).toContain("frame-ancestors 'none'");
+    expect(csp).not.toContain("unsafe-inline");
     await expect(page.getByRole("heading", { name: /Friday watch room/i })).toBeVisible();
     await expect(page.getByText(/Netflix tab not paired/i)).toBeVisible();
     await expect(page.getByRole("heading", { name: /Chat/i })).toBeVisible();

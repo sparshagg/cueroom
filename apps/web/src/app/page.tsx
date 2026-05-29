@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { Badge, Button, Panel } from "@cueroom/ui";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -15,7 +16,9 @@ import { BrandMark } from "@/components/BrandMark";
 import { LobbyPreview } from "@/components/LobbyPreview";
 import { RoomLauncher } from "@/components/RoomLauncher";
 
-export default function HomePage() {
+export default async function HomePage() {
+  await connection();
+
   return (
     <main className="min-h-screen px-4 py-6 text-white md:px-8">
       <div className="mx-auto grid max-w-7xl gap-8">

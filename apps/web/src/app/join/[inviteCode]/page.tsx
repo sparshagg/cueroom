@@ -1,6 +1,9 @@
+import { connection } from "next/server";
 import { JoinRoomForm } from "@/components/JoinRoomForm";
 
 export default async function JoinPage({ params }: { params: Promise<{ inviteCode: string }> }) {
+  await connection();
+
   const { inviteCode } = await params;
 
   return (

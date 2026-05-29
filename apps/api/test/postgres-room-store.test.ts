@@ -46,6 +46,15 @@ describePostgres("Postgres room store", () => {
     const secondPool = createPostgresPool(process.env.POSTGRES_TEST_URL);
     try {
       await Promise.all([runPostgresMigrations(pool), runPostgresMigrations(secondPool)]);
+      const recordedMigrations = await pool.query<{ migration_name: string }>(
+        "SELECT migration_name FROM schema_migrations ORDER BY migration_name"
+      );
+      expect(recordedMigrations.rows.map((row) => row.migration_name)).toEqual([
+        "001_rooms_sessions.sql",
+        "002_auth.sql",
+        "003_sync_sequences.sql",
+        "004_room_reports.sql"
+      ]);
     } finally {
       await secondPool.end();
     }

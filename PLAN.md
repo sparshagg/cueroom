@@ -52,8 +52,10 @@
 - [x] Add CodeQL and dependency workflows.
 - [x] Add PostgreSQL/Redis integration tests.
 - [x] Serialize Postgres migrations for parallel API workers.
+- [x] Add a Postgres migration journal to avoid replaying DDL during parallel tests/startup.
 - [x] Add DAST and extension store review checklist evidence.
 - [x] Close DAST security-header findings.
+- [x] Replace production `unsafe-inline` CSP with per-request nonces.
 - [x] Run independent security review.
 - [x] Resolve Dependabot PostCSS CVE-2026-41305 alert with a workspace override.
 
