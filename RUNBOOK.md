@@ -39,10 +39,14 @@
 - [ ] Set `AUTH_REQUIRED=true`, `AUTH_RP_ID=localhost`, and `AUTH_ORIGIN=http://localhost:3000` for local auth-gated room creation.
 - [ ] Set `AUTH_DEV_MAGIC_LINKS=true` only for local development flows that need returned `devToken` or `devLink` values.
 - [ ] Confirm `AUTH_DEV_MAGIC_LINKS=true` is rejected when `NODE_ENV=production`.
+- [ ] For production magic links, set `SMTP_HOST`, `SMTP_FROM`, and provider credentials through secrets; set `SMTP_PORT=465` with `SMTP_SECURE=true` or require STARTTLS with `SMTP_REQUIRE_TLS=true`.
+- [ ] Confirm production startup fails when SMTP delivery is not configured.
+- [ ] Confirm production `SMTP_HOST` is a hostname, not an IP literal.
 - [ ] Run `POSTGRES_TEST_URL=postgres://cueroom:cueroom@localhost:5432/cueroom pnpm --filter @cueroom/api test`.
 - [ ] Confirm `auth_sessions` and `magic_links` contain only token hashes, never raw `cas_` or `cml_` tokens.
 - [ ] Confirm room sessions use `crs_` tokens and account sessions use `cas_` tokens.
 - [ ] Confirm magic-link verification uses `POST /v1/auth/magic-link/verify` with the token in the JSON body, not in a URL path or query string.
+- [ ] Confirm magic-link email URLs use `/auth/magic-link#token=...` fragments, not query strings.
 - [ ] Confirm production deployments set explicit HTTPS `AUTH_ORIGIN` and domain-only `AUTH_RP_ID`.
 
 ## LiveKit Verification

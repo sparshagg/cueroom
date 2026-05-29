@@ -1,5 +1,6 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createAuthStore, validateAuthConfig } from "../src/auth-store";
+import { validateEmailConfig } from "../src/email";
 import { createPostgresAuthStore } from "../src/postgres-auth-store";
 import { createPostgresPool, runPostgresMigrations, type PostgresPool } from "../src/postgres";
 
@@ -54,6 +55,37 @@ describe("memory auth store", () => {
     }
   });
 
+  it("delivers magic links through the configured sender without returning tokens", async () => {
+    const previousDevMagicLinks = process.env.AUTH_DEV_MAGIC_LINKS;
+    delete process.env.AUTH_DEV_MAGIC_LINKS;
+    const deliverMagicLink = vi.fn(async () => undefined);
+    const store = createAuthStore({ deliverMagicLink });
+    try {
+      const requested = await store.requestMagicLink({
+        email: "Host@Example.com",
+        displayName: "Host"
+      });
+
+      expect(requested.accepted).toBe(true);
+      expect(requested.devToken).toBeUndefined();
+      expect(requested.devLink).toBeUndefined();
+      expect(deliverMagicLink).toHaveBeenCalledOnce();
+      const delivery = deliverMagicLink.mock.calls[0]?.[0];
+      expect(delivery).toMatchObject({
+        email: "host@example.com",
+        displayName: "Host"
+      });
+      expect(delivery?.magicLinkUrl).toContain("#token=cml_");
+      expect("token" in (delivery ?? {})).toBe(false);
+
+      const token = new URL(delivery?.magicLinkUrl ?? "").hash.replace("#token=", "");
+      const session = await store.verifyMagicLink(decodeURIComponent(token));
+      expect("error" in session).toBe(false);
+    } finally {
+      restoreEnv("AUTH_DEV_MAGIC_LINKS", previousDevMagicLinks);
+    }
+  });
+
   it("fails closed for invalid WebAuthn relying party config", () => {
     const previousRpId = process.env.AUTH_RP_ID;
     try {
@@ -78,6 +110,65 @@ describe("memory auth store", () => {
     } finally {
       restoreEnv("NODE_ENV", previousNodeEnv);
       restoreEnv("AUTH_DEV_MAGIC_LINKS", previousDevMagicLinks);
+    }
+  });
+
+  it("requires SMTP configuration for production email", () => {
+    const previousNodeEnv = process.env.NODE_ENV;
+    const previousAuthRequired = process.env.AUTH_REQUIRED;
+    const previousSmtpHost = process.env.SMTP_HOST;
+    const previousSmtpFrom = process.env.SMTP_FROM;
+    try {
+      process.env.NODE_ENV = "production";
+      delete process.env.SMTP_HOST;
+      delete process.env.SMTP_FROM;
+      expect(() => validateEmailConfig()).toThrow(/SMTP_HOST/);
+    } finally {
+      restoreEnv("NODE_ENV", previousNodeEnv);
+      restoreEnv("AUTH_REQUIRED", previousAuthRequired);
+      restoreEnv("SMTP_HOST", previousSmtpHost);
+      restoreEnv("SMTP_FROM", previousSmtpFrom);
+    }
+  });
+
+  it("rejects insecure production SMTP delivery", () => {
+    const previousNodeEnv = process.env.NODE_ENV;
+    const previousSmtpHost = process.env.SMTP_HOST;
+    const previousSmtpFrom = process.env.SMTP_FROM;
+    const previousSmtpSecure = process.env.SMTP_SECURE;
+    const previousSmtpRequireTls = process.env.SMTP_REQUIRE_TLS;
+    try {
+      process.env.NODE_ENV = "production";
+      process.env.SMTP_HOST = "smtp.example.com";
+      process.env.SMTP_FROM = "CueRoom <no-reply@example.com>";
+      process.env.SMTP_SECURE = "false";
+      process.env.SMTP_REQUIRE_TLS = "false";
+      expect(() => validateEmailConfig()).toThrow(/STARTTLS/);
+    } finally {
+      restoreEnv("NODE_ENV", previousNodeEnv);
+      restoreEnv("SMTP_HOST", previousSmtpHost);
+      restoreEnv("SMTP_FROM", previousSmtpFrom);
+      restoreEnv("SMTP_SECURE", previousSmtpSecure);
+      restoreEnv("SMTP_REQUIRE_TLS", previousSmtpRequireTls);
+    }
+  });
+
+  it("rejects production SMTP IP literals", () => {
+    const previousNodeEnv = process.env.NODE_ENV;
+    const previousSmtpHost = process.env.SMTP_HOST;
+    const previousSmtpFrom = process.env.SMTP_FROM;
+    const previousSmtpSecure = process.env.SMTP_SECURE;
+    try {
+      process.env.NODE_ENV = "production";
+      process.env.SMTP_HOST = "127.0.0.1";
+      process.env.SMTP_FROM = "CueRoom <no-reply@example.com>";
+      process.env.SMTP_SECURE = "true";
+      expect(() => validateEmailConfig()).toThrow(/hostname/);
+    } finally {
+      restoreEnv("NODE_ENV", previousNodeEnv);
+      restoreEnv("SMTP_HOST", previousSmtpHost);
+      restoreEnv("SMTP_FROM", previousSmtpFrom);
+      restoreEnv("SMTP_SECURE", previousSmtpSecure);
     }
   });
 });

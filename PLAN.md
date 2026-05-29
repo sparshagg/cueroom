@@ -25,7 +25,7 @@
 - [x] Add PostgreSQL persistence.
 - [x] Add Redis-backed presence, invites, rate limits, and sync counters.
 - [x] Add passkey and magic-link auth.
-- [ ] Add production email delivery and account management UI.
+- [x] Add production email delivery and account management UI.
 
 ## M3: LiveKit Calls
 

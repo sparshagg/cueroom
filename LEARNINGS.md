@@ -84,6 +84,22 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: Session identifiers need high entropy, server-side validation, expiration, and protection from logging or disclosure.
   - Impact: Account session tokens use a distinct `cas_` prefix, are stored as hashes, expire server-side, and are redacted from logs.
+- [ ] Source: https://nodemailer.com/smtp
+  - Stale-by: 2026-08-29
+  - Learning: Nodemailer SMTP delivery uses `createTransport`; `secure: true` is required for implicit TLS on port 465, while `requireTLS` forces a STARTTLS upgrade when not using implicit TLS.
+  - Impact: CueRoom's production magic-link mailer uses explicit SMTP host, port, secure, and requireTLS settings and rejects missing or insecure production email config.
+- [ ] Source: https://nodemailer.com/message
+  - Stale-by: 2026-08-29
+  - Learning: Nodemailer messages can include both plaintext and HTML bodies, and `disableFileAccess` plus `disableUrlAccess` prevents message content from pulling local files or remote URLs.
+  - Impact: Magic-link emails include text and HTML alternatives, keep the token only in the link fragment, avoid passing raw tokens into the mailer, and disable file/URL access during message construction.
+- [ ] Source: https://developer.mozilla.org/en-US/docs/Web/API/Location/hash
+  - Stale-by: 2026-08-29
+  - Learning: `location.hash` exposes only the URL fragment identifier, including the leading `#` when present.
+  - Impact: CueRoom magic-link verification reads only `#token=...`, rejects query-string token flows, and clears the fragment before calling the API.
+- [ ] Source: https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage
+  - Stale-by: 2026-08-29
+  - Learning: `sessionStorage` is partitioned by origin and tab and is cleared when the tab/window session ends, unlike `localStorage`.
+  - Impact: Browser account sessions use `sessionStorage` instead of `localStorage` while the project remains on bearer-token auth.
 - [ ] Source: https://docs.livekit.io/intro/basics/connect/
   - Stale-by: 2026-08-29
   - Learning: LiveKit browser clients connect through a `Room` object with a server URL and a backend-generated access token; room state exposes local and remote participants.

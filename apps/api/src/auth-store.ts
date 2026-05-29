@@ -43,6 +43,17 @@ export type MagicLinkRequestResult = {
   devLink?: string;
 };
 
+export type MagicLinkDeliveryInput = {
+  email: string;
+  displayName?: string;
+  magicLinkUrl: string;
+  expiresAt: string;
+};
+
+export type AuthStoreOptions = {
+  deliverMagicLink?: (input: MagicLinkDeliveryInput) => Promise<void>;
+};
+
 export type PasskeyRecord = {
   credentialId: string;
   accountId: string;
@@ -99,7 +110,7 @@ export const authSessionTtlMs = 30 * 24 * 60 * 60 * 1000;
 export const magicLinkTtlMs = 15 * 60 * 1000;
 export const webauthnChallengeTtlMs = 5 * 60 * 1000;
 
-export function createAuthStore(): AuthStore {
+export function createAuthStore(options: AuthStoreOptions = {}): AuthStore {
   const accountsById = new Map<string, Account>();
   const accountIdByEmail = new Map<string, string>();
   const magicLinksByHash = new Map<string, MagicLinkRecord>();
@@ -190,6 +201,12 @@ export function createAuthStore(): AuthStore {
         record.displayName = input.displayName;
       }
       magicLinksByHash.set(tokenHash, record);
+      await deliverMagicLink(options, {
+        email: record.emailNormalized,
+        ...(record.displayName ? { displayName: record.displayName } : {}),
+        token,
+        expiresAt
+      });
       return createMagicLinkResult(token, expiresAt);
     },
 
@@ -422,14 +439,39 @@ export function createMagicLinkResult(token: string, expiresAt: number): MagicLi
     return result;
   }
 
-  const origin = process.env.AUTH_ORIGIN ?? "http://localhost:3000";
-  const devLink = new URL("/auth/magic-link", origin);
-  devLink.hash = `token=${token}`;
   return {
     ...result,
     devToken: token,
-    devLink: devLink.toString()
+    devLink: createMagicLinkUrl(token)
   };
+}
+
+export async function deliverMagicLink(
+  options: AuthStoreOptions,
+  input: {
+    email: string;
+    displayName?: string;
+    token: string;
+    expiresAt: number;
+  }
+) {
+  if (!options.deliverMagicLink) {
+    return;
+  }
+
+  await options.deliverMagicLink({
+    email: input.email,
+    ...(input.displayName ? { displayName: input.displayName } : {}),
+    magicLinkUrl: createMagicLinkUrl(input.token),
+    expiresAt: new Date(input.expiresAt).toISOString()
+  });
+}
+
+function createMagicLinkUrl(token: string) {
+  const origin = process.env.AUTH_ORIGIN ?? "http://localhost:3000";
+  const link = new URL("/auth/magic-link", origin);
+  link.hash = `token=${encodeURIComponent(token)}`;
+  return link.toString();
 }
 
 async function toStoreError<T>(callback: () => Promise<T>): Promise<T | StoreError> {

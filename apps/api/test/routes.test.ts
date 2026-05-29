@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { TokenVerifier } from "livekit-server-sdk";
 import { buildServer } from "../src/server";
 
@@ -54,6 +54,34 @@ describe("CueRoom API", () => {
       } else {
         process.env.AUTH_REQUIRED = previousAuthRequired;
       }
+    }
+  });
+
+  it("does not expose magic-link tokens when SMTP delivery fails", async () => {
+    const sendMagicLink = vi.fn(async () => {
+      throw new Error("smtp unavailable");
+    });
+    const server = await buildServer({
+      mailer: {
+        sendMagicLink
+      }
+    });
+    try {
+      const response = await server.inject({
+        method: "POST",
+        url: "/v1/auth/magic-link/request",
+        payload: {
+          email: "host@example.com",
+          displayName: "Host"
+        }
+      });
+
+      expect(response.statusCode).toBe(502);
+      expect(response.json()).toEqual({ error: "Magic link delivery unavailable" });
+      expect(response.body).not.toContain("cml_");
+      expect(sendMagicLink).toHaveBeenCalledOnce();
+    } finally {
+      await server.close();
     }
   });
 

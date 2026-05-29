@@ -10,6 +10,7 @@ import { closeRedisClient, createRedisClient, type RedisClient } from "./redis.j
 import { createRedisRoomState } from "./redis-room-state.js";
 import { createRoomStore, type RoomStore } from "./room-store.js";
 import { createAuthStore, validateAuthConfig, type AuthStore } from "./auth-store.js";
+import { createConfiguredMailer, validateEmailConfig, type MagicLinkMailer } from "./email.js";
 import { validateLiveKitConfig } from "./livekit.js";
 
 type RemoveLiveKitParticipant = (roomId: string, participantId: string) => Promise<void>;
@@ -17,17 +18,28 @@ type RemoveLiveKitParticipant = (roomId: string, participantId: string) => Promi
 type BuildServerOptions = {
   store?: RoomStore;
   authStore?: AuthStore;
+  mailer?: MagicLinkMailer;
   removeLiveKitParticipant?: RemoveLiveKitParticipant;
 };
 
 export async function buildServer(options: BuildServerOptions = {}) {
   validateAuthConfig();
+  validateEmailConfig();
   validateLiveKitConfig();
   const redis = process.env.REDIS_URL ? createRedisClient() : undefined;
+  const mailer = options.mailer ?? createConfiguredMailer();
   const server = Fastify({
     logger: {
       level: process.env.LOG_LEVEL ?? "info",
-      redact: ["req.headers.authorization", "*.sessionToken", "*.token"]
+      redact: [
+        "req.headers.authorization",
+        "*.sessionToken",
+        "*.accountSessionToken",
+        "*.token",
+        "*.devToken",
+        "*.devLink",
+        "*.magicLinkUrl"
+      ]
     }
   });
 
@@ -59,7 +71,7 @@ export async function buildServer(options: BuildServerOptions = {}) {
     }
   });
 
-  const configuredStores = await createConfiguredStores(redis, options);
+  const configuredStores = await createConfiguredStores(redis, options, mailer);
   const store = configuredStores.store;
   const authStore = configuredStores.authStore;
   server.addHook("onClose", async () => {
@@ -67,6 +79,7 @@ export async function buildServer(options: BuildServerOptions = {}) {
     if (redis) {
       await closeRedisClient(redis);
     }
+    await mailer?.close?.();
   });
   if (options.removeLiveKitParticipant) {
     registerRoutes(server, store, authStore, {
@@ -81,12 +94,14 @@ export async function buildServer(options: BuildServerOptions = {}) {
 
 async function createConfiguredStores(
   redis: RedisClient | undefined,
-  options: BuildServerOptions
+  options: BuildServerOptions,
+  mailer: MagicLinkMailer | undefined
 ): Promise<{ store: RoomStore; authStore: AuthStore }> {
+  const deliverMagicLink = mailer?.sendMagicLink.bind(mailer);
   if (options.store || options.authStore) {
     return {
       store: options.store ?? createRoomStore(),
-      authStore: options.authStore ?? createAuthStore()
+      authStore: options.authStore ?? createMemoryAuthStore(deliverMagicLink)
     };
   }
 
@@ -97,12 +112,18 @@ async function createConfiguredStores(
     }
     return {
       store: createPostgresRoomStore(pool, redis ? createRedisRoomState(redis) : undefined),
-      authStore: createPostgresAuthStore(pool)
+      authStore: deliverMagicLink
+        ? createPostgresAuthStore(pool, { deliverMagicLink })
+        : createPostgresAuthStore(pool)
     };
   }
 
   return {
     store: createRoomStore(),
-    authStore: createAuthStore()
+    authStore: createMemoryAuthStore(deliverMagicLink)
   };
+}
+
+function createMemoryAuthStore(deliverMagicLink: MagicLinkMailer["sendMagicLink"] | undefined) {
+  return deliverMagicLink ? createAuthStore({ deliverMagicLink }) : createAuthStore();
 }

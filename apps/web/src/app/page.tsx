@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Video
 } from "lucide-react";
+import { AccountPanel } from "@/components/AccountPanel";
 import { BrandMark } from "@/components/BrandMark";
 import { LobbyPreview } from "@/components/LobbyPreview";
 import { RoomLauncher } from "@/components/RoomLauncher";
@@ -51,6 +52,7 @@ export default function HomePage() {
                 session. It never sees Netflix video, credentials, cookies, or DRM data.
               </p>
             </div>
+            <AccountPanel />
             <RoomLauncher />
             <div className="grid gap-3 sm:grid-cols-3">
               {(

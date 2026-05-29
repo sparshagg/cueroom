@@ -13,6 +13,7 @@ import {
   createAccountId,
   createAuthSessionToken,
   createChallengeId,
+  deliverMagicLink,
   createMagicLinkResult,
   createMagicLinkToken,
   createWebAuthnUserId,
@@ -24,6 +25,7 @@ import {
   type Account,
   type AuthMethod,
   type AuthSession,
+  type AuthStoreOptions,
   type AuthStore,
   type MagicLinkRequest,
   type MagicLinkRequestResult,
@@ -66,7 +68,10 @@ type PasskeyRow = {
   backed_up: boolean;
 };
 
-export function createPostgresAuthStore(pool: PostgresPool): AuthStore {
+export function createPostgresAuthStore(
+  pool: PostgresPool,
+  options: AuthStoreOptions = {}
+): AuthStore {
   return {
     async requestMagicLink(input: MagicLinkRequest): Promise<MagicLinkRequestResult> {
       const token = createMagicLinkToken();
@@ -84,6 +89,12 @@ export function createPostgresAuthStore(pool: PostgresPool): AuthStore {
           new Date(expiresAt).toISOString()
         ]
       );
+      await deliverMagicLink(options, {
+        email: normalizeEmail(input.email),
+        ...(input.displayName ? { displayName: input.displayName } : {}),
+        token,
+        expiresAt
+      });
       return createMagicLinkResult(token, expiresAt);
     },
 

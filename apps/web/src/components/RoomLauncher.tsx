@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button, Input } from "@cueroom/ui";
 import { ArrowRight, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { createRoom, joinRoom } from "@/lib/api";
+import { createRoom, CueRoomApiError, joinRoom } from "@/lib/api";
+import { readAccountSession } from "@/lib/account-session";
 import { storeRoomSession } from "@/lib/room-session";
 
 export function RoomLauncher() {
@@ -19,12 +20,22 @@ export function RoomLauncher() {
   async function handleCreateRoom() {
     setIsCreating(true);
     try {
-      const session = await createRoom({ hostName, title: roomTitle });
+      const accountSession = readAccountSession();
+      const apiOptions = accountSession
+        ? { accountSessionToken: accountSession.accountSessionToken }
+        : {};
+      const session = await createRoom({ hostName, title: roomTitle }, apiOptions);
       storeRoomSession(session);
       toast.success("Room created");
       router.push(`/room/${session.room.id}`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not create room");
+      const message =
+        error instanceof CueRoomApiError && error.status === 401
+          ? "Sign in before creating a production room"
+          : error instanceof Error
+            ? error.message
+            : "Could not create room";
+      toast.error(message);
     } finally {
       setIsCreating(false);
     }

@@ -100,7 +100,12 @@ export function registerRoutes(
       email: parsed.data.email,
       ...(parsed.data.displayName ? { displayName: parsed.data.displayName } : {})
     };
-    return authStore.requestMagicLink(input);
+    try {
+      return await authStore.requestMagicLink(input);
+    } catch (error) {
+      request.log.error({ err: error }, "Failed to deliver magic link");
+      return reply.code(502).send({ error: "Magic link delivery unavailable" });
+    }
   });
 
   server.post("/v1/auth/magic-link/verify", authVerifyRateLimit, async (request, reply) => {

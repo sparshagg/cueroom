@@ -134,3 +134,12 @@
 - [x] Reason: A single local/CI command reduces release drift and keeps the uploaded ZIP, manifest audit, privacy policy, and listing draft together.
 - [x] Security/privacy impact: Store submissions carry explicit least-permission, non-affiliation, no-sensitive-Netflix-data, and Limited Use evidence.
 - [x] Rollback trigger: Chrome Web Store API automation replaces manual artifact upload and produces equivalent evidence.
+
+## ADR-016: Magic-Link Email Delivery
+
+- [x] Problem: Production auth cannot rely on returned development magic-link tokens.
+- [x] Options: keep dev-only token disclosure, add provider-specific email API, add generic SMTP delivery through Nodemailer.
+- [x] Decision: Use a generic SMTP mailer for magic-link delivery and keep dev token disclosure opt-in/local only.
+- [x] Reason: SMTP works across common self-hosted and managed email providers without coupling CueRoom to one vendor.
+- [x] Security/privacy impact: `cml_` tokens are stored hashed server-side, sent only in email link fragments, posted back in JSON bodies, never returned in production responses, and production auth-required deployments fail closed without SMTP config.
+- [x] Rollback trigger: Deliverability or abuse controls require a managed email provider integration.

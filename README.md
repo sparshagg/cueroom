@@ -14,6 +14,7 @@ CueRoom does not stream Netflix content. Every participant watches through their
 - [x] Docker and CI skeleton.
 - [x] Redis presence/rate limits/sync counters.
 - [x] Passkey and magic-link auth foundation.
+- [x] SMTP-backed magic-link delivery and account UI.
 - [ ] Public beta.
 
 ## Apps
@@ -42,6 +43,8 @@ docker compose -f infra/docker/compose.dev.yml up --build
 ```
 
 The development compose stack binds published ports to `127.0.0.1`. Use `.env.example` values only for local development, including `AUTH_DEV_MAGIC_LINKS=true`.
+
+Production magic-link delivery uses SMTP. Set `SMTP_HOST`, `SMTP_FROM`, and provider credentials through deployment secrets; use implicit TLS on port 465 or require STARTTLS with `SMTP_REQUIRE_TLS=true`.
 
 To build the Chrome Web Store beta package:
 
