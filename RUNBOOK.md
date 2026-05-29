@@ -5,6 +5,7 @@
 - [ ] Install Node.js 24.14.0 or Node.js 22.13+ and pnpm 10+.
 - [ ] Run `nvm use` or `fnm use` from the repo root when your shell supports it.
 - [ ] Run `pnpm install`.
+- [ ] Run `pnpm exec playwright install chromium` before local `pnpm verify` or visual checks.
 - [ ] Copy `.env.example` to `.env`.
 - [ ] Keep `ROOM_STORE=memory` for the fastest local API loop.
 - [ ] Run `pnpm dev`.
@@ -73,6 +74,7 @@
 ## Release
 
 - [ ] Run `pnpm verify`.
+- [ ] Review the `cueroom-visual-regression` CI artifact for home, room, and extension popup screenshots.
 - [ ] Run `pnpm extension:package`.
 - [ ] Review the latest DAST workflow artifacts and `docs/security/dast.md`.
 - [ ] Review `LEARNINGS.md` for stale sources.

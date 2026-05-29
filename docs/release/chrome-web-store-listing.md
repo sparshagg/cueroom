@@ -35,6 +35,7 @@
 ## Required Visual Assets
 
 - [x] Extension icon in package: `apps/extension/src/icons/icon128.svg`.
+- [x] CI visual evidence artifact: `cueroom-visual-regression`.
 - [ ] Store screenshot: room UI with video call controls and sync health.
 - [ ] Store screenshot: extension popup paired to a room.
 - [ ] Small promo tile: 440x280.

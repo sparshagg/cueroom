@@ -15,7 +15,7 @@
 - [x] Add shadcn-style UI primitives and Tailwind v4 theme.
 - [x] Build welcome, join, lobby, room, chat, and control surfaces.
 - [x] Add brand assets and non-affiliation language.
-- [ ] Add Playwright visual regression coverage.
+- [x] Add Playwright visual regression coverage.
 
 ## M2: API And Rooms
 

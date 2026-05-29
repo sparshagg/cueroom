@@ -16,16 +16,19 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
+    "visual:test": "playwright test",
+    "visual:check": "pnpm build && pnpm visual:test",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "security:extension": "pnpm --filter @cueroom/security build && node scripts/audit-extension.mjs",
     "extension:package": "node scripts/package-extension.mjs",
     "cleanup:check": "node scripts/cleanup-check.mjs",
     "docs:freshness": "node scripts/check-docs-freshness.mjs",
-    "verify": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm security:extension && pnpm cleanup:check && pnpm docs:freshness"
+    "verify": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm visual:test && pnpm security:extension && pnpm cleanup:check && pnpm docs:freshness"
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",
+    "@playwright/test": "1.60.0",
     "@types/node": "^22.15.29",
     "eslint": "^9.28.0",
     "knip": "^5.55.0",

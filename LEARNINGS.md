@@ -184,3 +184,15 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: Extensions handling personal or sensitive user data need a privacy policy, accurate privacy-tab disclosures, secure transmission, and consistency between product behavior, dashboard disclosures, and policy.
   - Impact: CueRoom adds `PRIVACY.md` and copies it into Chrome Web Store evidence artifacts so privacy answers align with the implementation boundary.
+- [ ] Source: https://playwright.dev/docs/test-configuration
+  - Stale-by: 2026-08-29
+  - Learning: Playwright test configuration supports browser projects, reporter settings, shared `baseURL`, and a `webServer` block that launches the app under test.
+  - Impact: CueRoom adds a root Playwright config that runs desktop and mobile Chromium visual contracts against the built Next.js web app.
+- [ ] Source: https://playwright.dev/docs/test-webserver
+  - Stale-by: 2026-08-29
+  - Learning: Playwright can launch and wait for a local web server before tests, with `reuseExistingServer` for local development and CI-specific startup behavior.
+  - Impact: CueRoom visual tests start `next start` on an isolated local port instead of depending on a manually running dev server.
+- [ ] Source: https://playwright.dev/docs/test-snapshots
+  - Stale-by: 2026-08-29
+  - Learning: Playwright screenshot comparisons are useful but browser rendering can vary by OS and environment, so baselines should be generated consistently.
+  - Impact: CueRoom starts with deterministic visual contracts and screenshot artifacts in CI rather than cross-OS golden files that would be noisy before the beta UI stabilizes.

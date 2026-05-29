@@ -48,7 +48,17 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm verify
+      - name: Upload visual regression evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cueroom-visual-regression
+          path: |
+            playwright-report
+            test-results/visual
+          if-no-files-found: warn
       - name: Build Chrome Web Store review evidence
         run: pnpm extension:package
       - name: Upload Chrome Web Store review evidence
