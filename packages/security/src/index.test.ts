@@ -14,4 +14,15 @@ describe("auditExtensionManifest", () => {
     expect(findings.map((finding) => finding.severity)).toContain("critical");
     expect(findings.length).toBeGreaterThanOrEqual(3);
   });
+
+  it("does not accept lookalike Netflix host permissions", () => {
+    const findings = auditExtensionManifest({
+      host_permissions: ["https://evil-netflix.com/watch/*"]
+    });
+
+    expect(findings).toContainEqual({
+      severity: "high",
+      message: "Unexpected host permission: https://evil-netflix.com/watch/*"
+    });
+  });
 });

@@ -7,6 +7,8 @@ export const forbiddenExtensionPermissions = new Set([
   "desktopCapture"
 ]);
 
+export const allowedExtensionHostPermissions = new Set(["https://www.netflix.com/watch/*"]);
+
 export type ExtensionManifestLike = {
   permissions?: string[];
   host_permissions?: string[];
@@ -45,7 +47,7 @@ export function auditExtensionManifest(manifest: ExtensionManifestLike): Manifes
   }
 
   for (const host of hostPermissions) {
-    if (!host.includes("netflix.com") && !host.includes("localhost") && !host.includes("cueroom")) {
+    if (!allowedExtensionHostPermissions.has(host)) {
       findings.push({
         severity: "high",
         message: `Unexpected host permission: ${host}`

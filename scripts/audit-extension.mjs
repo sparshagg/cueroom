@@ -9,6 +9,7 @@ const forbidden = new Set([
   "tabCapture",
   "desktopCapture"
 ]);
+const allowedHostPermissions = new Set(["https://www.netflix.com/watch/*"]);
 const findings = [];
 
 for (const permission of manifest.permissions ?? []) {
@@ -21,7 +22,7 @@ for (const host of manifest.host_permissions ?? []) {
   if (host === "<all_urls>" || host === "*://*/*") {
     findings.push("Broad host permission is forbidden");
   }
-  if (!host.includes("netflix.com")) {
+  if (!allowedHostPermissions.has(host)) {
     findings.push(`Unexpected host permission: ${host}`);
   }
 }
