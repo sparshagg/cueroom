@@ -28,7 +28,7 @@ jobs:
         continue-on-error: true
       - name: Open scheduled cleanup issue
         if: github.event_name == 'schedule' && steps.cleanup.outcome == 'failure'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const title = 'chore: review cleanup candidates';
