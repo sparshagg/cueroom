@@ -25,7 +25,9 @@
 
 - [x] Attach CI extension artifact zip from `pnpm --filter @cueroom/extension build`.
 - [x] Attach manifest permission audit output.
+- [x] Attach `SHA256SUMS` and `release-manifest.json` from `pnpm extension:package`.
 - [x] Attach latest DAST artifact summary.
 - [x] Include tester instructions from `docs/release/chrome-web-store-listing.md`.
 - [x] Include non-affiliation statement: CueRoom is not affiliated with Netflix.
+- [ ] Verify GitHub artifact attestation for the release ZIP before Chrome Web Store submission.
 - [ ] Include rollback package for the last approved version after first approval.

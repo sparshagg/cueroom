@@ -23,6 +23,7 @@
     "security:extension": "pnpm --filter @cueroom/security build && node scripts/audit-extension.mjs",
     "store:assets": "node scripts/generate-store-assets.mjs",
     "extension:package": "node scripts/package-extension.mjs",
+    "release:check": "node scripts/check-release-readiness.mjs",
     "cleanup:check": "node scripts/cleanup-check.mjs",
     "docs:freshness": "node scripts/check-docs-freshness.mjs",
     "verify": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm visual:test && pnpm security:extension && pnpm cleanup:check && pnpm docs:freshness"

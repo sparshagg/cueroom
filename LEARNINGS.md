@@ -216,3 +216,15 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: Playwright screenshot comparisons are useful but browser rendering can vary by OS and environment, so baselines should be generated consistently.
   - Impact: CueRoom starts with deterministic visual contracts and screenshot artifacts in CI rather than cross-OS golden files that would be noisy before the beta UI stabilizes.
+- [ ] Source: https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations
+  - Stale-by: 2026-08-29
+  - Learning: GitHub artifact attestations can generate signed provenance for workflow-built artifacts when the workflow grants `attestations: write` and `id-token: write`.
+  - Impact: CueRoom's release workflow attests the Chrome Web Store ZIP before a maintainer uploads it to the store.
+- [ ] Source: https://cli.github.com/manual/gh_release_create
+  - Stale-by: 2026-08-29
+  - Learning: `gh release create` supports `--verify-tag`, generated notes, prerelease marking, and attaching files with display labels.
+  - Impact: CueRoom creates prereleases only for existing release tags and attaches the extension ZIP, `SHA256SUMS`, and `release-manifest.json`.
+- [ ] Source: https://docs.github.com/en/code-security/how-tos/report-and-fix-vulnerabilities/configure-vulnerability-reporting/configuring-private-vulnerability-reporting-for-a-repository
+  - Stale-by: 2026-08-29
+  - Learning: Repository maintainers can enable private vulnerability reporting so external reporters can submit vulnerability details privately before public disclosure.
+  - Impact: Public beta release gates now require private vulnerability reporting and maintainer security notifications before user installation.

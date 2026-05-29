@@ -1,0 +1,101 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing signed or annotated tag to release, for example v0.1.0.
+        required: true
+
+permissions:
+  attestations: write
+  contents: write
+  id-token: write
+
+jobs:
+  beta-release:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: cueroom
+          POSTGRES_PASSWORD: cueroom
+          POSTGRES_DB: cueroom
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cueroom -d cueroom"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      POSTGRES_TEST_URL: postgres://cueroom:cueroom@localhost:5432/cueroom
+      REDIS_TEST_URL: redis://localhost:6379/1
+      REDIS_URL: redis://localhost:6379/1
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+      - run: git fetch origin main --tags --force
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Check release gates
+        run: >
+          pnpm release:check --
+          --tag "$RELEASE_TAG"
+          --require-annotated-tag
+          --require-main
+          --require-beta-gates
+      - run: pnpm verify
+      - run: pnpm extension:package
+      - name: Verify packaged checksum
+        run: cd artifacts/chrome-web-store && sha256sum -c SHA256SUMS
+      - name: Resolve packaged extension
+        id: packaged-extension
+        run: |
+          ZIP_PATH="$(ls artifacts/chrome-web-store/cueroom-extension-*.zip | head -n 1)"
+          test -n "$ZIP_PATH"
+          echo "zip_path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
+      - name: Upload Chrome Web Store release package
+        uses: actions/upload-artifact@v4
+        with:
+          name: cueroom-chrome-web-store-${{ env.RELEASE_TAG }}
+          path: artifacts/chrome-web-store
+      - name: Generate artifact attestation
+        uses: actions/attest@v4
+        with:
+          subject-path: ${{ steps.packaged-extension.outputs.zip_path }}
+      - name: Create GitHub prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$RELEASE_TAG" \
+            "${{ steps.packaged-extension.outputs.zip_path }}#CueRoom Chrome Web Store extension ZIP" \
+            "artifacts/chrome-web-store/SHA256SUMS#SHA256SUMS" \
+            "artifacts/chrome-web-store/release-manifest.json#Release manifest" \
+            --generate-notes \
+            --prerelease \
+            --title "CueRoom ${RELEASE_TAG}" \
+            --verify-tag

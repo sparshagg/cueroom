@@ -143,3 +143,12 @@
 - [x] Reason: SMTP works across common self-hosted and managed email providers without coupling CueRoom to one vendor.
 - [x] Security/privacy impact: `cml_` tokens are stored hashed server-side, sent only in email link fragments, posted back in JSON bodies, never returned in production responses, and production auth-required deployments fail closed without SMTP config.
 - [x] Rollback trigger: Deliverability or abuse controls require a managed email provider integration.
+
+## ADR-017: Release Provenance And Public Beta Response
+
+- [x] Problem: Public beta needs repeatable release evidence, artifact provenance, and a concrete sensitive-report path before users install the extension.
+- [x] Options: manual ZIP upload only, CI-built prereleases with checksums, or full Chrome Web Store API publishing.
+- [x] Decision: Use a tag-triggered GitHub prerelease workflow that verifies beta gates, builds the extension package, checks `SHA256SUMS`, uploads release metadata, and creates a GitHub artifact attestation.
+- [x] Reason: This is the smallest self-hostable path that proves what source produced the extension ZIP while the first Chrome Web Store submission remains a manual dashboard step.
+- [x] Security/privacy impact: Release tags must come from protected `main`, beta blockers stay explicit, sensitive security reports route through private vulnerability reporting, and public abuse reports are constrained to non-sensitive metadata.
+- [x] Rollback trigger: Chrome Web Store API automation or a dedicated release manager replaces manual dashboard upload and produces equal or stronger provenance evidence.

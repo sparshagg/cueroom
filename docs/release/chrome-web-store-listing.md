@@ -46,6 +46,10 @@
 
 - [ ] Hosted privacy policy URL is live.
 - [ ] Public beta domain is live and listed in `externally_connectable.matches`.
+- [ ] `docs/release/public-beta-checklist.md` Required Before Tagging section is fully checked.
+- [ ] GitHub private vulnerability reporting is enabled for the public repository.
 - [x] Store screenshots and promo tile are generated from the current UI/package.
+- [x] Release package includes `SHA256SUMS` and `release-manifest.json`.
 - [ ] Human legal review confirms non-affiliation, Netflix Terms boundary, and privacy disclosures.
 - [ ] First public beta tag is cut from protected `main`.
+- [ ] Release artifact attestation verifies for the uploaded extension ZIP.

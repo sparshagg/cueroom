@@ -78,17 +78,28 @@
 ## Release
 
 - [ ] Run `pnpm verify`.
+- [ ] Run `pnpm release:check -- --tag v0.1.0` and confirm versions, release files, and checklist files are present.
 - [ ] Review the `cueroom-visual-regression` CI artifact for home, room, and extension popup screenshots.
 - [ ] Run `pnpm extension:package`.
+- [ ] Run `cd artifacts/chrome-web-store && shasum -a 256 -c SHA256SUMS`.
 - [ ] Review the latest DAST workflow artifacts and `docs/security/dast.md`.
 - [ ] Review `LEARNINGS.md` for stale sources.
 - [ ] Review `THREAT_MODEL.md` for changed assumptions.
+- [ ] Review `docs/release/public-beta-checklist.md` and leave any incomplete blocker unchecked.
+- [ ] Review `docs/release/legal-privacy-review.md` and confirm real reviewer evidence is recorded before tagging.
 - [ ] Confirm no Netflix sensitive data is logged or stored.
 - [ ] Confirm extension permissions did not broaden.
-- [ ] Confirm `artifacts/chrome-web-store` contains a versioned extension ZIP, manifest, manifest audit, privacy policy, listing draft, and review checklist.
+- [ ] Confirm `artifacts/chrome-web-store` contains a versioned extension ZIP, `SHA256SUMS`, `release-manifest.json`, manifest, manifest audit, privacy policy, listing draft, and review checklist.
 - [ ] Confirm `artifacts/chrome-web-store/images` contains room, popup, small promo, and marquee promo PNG assets.
 - [ ] Generate changelog from Conventional Commits.
-- [ ] Tag release from protected `main`.
+- [ ] Merge the release PR into protected `main` only after required checks and review pass.
+- [ ] From protected `main`, run `git tag -s v0.1.0 -m "CueRoom v0.1.0"` when a signing key is available.
+- [ ] If signing is not available, document the reason and use an annotated tag with a rollback trigger in `DECISIONS.md`.
+- [ ] Run `git verify-tag v0.1.0` for signed tags.
+- [ ] Push the release tag with `git push origin v0.1.0`.
+- [ ] Confirm the release workflow runs `pnpm release:check -- --require-annotated-tag --require-main --require-beta-gates`.
+- [ ] Download the release artifact and run `gh attestation verify cueroom-extension-0.1.0.zip --repo sparshagg/cueroom`.
+- [ ] Confirm the GitHub prerelease includes the extension ZIP, `SHA256SUMS`, and `release-manifest.json`.
 
 ## Rollback
 
@@ -100,6 +111,7 @@
 
 ## Secret Leak
 
+- [ ] Follow `docs/security/incident-response.md`.
 - [ ] Revoke the leaked secret immediately.
 - [ ] Rotate dependent credentials.
 - [ ] Search repository and logs for copies.
@@ -108,6 +120,7 @@
 
 ## Dependency CVE
 
+- [ ] Follow `docs/security/incident-response.md` if released users may be affected.
 - [ ] Confirm affected package and reachable code path.
 - [ ] Upgrade or remove dependency.
 - [ ] For transitive npm CVEs, prefer package-manager overrides only when the parent package has no safe release available and record the rollback trigger in `DECISIONS.md`.
@@ -116,6 +129,8 @@
 
 ## Abuse Report
 
+- [ ] Use `.github/ISSUE_TEMPLATE/abuse_report.md` only for non-sensitive reports.
+- [ ] Move reports containing exploit detail, invite tokens, account tokens, or secrets into private security handling.
 - [ ] Preserve minimal audit data needed for investigation.
 - [ ] Disable offending room or account token.
 - [ ] Do not inspect call media; CueRoom does not record it.
@@ -124,6 +139,7 @@
 ## Chrome Web Store Submission
 
 - [ ] Run `pnpm extension:package`.
+- [ ] Verify `SHA256SUMS` and `release-manifest.json` in `artifacts/chrome-web-store`.
 - [ ] Confirm `images/room-ui-1280x800.png`, `images/extension-popup-640x400.png`, `images/small-promo-440x280.png`, and `images/marquee-promo-1400x560.png` are present in the package evidence.
 - [ ] Verify minimum permissions.
 - [ ] Review `docs/security/chrome-web-store-review.md` and the `cueroom-chrome-web-store-review` CI artifact.

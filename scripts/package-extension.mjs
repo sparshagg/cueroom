@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
@@ -32,6 +33,13 @@ const zipName = `cueroom-extension-${version}.zip`;
 const zipPath = path.join(artifactDir, zipName);
 
 run("zip", ["-qr", zipPath, "."], { cwd: extensionDist });
+const zipSha256 = createHash("sha256")
+  .update(await readFile(zipPath))
+  .digest("hex");
+const commitSha = execFileSync("git", ["rev-parse", "HEAD"], {
+  cwd: repoRoot,
+  encoding: "utf8"
+}).trim();
 
 const auditOutput = execFileSync("pnpm", ["security:extension"], {
   cwd: repoRoot,
@@ -48,7 +56,34 @@ await cp(
   path.join(repoRoot, "docs/release/chrome-web-store-listing.md"),
   path.join(artifactDir, "chrome-web-store-listing.md")
 );
+await cp(
+  path.join(repoRoot, "docs/release/public-beta-checklist.md"),
+  path.join(artifactDir, "public-beta-checklist.md")
+);
 await writeFile(path.join(artifactDir, "manifest-audit.txt"), auditOutput);
+await writeFile(path.join(artifactDir, "SHA256SUMS"), `${zipSha256}  ${zipName}\n`);
+await writeFile(
+  path.join(artifactDir, "release-manifest.json"),
+  `${JSON.stringify(
+    {
+      commit: commitSha,
+      generatedAt: new Date().toISOString(),
+      manifestVersion: version,
+      package: zipName,
+      packageSha256: zipSha256,
+      reviewEvidence: [
+        "manifest.json",
+        "manifest-audit.txt",
+        "PRIVACY.md",
+        "chrome-web-store-listing.md",
+        "chrome-web-store-review.md",
+        "public-beta-checklist.md"
+      ]
+    },
+    null,
+    2
+  )}\n`
+);
 await writeFile(
   path.join(artifactDir, "README.md"),
   [
@@ -56,7 +91,9 @@ await writeFile(
     "",
     `- ZIP: \`${zipName}\``,
     `- Manifest version: \`${version}\``,
+    `- SHA-256: \`${zipSha256}\``,
     "- Upload the ZIP itself; the manifest is at the ZIP root.",
+    "- Verify `SHA256SUMS` before submission.",
     "- Store screenshots and promo tiles are in `images/`.",
     "- Use the included privacy policy, listing draft, and review checklist for Developer Dashboard fields."
   ].join("\n") + "\n"
