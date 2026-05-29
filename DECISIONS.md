@@ -360,3 +360,12 @@
 - [x] Reason: The manifest is the security-sensitive source for website-to-extension reachability, so documentation and deployment examples should align with it before beta packaging.
 - [x] Security/privacy impact: Reduces risk of publishing a store listing or production config that points users to an origin not authorized for extension pairing.
 - [x] Rollback trigger: A typed deployment manifest becomes the single source for public domains and generates extension, docs, and production env examples.
+
+## ADR-041: Privacy Implementation Evidence Guard
+
+- [x] Problem: The legal/privacy checklist named implementation claims, but reviewers had to manually infer the source files, tests, and commands behind each claim.
+- [x] Options: leave evidence in reviewer notes, add a prose-only evidence appendix, or add a checked evidence index with source/test/command anchors.
+- [x] Decision: Add `docs/release/privacy-implementation-evidence.md` and `pnpm privacy:evidence` to verify every core privacy claim has referenced source files, checks, commands, and source-code anchors.
+- [x] Reason: Release privacy review should be repeatable and inspectable without treating unchecked human sign-off as complete.
+- [x] Security/privacy impact: Reduces risk that privacy disclosures drift from implementation for transient chat, abuse reports, hashed tokens, magic links, LiveKit tokens, and Netflix sensitive-data exclusions.
+- [x] Rollback trigger: A stronger generated privacy-control matrix replaces the hand-authored evidence index and validates the same or broader claims.

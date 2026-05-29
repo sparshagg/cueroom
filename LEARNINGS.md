@@ -387,3 +387,7 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-30
   - Learning: Chrome extension messaging crosses execution contexts, so website-to-extension communication should be restricted to deliberate, allowlisted extension origins and validated message paths.
   - Impact: `pnpm docs:freshness` now verifies the public `externally_connectable.matches` origin stays aligned with the Chrome Web Store listing, production domain example, and public-beta release checklist.
+- [ ] Source: https://developer.chrome.com/docs/webstore/program-policies/user-data-faq
+  - Stale-by: 2026-08-30
+  - Learning: Chrome treats authentication data, website content/resources, browsing activity, personal communications, and user-generated content as personal or sensitive user data that should be accurately disclosed and securely handled.
+  - Impact: CueRoom now keeps an automated privacy implementation evidence index linking core privacy claims to source files, tests/checks, and verification commands.

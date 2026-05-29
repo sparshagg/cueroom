@@ -40,6 +40,7 @@ These fields are checked by `pnpm release:check -- --require-beta-gates`. Leave 
 - [ ] Deployed `/privacy` page matches `PRIVACY.md` and Chrome Web Store privacy answers.
 - [ ] Chrome Web Store privacy answers in `docs/release/chrome-web-store-privacy-answers.md` match `PRIVACY.md`.
 - [ ] Extension data handling matches `docs/security/chrome-web-store-review.md`.
+- [ ] `docs/release/privacy-implementation-evidence.md` source/test evidence has been reviewed.
 - [ ] Room chat remains transient by default.
 - [ ] Abuse reports persist only bounded report metadata and optional reporter-provided details.
 - [ ] Account/session tokens are hashed server-side where persisted.
