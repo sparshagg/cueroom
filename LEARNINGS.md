@@ -96,3 +96,11 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: Frontends must receive LiveKit JWTs from a backend token flow because token generation requires API keys.
   - Impact: The web app fetches scoped call tokens from `/v1/livekit/token` with an existing room session instead of minting or storing LiveKit credentials client-side.
+- [ ] Source: https://www.npmjs.com/package/@testing-library/react
+  - Stale-by: 2026-08-29
+  - Learning: The current React Testing Library registry release checked for this slice is 16.3.2.
+  - Impact: `apps/web` uses React Testing Library for browser-like hook integration coverage around LiveKit controls.
+- [ ] Source: https://www.npmjs.com/package/jsdom
+  - Stale-by: 2026-08-29
+  - Learning: The current jsdom registry release checked for this slice is 29.1.1.
+  - Impact: Web tests run in a jsdom environment so React controls can exercise browser storage and media-device boundaries.

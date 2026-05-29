@@ -32,7 +32,7 @@
 - [x] Add LiveKit token minting surface.
 - [x] Add video-call UI controls and device-state UX.
 - [x] Connect web client to LiveKit rooms.
-- [ ] Add mute/camera/device switching integration tests.
+- [x] Add mute/camera/device switching integration tests.
 
 ## M4: Extension And Sync
 
