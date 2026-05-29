@@ -1,11 +1,39 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "workspaces": {
+    ".": {
+      "entry": ["scripts/*.mjs", "scripts/*.test.mjs"],
+      "project": ["scripts/*.mjs", "scripts/*.test.mjs"]
+    },
     "apps/api": {
-      "entry": ["test/**/*.ts"]
+      "entry": ["test/**/*.ts"],
+      "project": ["src/**/*.ts", "test/**/*.ts"]
     },
     "apps/extension": {
-      "entry": ["src/service-worker.ts", "src/content-script.ts", "src/popup.ts", "scripts/*.mjs"]
+      "entry": [
+        "src/service-worker.ts",
+        "src/content-script.ts",
+        "src/popup.ts",
+        "scripts/*.mjs",
+        "test/**/*.ts"
+      ],
+      "project": ["src/**/*.ts", "scripts/*.mjs", "test/**/*.ts"]
+    },
+    "apps/web": {
+      "ignoreDependencies": ["tailwindcss"],
+      "entry": ["src/app/**/*.tsx", "src/components/**/*.tsx", "src/**/*.test.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/security": {
+      "entry": ["src/**/*.test.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/shared": {
+      "entry": ["src/**/*.test.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/ui": {
+      "project": ["src/**/*.{ts,tsx}"]
     }
   }
 }

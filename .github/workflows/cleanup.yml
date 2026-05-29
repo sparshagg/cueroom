@@ -4,14 +4,18 @@ on:
   pull_request:
   schedule:
     - cron: "12 6 * * 2"
+  workflow_dispatch:
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
-  cleanup:
+  cleanup-check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      cleanup_status: ${{ steps.cleanup.outputs.status }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -22,12 +26,27 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Run cleanup check
+      - name: Run read-only cleanup check
         id: cleanup
-        run: pnpm cleanup:check
-        continue-on-error: true
+        run: |
+          set +e
+          pnpm cleanup:check
+          status="$?"
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Fail pull request on cleanup findings
+        if: github.event_name == 'pull_request' && steps.cleanup.outputs.status != '0'
+        run: exit 1
+
+  scheduled-cleanup-issue:
+    needs: cleanup-check
+    if: github.event_name == 'schedule' && needs.cleanup-check.outputs.cleanup_status != '0'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
       - name: Open scheduled cleanup issue
-        if: github.event_name == 'schedule' && steps.cleanup.outcome == 'failure'
         uses: actions/github-script@v7
         with:
           script: |
@@ -45,9 +64,55 @@ jobs:
                 repo: context.repo.repo,
                 title,
                 labels: ['cleanup'],
-                body: `${marker}\nScheduled cleanup found candidates. Review the failed workflow logs, open a PR with tests for source deletions, and do not silently delete protected-branch source.`
+                body: `${marker}\nScheduled cleanup found unused source, export, dependency, temporary-file, or generated-artifact candidates. Review the failed workflow logs and open a PR with tests for source deletions. Do not silently delete protected-branch source.`
               });
             }
-      - name: Fail on cleanup findings
-        if: steps.cleanup.outcome == 'failure'
-        run: exit 1
+
+  scheduled-generated-prune:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Prune tracked generated artifacts
+        run: pnpm cleanup:prune-tracked
+      - name: Verify cleanup diff is generated-only
+        run: pnpm cleanup:diff-check
+      - name: Open generated cleanup pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet; then
+            echo "No tracked generated artifacts to prune."
+            exit 0
+          fi
+
+          branch="automation/cleanup-generated-artifacts"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git add -u
+          git commit -m "chore: prune generated artifacts"
+          git push --force-with-lease origin "$branch"
+
+          existing_pr="$(gh pr list --head "$branch" --json number --jq '.[0].number // empty')"
+          if [ -n "$existing_pr" ]; then
+            echo "Updated existing cleanup PR #$existing_pr."
+            exit 0
+          fi
+
+          gh pr create \
+            --head "$branch" \
+            --base main \
+            --title "chore: prune generated artifacts" \
+            --body "Automated cleanup PR for tracked generated artifacts only. Source cleanup candidates must be reviewed separately with tests."

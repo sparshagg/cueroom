@@ -36,9 +36,14 @@
     "release:notes": "node scripts/generate-release-notes.mjs",
     "docker:prod-check": "node scripts/check-production-docker.mjs",
     "cleanup:check": "node scripts/cleanup-check.mjs",
+    "cleanup:prune": "node scripts/cleanup-check.mjs --prune-generated",
+    "cleanup:prune-tracked": "node scripts/cleanup-check.mjs --prune-generated --prune-tracked-generated",
+    "cleanup:diff-check": "node scripts/check-cleanup-diff.mjs",
+    "cleanup:test": "node --test scripts/cleanup-check.test.mjs",
+    "cleanup:verify": "pnpm cleanup:prune && pnpm cleanup:check",
     "privacy:evidence": "node scripts/check-privacy-evidence.mjs",
     "docs:freshness": "node scripts/check-docs-freshness.mjs",
-    "verify": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm visual:test && pnpm security:extension && pnpm security:api-rate-limits && pnpm cleanup:check && pnpm docker:prod-check && pnpm docs:freshness && pnpm privacy:evidence"
+    "verify": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm visual:test && pnpm security:extension && pnpm security:api-rate-limits && pnpm cleanup:test && pnpm cleanup:verify && pnpm docker:prod-check && pnpm docs:freshness && pnpm privacy:evidence"
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",

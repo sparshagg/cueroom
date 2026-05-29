@@ -58,6 +58,15 @@
 - [ ] Confirm sync replay is rejected across two API store instances sharing Redis.
 - [ ] Confirm Postgres-only sync replay is also rejected across two API store instances when Redis is unavailable.
 
+## Cleanup Verification
+
+- [ ] Run `pnpm cleanup:check` for read-only unused file, export, dependency, temporary-file, and generated-artifact detection.
+- [ ] Run `pnpm cleanup:prune` to remove untracked generated artifacts such as `.next`, `.turbo`, `dist`, `build`, `coverage`, `artifacts`, `playwright-report`, `test-results`, `.DS_Store`, and `*.tsbuildinfo`.
+- [ ] Run `pnpm cleanup:test` after cleanup script or workflow changes.
+- [ ] Run `pnpm cleanup:diff-check` before committing any cleanup branch and confirm the diff is generated-only when using the automated generated-artifact cleanup path.
+- [ ] For source cleanup candidates, open a reviewed PR with tests; do not silently delete protected-branch source.
+- [ ] Confirm the scheduled Cleanup Review workflow keeps pull-request cleanup checks read-only and grants `contents: write` plus `pull-requests: write` only to the generated-artifact prune job.
+
 ## Auth Verification
 
 - [ ] Set `AUTH_REQUIRED=true`, `AUTH_RP_ID=localhost`, and `AUTH_ORIGIN=http://localhost:3000` for local auth-gated room creation.

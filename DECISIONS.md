@@ -405,3 +405,12 @@
 - [x] Reason: Host commands and drift corrections should use the same wrong-title safety boundary; rejecting untargeted legacy commands is safer than preserving an ambiguous mutation path.
 - [x] Security/privacy impact: Reduces risk that a valid room command pauses, seeks, or changes rate on a different Netflix title; the extension records a skip instead of advancing command sequence when the active tab refuses the command.
 - [x] Rollback trigger: A future backwards-compatible command negotiation proves legacy clients can be upgraded without ever applying untargeted commands.
+
+## ADR-046: Read-Only Cleanup Gate
+
+- [x] Problem: The cleanup gate removed generated artifacts while it was also used as a CI detection check, making check mode mutating and harder to reason about.
+- [x] Options: keep mutating check mode, split read-only detection from explicit pruning, or rely on developer conventions only.
+- [x] Decision: Keep `pnpm cleanup:check` read-only, add explicit pruning commands for generated artifacts, and make the scheduled generated-artifact branch verify its diff before opening a cleanup PR.
+- [x] Reason: CI gates should be deterministic detectors; generated cleanup can be automated when the diff is constrained to generated paths, while source cleanup remains reviewed with tests.
+- [x] Security/privacy impact: Reduces risk that a privileged scheduled workflow deletes source files or broadens write permissions while still preventing generated artifacts and dead code from drifting.
+- [x] Rollback trigger: A dedicated cleanup bot with equivalent generated-only diff enforcement and source-test review replaces the repo-owned workflow.

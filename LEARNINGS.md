@@ -415,3 +415,11 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-30
   - Learning: Content scripts run with isolated extension execution but share access to the host page DOM, so any page mutation must be tightly scoped to the active matched page and current local state.
   - Impact: CueRoom's Netflix content script must validate the current watch ID before applying host play/pause/seek commands, not only before reporting playback state.
+- [ ] Source: https://knip.dev/reference/configuration
+  - Stale-by: 2026-08-30
+  - Learning: Knip workspaces configure `entry` and `project` patterns per workspace, with the root workspace represented as `"."`.
+  - Impact: CueRoom's dead-code check now covers root scripts, visual tests, web, API, extension, shared, UI, and security workspaces instead of only a subset.
+- [ ] Source: https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions
+  - Stale-by: 2026-08-30
+  - Learning: GitHub Actions `permissions` can be set per job, and specifying permissions narrows unspecified scopes to `none`; scheduled workflows run from the latest default-branch commit.
+  - Impact: CueRoom's cleanup workflow keeps pull-request detection read-only and grants write scopes only to the scheduled generated-artifact cleanup PR job.

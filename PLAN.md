@@ -49,6 +49,7 @@
 
 - [x] Add threat model.
 - [x] Add cleanup check and docs freshness check.
+- [x] Split cleanup pruning from read-only cleanup detection and add generated-only cleanup PR guard.
 - [x] Block stale scaffold language in source-of-truth docs.
 - [x] Add CodeQL and dependency workflows.
 - [x] Add PostgreSQL/Redis integration tests.
