@@ -83,6 +83,11 @@ jobs:
           DAST_WEB_ORIGIN: http://127.0.0.1:3000
           DAST_ZAP_ORIGIN: http://127.0.0.1:8090
         run: pnpm dast:export-zap-evidence
+      - name: Enforce authenticated ZAP evidence gate
+        env:
+          DAST_FAIL_ON_RISK: Medium
+          DAST_OUTPUT_DIR: artifacts/dast
+        run: pnpm dast:check-zap-evidence
       - name: Stop authenticated ZAP daemon
         if: always()
         run: docker rm -f cueroom-zap || true

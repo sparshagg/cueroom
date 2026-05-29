@@ -225,3 +225,12 @@
 - [x] Reason: A migration journal is the smallest production-relevant fix: it preserves parallel tests, keeps startup idempotent, and avoids replaying table-altering DDL on every pool initialization.
 - [x] Security/privacy impact: Reduces deployment/test reliability risk without changing auth tokens, room data, extension permissions, or CueRoom's Netflix data boundary.
 - [x] Rollback trigger: CueRoom adopts an external migration tool with an equivalent applied-migration ledger and locking behavior.
+
+## ADR-026: Authenticated DAST Blocking Gate
+
+- [x] Problem: DAST artifacts were reviewed manually, but medium/high ZAP alerts were not yet a blocking CI condition.
+- [x] Options: keep manual artifact review only, rely on the generic ZAP baseline action, or add a CueRoom-specific evidence gate over sanitized authenticated-flow artifacts.
+- [x] Decision: Add `pnpm dast:check-zap-evidence` to fail CI when authenticated ZAP coverage is incomplete, raw proxy traffic is uploaded, or web/API alerts reach `Medium` or higher.
+- [x] Reason: CueRoom's authenticated browser flow is the meaningful beta security surface, and a repo-owned gate can enforce coverage and redaction rules that the generic baseline action does not know.
+- [x] Security/privacy impact: Prevents regressions in authenticated create/join/report flows without uploading raw proxy traffic or exposing room/session/report identifiers.
+- [x] Rollback trigger: A managed DAST service replaces this workflow and enforces equivalent coverage, redaction, and medium/high failure behavior.
