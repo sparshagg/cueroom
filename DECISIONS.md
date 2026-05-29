@@ -297,3 +297,12 @@
 - [x] Reason: A narrow repo-owned guard prevents obvious stale beta-readiness language without adding another dependency.
 - [x] Security/privacy impact: Keeps contributor instructions aligned with the implemented auth, extension, sync, and release boundaries instead of implying unfinished placeholders.
 - [x] Rollback trigger: A maintained documentation policy tool replaces the custom stale-language check.
+
+## ADR-034: Hosted Privacy Policy Route
+
+- [x] Problem: Public beta and Chrome Web Store submission require a live privacy policy URL, but the web app did not yet expose the policy at a first-party route.
+- [x] Options: rely on repository `PRIVACY.md`, host a separate static document, or add a first-party `/privacy` route linked from the home page.
+- [x] Decision: Add `/privacy` to the web app, link it from the home page, and cover the route in Playwright visual/security-boundary checks plus docs freshness drift checks.
+- [x] Reason: A first-party route gives maintainers the eventual `https://cueroom.app/privacy` URL without adding another hosting surface or external document workflow.
+- [x] Security/privacy impact: Makes the Limited Use disclosure one click from the home page and locks the no-sensitive-Netflix-data boundary into UI and docs freshness coverage.
+- [x] Rollback trigger: A managed legal/privacy portal becomes the authoritative hosted policy and is linked from the home page and Chrome Web Store dashboard.

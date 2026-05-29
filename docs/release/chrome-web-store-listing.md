@@ -8,6 +8,7 @@
 - [x] Category: Communication or Productivity; final category depends on Chrome Web Store dashboard availability.
 - [x] Language: English.
 - [x] Website: `https://cueroom.app` once the public beta site is live.
+- [x] Privacy policy URL: `https://cueroom.app/privacy` once the public beta site is live.
 - [x] Support URL: GitHub issues for non-sensitive support after public launch.
 
 ## Privacy Practices Draft
@@ -46,6 +47,7 @@
 ## Release Blockers
 
 - [ ] Hosted privacy policy URL is live.
+- [x] Hosted privacy policy route exists at `/privacy` and is linked one click from the home page.
 - [ ] Public beta domain is live and listed in `externally_connectable.matches`.
 - [ ] `docs/release/public-beta-checklist.md` Required Before Tagging section is fully checked.
 - [x] GitHub private vulnerability reporting is enabled for the public repository.

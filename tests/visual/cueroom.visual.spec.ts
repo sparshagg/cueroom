@@ -61,9 +61,32 @@ test.describe("CueRoom visual contracts", () => {
       })
     ).toBeVisible();
     await expect(page.getByRole("link", { name: /Create room/i }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "Privacy" })).toBeVisible();
     await expect(page.getByText(/never sees Netflix video/i)).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await attachVisualEvidence(page, "home-page");
+  });
+
+  test("privacy page keeps the Chrome Web Store disclosure one click from home", async ({
+    page
+  }) => {
+    const response = await page.goto("/privacy");
+
+    const csp = response?.headers()["content-security-policy"];
+    expect(csp).toContain("default-src 'self'");
+    expect(csp).toContain("script-src 'self' 'nonce-");
+    expect(csp).not.toContain("unsafe-inline");
+    await expect(page.getByRole("heading", { name: "Privacy Policy" })).toBeVisible();
+    await expect(page.getByText("No Netflix credentials.").first()).toBeVisible();
+    await expect(page.getByText("No Netflix cookies.").first()).toBeVisible();
+    await expect(page.getByText("No Netflix DRM keys.").first()).toBeVisible();
+    await expect(
+      page.getByText("No Netflix screenshots, frames, video, or audio.").first()
+    ).toBeVisible();
+    await expect(page.getByText(/Chrome Web Store Limited Use/i)).toBeVisible();
+    await expect(page.getByText(/not affiliated/i)).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await attachVisualEvidence(page, "privacy-page");
   });
 
   test("room page keeps call controls, chat, and sync health visible", async ({ page }) => {

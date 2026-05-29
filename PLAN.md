@@ -70,6 +70,8 @@
 
 - [x] Create public privacy policy draft and Chrome Web Store listing/privacy form checklist.
 - [x] Create Chrome Web Store privacy answers draft and package evidence gate.
+- [x] Add first-party `/privacy` route with visual coverage for hosted privacy policy readiness.
+- [x] Add docs freshness guard for `/privacy` sensitive-data exclusions and home-page link.
 - [x] Package Chrome Web Store artifact with a repeatable release script.
 - [x] Generate Chrome Web Store screenshot and promo assets.
 - [x] Add deterministic release notes generation from Conventional Commits.

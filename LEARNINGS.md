@@ -320,3 +320,14 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-30
   - Learning: Chrome Web Store requires publishers to fill out Privacy practices dashboard fields with data collection disclosures and Limited Use certification before publishing or updating an item.
   - Impact: CueRoom adds a dedicated privacy answers draft that is copied into review artifacts and checked by `pnpm store:check-package`.
+
+## 2026-05-30
+
+- [ ] Source: https://developer.chrome.com/docs/webstore/program-policies/user-data-faq
+  - Stale-by: 2026-08-30
+  - Learning: Extensions that request personal or sensitive user data must show a Limited Use disclosure on the project home page or on a page one click away, such as the privacy policy.
+  - Impact: CueRoom links the `/privacy` route from the home page and includes the Chrome Web Store Limited Use disclosure there.
+- [ ] Source: https://developer.chrome.com/docs/webstore/cws-dashboard-privacy
+  - Stale-by: 2026-08-30
+  - Learning: Chrome Web Store privacy disclosures should stay consistent with the privacy policy URL supplied in the Developer Dashboard.
+  - Impact: CueRoom prepares `https://cueroom.app/privacy` as the dashboard privacy policy URL and keeps the route aligned with `PRIVACY.md` and store privacy answers.

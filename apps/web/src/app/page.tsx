@@ -26,6 +26,9 @@ export default async function HomePage() {
           <BrandMark />
           <div className="flex items-center gap-2">
             <Button asChild variant="ghost">
+              <Link href="/privacy">Privacy</Link>
+            </Button>
+            <Button asChild variant="ghost">
               <Link href="https://github.com/sparshagg/cueroom" target="_blank">
                 <Github className="size-4" />
                 Open source

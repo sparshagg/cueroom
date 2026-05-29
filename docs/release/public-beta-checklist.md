@@ -7,6 +7,7 @@ This checklist is the source of truth for the first public beta release gate. It
 - [ ] PR branch is approved and merged into protected `main`.
 - [ ] Human legal review confirms non-affiliation language, Netflix Terms boundary, and no content redistribution claim.
 - [ ] Human privacy review confirms `PRIVACY.md`, Chrome Web Store privacy answers, and in-app data boundary match current behavior.
+- [x] In-app `/privacy` route is linked from the home page and includes the Chrome Web Store Limited Use disclosure.
 - [ ] Hosted privacy policy URL is live and matches `PRIVACY.md`.
 - [ ] Public beta web domain is live and matches `apps/extension/src/manifest.json` `externally_connectable.matches`.
 - [x] Maintainer has enabled GitHub private vulnerability reporting for the public repository.

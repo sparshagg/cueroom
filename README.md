@@ -77,4 +77,5 @@ CueRoom is not affiliated with, endorsed by, sponsored by, or approved by Netfli
 
 ## Privacy
 
-See `PRIVACY.md` for the beta privacy policy draft and Chrome Web Store Limited Use disclosure.
+See `PRIVACY.md` for the beta privacy policy and Chrome Web Store Limited Use disclosure.
+The web app exposes the same policy at `/privacy` and links it from the home page.

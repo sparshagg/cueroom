@@ -7,6 +7,7 @@ This file records human review evidence before the first public beta. Do not che
 - [ ] Legal reviewer name, role, and date recorded.
 - [ ] Privacy reviewer name, role, and date recorded.
 - [ ] Public beta domain and hosted privacy policy URL recorded.
+- [x] In-app `/privacy` route is ready for the hosted privacy policy URL once the public beta domain is live.
 - [ ] Chrome Web Store developer account owner recorded.
 - [ ] Final extension ID recorded after first approved upload.
 
@@ -22,6 +23,7 @@ This file records human review evidence before the first public beta. Do not che
 ## Privacy Checklist
 
 - [ ] `PRIVACY.md` matches the current implementation.
+- [ ] Deployed `/privacy` page matches `PRIVACY.md` and Chrome Web Store privacy answers.
 - [ ] Chrome Web Store privacy answers in `docs/release/chrome-web-store-privacy-answers.md` match `PRIVACY.md`.
 - [ ] Extension data handling matches `docs/security/chrome-web-store-review.md`.
 - [ ] Room chat remains transient by default.
