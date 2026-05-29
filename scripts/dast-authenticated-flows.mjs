@@ -85,7 +85,8 @@ async function main() {
 
     const hostPage = await context.newPage();
     captureRequests(hostPage);
-    await hostPage.goto(webOrigin, { waitUntil: "domcontentloaded" });
+    await hostPage.goto(webOrigin, { waitUntil: "load" });
+    await hostPage.waitForLoadState("networkidle");
     await hostPage.getByRole("textbox", { name: "Host name" }).fill("DAST Host");
     await hostPage.getByRole("textbox", { name: "Room title" }).fill("DAST Report Room");
 
@@ -98,8 +99,9 @@ async function main() {
     const guestPage = await context.newPage();
     captureRequests(guestPage);
     await guestPage.goto(`${webOrigin}/join/${encodeURIComponent(hostSession.room.inviteCode)}`, {
-      waitUntil: "domcontentloaded"
+      waitUntil: "load"
     });
+    await guestPage.waitForLoadState("networkidle");
     await guestPage.getByRole("textbox", { name: "Display name" }).fill("DAST Guest");
 
     const joinResponse = waitForApiPost(guestPage, "/v1/rooms/join");
@@ -154,12 +156,15 @@ function captureRequests(page) {
 }
 
 function waitForApiPost(page, pathname) {
-  return page.waitForResponse((response) => {
-    const url = safeUrl(response.url());
-    return Boolean(
-      url && url.pathname === pathname && response.request().method().toUpperCase() === "POST"
-    );
-  });
+  return page.waitForResponse(
+    (response) => {
+      const url = safeUrl(response.url());
+      return Boolean(
+        url && url.pathname === pathname && response.request().method().toUpperCase() === "POST"
+      );
+    },
+    { timeout: 45_000 }
+  );
 }
 
 async function assertOk(response, label) {
