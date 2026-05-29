@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { TokenVerifier } from "livekit-server-sdk";
 import { buildServer } from "../src/server";
 
 describe("CueRoom API", () => {
@@ -195,6 +196,111 @@ describe("CueRoom API", () => {
     await server.close();
   });
 
+  it("mints narrow LiveKit tokens only for the active room participant", async () => {
+    const previousUrl = process.env.LIVEKIT_URL;
+    const previousKey = process.env.LIVEKIT_API_KEY;
+    const previousSecret = process.env.LIVEKIT_API_SECRET;
+    process.env.LIVEKIT_URL = "ws://localhost:7880";
+    process.env.LIVEKIT_API_KEY = "devkey";
+    process.env.LIVEKIT_API_SECRET = "secret";
+
+    const server = await buildServer();
+    try {
+      const created = (
+        await server.inject({
+          method: "POST",
+          url: "/v1/rooms",
+          payload: { hostName: "Host", title: "Room" }
+        })
+      ).json();
+
+      const wrongParticipant = await server.inject({
+        method: "POST",
+        url: "/v1/livekit/token",
+        payload: {
+          roomId: created.room.id,
+          participantId: "p_attacker",
+          sessionToken: created.sessionToken
+        }
+      });
+      expect(wrongParticipant.statusCode).toBe(403);
+
+      const accountToken = await server.inject({
+        method: "POST",
+        url: "/v1/livekit/token",
+        payload: {
+          roomId: created.room.id,
+          participantId: created.participant.id,
+          sessionToken: "cas_123456789012345678901234"
+        }
+      });
+      expect(accountToken.statusCode).toBe(400);
+
+      const tokenResponse = await server.inject({
+        method: "POST",
+        url: "/v1/livekit/token",
+        payload: {
+          roomId: created.room.id,
+          participantId: created.participant.id,
+          sessionToken: created.sessionToken
+        }
+      });
+      expect(tokenResponse.statusCode).toBe(200);
+      expect(tokenResponse.json().url).toBe("ws://localhost:7880");
+
+      const claims = await new TokenVerifier("devkey", "secret").verify(tokenResponse.json().token);
+      expect(claims.sub).toBe(created.participant.id);
+      expect(claims.video).toMatchObject({
+        room: created.room.id,
+        roomJoin: true,
+        canPublish: true,
+        canSubscribe: true,
+        canPublishData: false,
+        canPublishSources: ["camera", "microphone"]
+      });
+      expect(claims.video?.roomAdmin).toBeUndefined();
+      expect(claims.video?.roomCreate).toBeUndefined();
+      expect(claims.video?.roomList).toBeUndefined();
+      expect(claims.video?.roomRecord).toBeUndefined();
+
+      const guest = (
+        await server.inject({
+          method: "POST",
+          url: "/v1/rooms/join",
+          payload: {
+            inviteCode: created.room.inviteCode,
+            displayName: "Guest"
+          }
+        })
+      ).json();
+      const kicked = await server.inject({
+        method: "POST",
+        url: `/v1/rooms/${created.room.id}/kick`,
+        payload: {
+          sessionToken: created.sessionToken,
+          participantId: guest.participant.id
+        }
+      });
+      expect(kicked.statusCode).toBe(200);
+
+      const kickedToken = await server.inject({
+        method: "POST",
+        url: "/v1/livekit/token",
+        payload: {
+          roomId: created.room.id,
+          participantId: guest.participant.id,
+          sessionToken: guest.sessionToken
+        }
+      });
+      expect(kickedToken.statusCode).toBe(403);
+    } finally {
+      await server.close();
+      restoreEnv("LIVEKIT_URL", previousUrl);
+      restoreEnv("LIVEKIT_API_KEY", previousKey);
+      restoreEnv("LIVEKIT_API_SECRET", previousSecret);
+    }
+  });
+
   it("blocks guest sync commands", async () => {
     const server = await buildServer();
     const created = (
@@ -314,3 +420,11 @@ describe("CueRoom API", () => {
     await server.close();
   });
 });
+
+function restoreEnv(name: string, value: string | undefined) {
+  if (value === undefined) {
+    delete process.env[name];
+  } else {
+    process.env[name] = value;
+  }
+}

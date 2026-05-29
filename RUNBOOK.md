@@ -40,6 +40,15 @@
 - [ ] Confirm magic-link verification uses `POST /v1/auth/magic-link/verify` with the token in the JSON body, not in a URL path or query string.
 - [ ] Confirm production deployments set explicit HTTPS `AUTH_ORIGIN` and domain-only `AUTH_RP_ID`.
 
+## LiveKit Verification
+
+- [ ] Start LiveKit with `docker compose -f infra/docker/compose.dev.yml up -d livekit api web`.
+- [ ] Create a room from `http://localhost:3000` and confirm the returned room session is stored in `sessionStorage`, not in the URL.
+- [ ] Confirm the web client calls `/v1/livekit/token` only after a valid room session exists.
+- [ ] Confirm LiveKit JWTs are not stored in browser storage or printed in logs.
+- [ ] Confirm decoded LiveKit grants allow `roomJoin`, camera publish, microphone publish, and subscribe only; data publish, admin, create, list, and record grants must remain disabled.
+- [ ] Confirm microphone and camera tracks publish only after explicit user toggle actions.
+
 ## Extension Development
 
 - [ ] Run `pnpm --filter @cueroom/extension build`.

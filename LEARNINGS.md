@@ -80,3 +80,19 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: Session identifiers need high entropy, server-side validation, expiration, and protection from logging or disclosure.
   - Impact: Account session tokens use a distinct `cas_` prefix, are stored as hashes, expire server-side, and are redacted from logs.
+- [ ] Source: https://docs.livekit.io/intro/basics/connect/
+  - Stale-by: 2026-08-29
+  - Learning: LiveKit browser clients connect through a `Room` object with a server URL and a backend-generated access token; room state exposes local and remote participants.
+  - Impact: `apps/web` now keeps LiveKit JWTs in memory only, connects with `Room.connect`, and renders participants from SDK room state.
+- [ ] Source: https://docs.livekit.io/transport/media/publish/
+  - Stale-by: 2026-08-29
+  - Learning: The web SDK publishes camera and microphone only after explicit calls to `setCameraEnabled` and `setMicrophoneEnabled`, which trigger browser permission prompts.
+  - Impact: CueRoom does not auto-publish camera or microphone on room page load; users toggle media after the room-scoped call connection is established.
+- [ ] Source: https://docs.livekit.io/reference/client-sdk-js/classes/Room.html
+  - Stale-by: 2026-08-29
+  - Learning: LiveKit JS SDK 2.19.0 exposes room lifecycle events, participant maps, device switching, and disconnect handling on the `Room` class.
+  - Impact: The call hook listens for room/track/device events, refreshes participant tiles, and detaches media on unmount.
+- [ ] Source: https://docs.livekit.io/frontends/build/authentication/
+  - Stale-by: 2026-08-29
+  - Learning: Frontends must receive LiveKit JWTs from a backend token flow because token generation requires API keys.
+  - Impact: The web app fetches scoped call tokens from `/v1/livekit/token` with an existing room session instead of minting or storing LiveKit credentials client-side.

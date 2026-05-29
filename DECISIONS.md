@@ -71,3 +71,12 @@
 - [x] Reason: Passkeys avoid password storage while magic links provide a practical bootstrap path for early open-source testing.
 - [x] Security/privacy impact: Account tokens use a distinct `cas_` prefix, room tokens keep the `crs_` prefix, magic links are body-verified and single-use, and authenticated room creation links rooms to account IDs when `AUTH_REQUIRED=true`.
 - [x] Rollback trigger: Email delivery/recovery requirements or browser compatibility force a managed auth provider.
+
+## ADR-009: LiveKit Client Integration
+
+- [x] Problem: Connect the custom CueRoom room UI to LiveKit without letting media tokens bypass CueRoom authorization.
+- [x] Options: LiveKit prefab UI, LiveKit React components with custom skin, lower-level `livekit-client` room lifecycle.
+- [x] Decision: Use `livekit-client` directly for M3 and keep CueRoom's custom Tailwind room UI.
+- [x] Reason: Direct room lifecycle control is the smallest durable change and avoids importing prefab UI assumptions while the room/session bridge is still maturing.
+- [x] Security/privacy impact: LiveKit JWTs stay in memory, room sessions stay in `sessionStorage`, token minting is rate-limited, data publishing is disabled, and publish sources are limited to camera and microphone.
+- [x] Rollback trigger: Connect/disconnect races or media rendering complexity require adopting official React room hooks/components.

@@ -11,7 +11,7 @@ RUN pnpm install --frozen-lockfile
 
 FROM deps AS build
 COPY . .
-RUN pnpm --filter @cueroom/ui build && pnpm --filter @cueroom/web build
+RUN pnpm --filter @cueroom/shared build && pnpm --filter @cueroom/ui build && pnpm --filter @cueroom/web build
 
 FROM base AS runner
 ENV NODE_ENV=production

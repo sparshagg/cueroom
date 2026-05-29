@@ -1,4 +1,4 @@
-import { AccessToken, RoomServiceClient } from "livekit-server-sdk";
+import { AccessToken, RoomServiceClient, TrackSource } from "livekit-server-sdk";
 import type { Participant, Room } from "@cueroom/shared";
 
 export async function createLiveKitToken(room: Room, participant: Participant) {
@@ -12,15 +12,16 @@ export async function createLiveKitToken(room: Room, participant: Participant) {
   const token = new AccessToken(apiKey, apiSecret, {
     identity: participant.id,
     name: participant.displayName,
-    ttl: "15m"
+    ttl: "10m"
   });
 
   token.addGrant({
     room: room.id,
     roomJoin: true,
     canPublish: true,
+    canPublishSources: [TrackSource.CAMERA, TrackSource.MICROPHONE],
     canSubscribe: true,
-    canPublishData: true
+    canPublishData: false
   });
 
   return token.toJwt();

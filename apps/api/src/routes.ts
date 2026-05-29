@@ -58,6 +58,15 @@ const authVerifyRateLimit = {
   }
 } as const;
 
+const tokenMintRateLimit = {
+  config: {
+    rateLimit: {
+      max: 30,
+      timeWindow: "1 minute"
+    }
+  }
+} as const;
+
 export function registerRoutes(server: FastifyInstance, store: RoomStore, authStore: AuthStore) {
   server.get("/health", async () => ({
     ok: true,
@@ -264,7 +273,7 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore, authSt
     return result;
   });
 
-  server.post("/v1/livekit/token", async (request, reply) => {
+  server.post("/v1/livekit/token", tokenMintRateLimit, async (request, reply) => {
     const parsed = liveKitTokenRequestSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply

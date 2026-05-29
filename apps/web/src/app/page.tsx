@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Badge, Button, Input, Panel } from "@cueroom/ui";
+import { Badge, Button, Panel } from "@cueroom/ui";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { LobbyPreview } from "@/components/LobbyPreview";
+import { RoomLauncher } from "@/components/RoomLauncher";
 
 export default function HomePage() {
   return (
@@ -21,13 +22,13 @@ export default function HomePage() {
           <BrandMark />
           <div className="flex items-center gap-2">
             <Button asChild variant="ghost">
-              <Link href="https://github.com/" target="_blank">
+              <Link href="https://github.com/sparshagg/cueroom" target="_blank">
                 <Github className="size-4" />
                 Open source
               </Link>
             </Button>
             <Button asChild>
-              <Link href="/room/demo-room">
+              <Link href="#create-room">
                 Create room
                 <ArrowRight className="size-4" />
               </Link>
@@ -50,15 +51,7 @@ export default function HomePage() {
                 session. It never sees Netflix video, credentials, cookies, or DRM data.
               </p>
             </div>
-            <div className="grid max-w-xl gap-3 sm:grid-cols-[1fr_auto]">
-              <Input placeholder="Enter invite code" aria-label="Enter invite code" />
-              <Button asChild>
-                <Link href="/join/demo-invite">
-                  Join room
-                  <ArrowRight className="size-4" />
-                </Link>
-              </Button>
-            </div>
+            <RoomLauncher />
             <div className="grid gap-3 sm:grid-cols-3">
               {(
                 [

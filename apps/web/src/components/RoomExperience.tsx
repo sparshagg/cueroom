@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, Input, Panel } from "@cueroom/ui";
 import {
   Camera,
   CameraOff,
   Copy,
   Lock,
+  LogIn,
   MessageCircle,
   Mic,
   MicOff,
@@ -18,6 +19,10 @@ import {
   Users
 } from "lucide-react";
 import { toast } from "sonner";
+import type { RoomSession } from "@cueroom/shared";
+import { LiveCallPanel } from "@/components/LiveCallPanel";
+import { clearRoomSession, readRoomSession } from "@/lib/room-session";
+import { useLiveKitCall } from "./useLiveKitCall";
 
 type ChatMessage = {
   id: string;
@@ -38,12 +43,26 @@ const initialMessages: ChatMessage[] = [
 ];
 
 export function RoomExperience({ roomId }: { roomId: string }) {
-  const [cameraEnabled, setCameraEnabled] = useState(true);
-  const [micEnabled, setMicEnabled] = useState(true);
+  const [roomSession, setRoomSession] = useState<RoomSession | null>(null);
+  const call = useLiveKitCall(roomSession);
+  const [previewCameraEnabled, setPreviewCameraEnabled] = useState(false);
+  const [previewMicEnabled, setPreviewMicEnabled] = useState(false);
   const [chatOpen, setChatOpen] = useState(true);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState(initialMessages);
-  const inviteUrl = useMemo(() => `https://cueroom.app/join/${roomId}`, [roomId]);
+  const inviteUrl = useMemo(() => {
+    const inviteCode = roomSession?.room.inviteCode ?? roomId;
+    const origin = typeof window === "undefined" ? "https://cueroom.app" : window.location.origin;
+    return `${origin}/join/${inviteCode}`;
+  }, [roomId, roomSession?.room.inviteCode]);
+  const displayTitle = roomSession?.room.title ?? "Friday watch room";
+  const participantCount = roomSession?.room.participants.length ?? (call.participants.length || 3);
+  const cameraEnabled = roomSession ? call.localCameraEnabled : previewCameraEnabled;
+  const micEnabled = roomSession ? call.localMicrophoneEnabled : previewMicEnabled;
+
+  useEffect(() => {
+    setRoomSession(readRoomSession(roomId));
+  }, [roomId]);
 
   function sendMessage() {
     const trimmed = message.trim();
@@ -62,20 +81,55 @@ export function RoomExperience({ roomId }: { roomId: string }) {
     setMessage("");
   }
 
+  async function toggleCamera() {
+    if (!roomSession || !call.canControlMedia) {
+      setPreviewCameraEnabled((enabled) => !enabled);
+      return;
+    }
+
+    try {
+      await call.setCameraEnabled(!call.localCameraEnabled);
+    } catch {
+      toast.error("Could not update camera");
+    }
+  }
+
+  async function toggleMic() {
+    if (!roomSession || !call.canControlMedia) {
+      setPreviewMicEnabled((enabled) => !enabled);
+      return;
+    }
+
+    try {
+      await call.setMicrophoneEnabled(!call.localMicrophoneEnabled);
+    } catch {
+      toast.error("Could not update microphone");
+    }
+  }
+
+  async function leaveRoom() {
+    await call.disconnect();
+    clearRoomSession(roomId);
+    setRoomSession(null);
+    toast.message("Left room");
+  }
+
   return (
     <main className="min-h-screen px-4 py-4 text-white md:px-6">
       <div className="mx-auto grid max-w-[1500px] gap-4">
         <header className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-black/25 px-4 py-3 backdrop-blur">
           <div>
             <p className="text-sm text-white/50">Room</p>
-            <h1 className="text-xl font-semibold">Friday watch room</h1>
+            <h1 className="text-xl font-semibold">{displayTitle}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone="success">
               <ShieldCheck className="size-3.5" />
               Invite-only
             </Badge>
-            <Badge tone="sync">Sync drift 92 ms</Badge>
+            <Badge tone={roomSession ? "sync" : "warning"}>
+              {roomSession ? "Room session active" : "Demo mode"}
+            </Badge>
             <Button
               variant="outline"
               onClick={() => {
@@ -133,6 +187,15 @@ export function RoomExperience({ roomId }: { roomId: string }) {
                     <SkipForward className="size-4" />
                     Catch up
                   </Button>
+                  {!roomSession && (
+                    <Button
+                      variant="outline"
+                      onClick={() => toast.message("Create or join a room to start the call")}
+                    >
+                      <LogIn className="size-4" />
+                      Join call
+                    </Button>
+                  )}
                   <span className="text-sm text-white/50">
                     CueRoom never sees Netflix video or credentials.
                   </span>
@@ -140,29 +203,7 @@ export function RoomExperience({ roomId }: { roomId: string }) {
               </div>
             </Panel>
 
-            <div className="grid gap-3 lg:grid-cols-3">
-              {["You", "Mira", "Dev"].map((name, index) => (
-                <Panel key={name} className="aspect-video overflow-hidden p-3">
-                  <div className="flex h-full flex-col justify-between rounded-md bg-black/35 p-3">
-                    <div className="flex items-center justify-between">
-                      <Badge tone={index === 0 ? "success" : "neutral"}>
-                        {index === 0 ? "Host" : "Guest"}
-                      </Badge>
-                      <Badge tone="sync">Good</Badge>
-                    </div>
-                    <div className="grid place-items-center">
-                      <div className="grid size-16 place-items-center rounded-full bg-cyan-300/15 text-xl font-semibold text-cyan-100">
-                        {name[0]}
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span>{name}</span>
-                      <span className="text-white/45">{index === 2 ? "Camera off" : "Live"}</span>
-                    </div>
-                  </div>
-                </Panel>
-              ))}
-            </div>
+            <LiveCallPanel call={call} session={roomSession} />
           </div>
 
           {chatOpen && (
@@ -173,7 +214,8 @@ export function RoomExperience({ roomId }: { roomId: string }) {
                   <p className="text-sm text-white/50">Ephemeral by default</p>
                 </div>
                 <Badge>
-                  <Users className="size-3.5" />3
+                  <Users className="size-3.5" />
+                  {participantCount}
                 </Badge>
               </div>
               <div className="grid content-start gap-3 overflow-auto p-4">
@@ -218,7 +260,8 @@ export function RoomExperience({ roomId }: { roomId: string }) {
           <Button
             size="icon"
             variant={micEnabled ? "secondary" : "outline"}
-            onClick={() => setMicEnabled((enabled) => !enabled)}
+            onClick={() => void toggleMic()}
+            disabled={roomSession ? !call.canControlMedia || call.operationPending : false}
             aria-label={micEnabled ? "Mute microphone" : "Unmute microphone"}
             title={micEnabled ? "Mute microphone" : "Unmute microphone"}
           >
@@ -227,7 +270,8 @@ export function RoomExperience({ roomId }: { roomId: string }) {
           <Button
             size="icon"
             variant={cameraEnabled ? "secondary" : "outline"}
-            onClick={() => setCameraEnabled((enabled) => !enabled)}
+            onClick={() => void toggleCamera()}
+            disabled={roomSession ? !call.canControlMedia || call.operationPending : false}
             aria-label={cameraEnabled ? "Turn camera off" : "Turn camera on"}
             title={cameraEnabled ? "Turn camera off" : "Turn camera on"}
           >
@@ -242,7 +286,13 @@ export function RoomExperience({ roomId }: { roomId: string }) {
           >
             <MessageCircle className="size-4" />
           </Button>
-          <Button size="icon" variant="destructive" aria-label="Leave room" title="Leave room">
+          <Button
+            size="icon"
+            variant="destructive"
+            onClick={() => void leaveRoom()}
+            aria-label="Leave room"
+            title="Leave room"
+          >
             <PhoneOff className="size-4" />
           </Button>
         </nav>
