@@ -7,5 +7,19 @@ rtc:
   use_external_ip: true
 redis:
   address: redis:6379
+  # username: default
+  password: replace-with-redis-password
 keys:
   cueroom-prod: replace-with-livekit-api-secret
+
+# Public beta operators must choose a TURN strategy before inviting users behind
+# restrictive networks. If enabling embedded TURN/TLS, provision a dedicated
+# TURN domain and trusted certificate files, then expose the chosen TCP/UDP
+# ports in compose and the host firewall.
+# turn:
+#   enabled: true
+#   domain: turn.cueroom.app
+#   tls_port: 5349
+#   cert_file: /run/secrets/turn.crt
+#   key_file: /run/secrets/turn.key
+#   udp_port: 3478

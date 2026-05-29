@@ -82,6 +82,7 @@ const roomReportRateLimit = {
 
 type RegisterRoutesOptions = {
   removeLiveKitParticipant?: (roomId: string, participantId: string) => Promise<void>;
+  checkDependencies?: () => Promise<void>;
 };
 
 export function registerRoutes(
@@ -94,10 +95,21 @@ export function registerRoutes(
   const authoritativePlaybackByRoom = new Map<string, AuthoritativePlaybackState>();
   const removeParticipantFromLiveKit = options.removeLiveKitParticipant ?? removeLiveKitParticipant;
 
-  server.get("/health", async () => ({
-    ok: true,
-    service: "cueroom-api"
-  }));
+  server.get("/health", async (_request, reply) => {
+    try {
+      await options.checkDependencies?.();
+    } catch {
+      return reply.code(503).send({
+        ok: false,
+        service: "cueroom-api"
+      });
+    }
+
+    return {
+      ok: true,
+      service: "cueroom-api"
+    };
+  });
 
   server.post("/v1/auth/magic-link/request", authRequestRateLimit, async (request, reply) => {
     const parsed = magicLinkRequestSchema.safeParse(request.body);

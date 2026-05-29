@@ -54,7 +54,7 @@ describe("validateProductionRuntimeConfig", () => {
         ROOM_STORE: "memory",
         AUTH_REQUIRED: "true",
         POSTGRES_URL: "postgres://cueroom:secret@postgres:5432/cueroom",
-        REDIS_URL: "redis://redis:6379"
+        REDIS_URL: "redis://:secret@redis:6379"
       })
     ).toThrow(/ROOM_STORE/);
   });
@@ -70,7 +70,7 @@ describe("validateProductionRuntimeConfig", () => {
     ).toThrow(/REDIS_URL/);
   });
 
-  it("accepts the production compose runtime boundary", () => {
+  it("requires authenticated Redis URLs in production", () => {
     expect(() =>
       validateProductionRuntimeConfig({
         NODE_ENV: "production",
@@ -78,6 +78,18 @@ describe("validateProductionRuntimeConfig", () => {
         AUTH_REQUIRED: "true",
         POSTGRES_URL: "postgres://cueroom:secret@postgres:5432/cueroom",
         REDIS_URL: "redis://redis:6379"
+      })
+    ).toThrow(/Redis password/);
+  });
+
+  it("accepts the production compose runtime boundary", () => {
+    expect(() =>
+      validateProductionRuntimeConfig({
+        NODE_ENV: "production",
+        ROOM_STORE: "postgres",
+        AUTH_REQUIRED: "true",
+        POSTGRES_URL: "postgres://cueroom:secret@postgres:5432/cueroom",
+        REDIS_URL: "redis://:secret@redis:6379"
       })
     ).not.toThrow();
   });

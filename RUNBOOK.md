@@ -23,17 +23,25 @@
 ## Docker Production
 
 - [ ] Copy `infra/docker/.env.prod.example` to `infra/docker/.env.prod` and set real `CUEROOM_DOMAIN`, `CUEROOM_API_DOMAIN`, `CUEROOM_LIVEKIT_DOMAIN`, `ACME_EMAIL`, `LIVEKIT_API_KEY`, SMTP, and extension ID values.
-- [ ] Create the secret files listed in `infra/docker/secrets/README.md`.
-- [ ] Copy `infra/docker/livekit/livekit.prod.example.yaml` to `infra/docker/secrets/livekit.yaml` and set the same LiveKit API secret recorded in `infra/docker/secrets/livekit_api_secret`.
+- [ ] Create the secret files listed in `infra/docker/secrets/README.md`, including separate Redis password and Redis URL files.
+- [ ] Copy `infra/docker/livekit/livekit.prod.example.yaml` to `infra/docker/secrets/livekit.yaml` and set the same LiveKit API secret recorded in `infra/docker/secrets/livekit_api_secret` plus the same Redis password recorded in `infra/docker/secrets/redis_password`.
 - [ ] Confirm DNS for `CUEROOM_DOMAIN`, `CUEROOM_API_DOMAIN`, and `CUEROOM_LIVEKIT_DOMAIN` points to the deployment host before starting Caddy.
-- [ ] Confirm ports 80 and 443 reach Caddy, LiveKit TCP port 7881 is reachable, and LiveKit UDP ports 50000-60000 are open on the host firewall.
+- [ ] Firewall matrix: TCP 80 reaches Caddy for ACME HTTP validation and HTTP-to-HTTPS handling.
+- [ ] Firewall matrix: TCP 443 reaches Caddy for web, API, and LiveKit signaling HTTPS/WSS routes.
+- [ ] Firewall matrix: TCP 7881 reaches LiveKit for ICE/TCP fallback.
+- [ ] Firewall matrix: UDP 50000-60000 reaches LiveKit for ICE/UDP media.
+- [ ] Firewall matrix: optional UDP 3478 and TCP 5349 or TCP 443 reach LiveKit TURN only when the deployment enables embedded TURN.
+- [ ] Confirm the default compose stack is direct ICE only; do not claim corporate-firewall/VPN compatibility until TURN is enabled and tested.
+- [ ] Choose a LiveKit TURN strategy before public beta; if enabling embedded TURN, provision a dedicated TURN domain, trusted certificate files, and firewall rules for the selected TURN/TLS and TURN/UDP ports.
 - [ ] Run `pnpm docker:prod-check`.
 - [ ] Run `docker compose --env-file infra/docker/.env.prod -f infra/docker/compose.prod.yml config` and confirm no plaintext secret values are printed.
 - [ ] Run `docker compose --env-file infra/docker/.env.prod -f infra/docker/compose.prod.yml up -d --build`.
 - [ ] Confirm Postgres, Redis, API, web, LiveKit, and Caddy containers are running.
 - [ ] Confirm Postgres, Redis, API, and web do not publish host ports in the production compose output.
-- [ ] Confirm API and web containers pass health checks while running as non-root users with dropped Linux capabilities and `no-new-privileges`.
-- [ ] Confirm `https://cueroom.app/privacy` renders the in-app privacy policy before entering the Chrome Web Store privacy policy URL.
+- [ ] Confirm Redis requires authentication by running `docker compose --env-file infra/docker/.env.prod -f infra/docker/compose.prod.yml exec redis redis-cli ping` and expecting `NOAUTH`.
+- [ ] Confirm Redis authentication works by running `docker compose --env-file infra/docker/.env.prod -f infra/docker/compose.prod.yml exec redis sh -c 'REDISCLI_AUTH="$(cat /run/secrets/redis_password)" redis-cli ping'`.
+- [ ] Confirm Redis, API, and web containers pass health checks while running with dropped Linux capabilities and `no-new-privileges`; confirm API and web run as non-root users.
+- [ ] Confirm `https://$CUEROOM_DOMAIN/privacy` renders the in-app privacy policy before entering the Chrome Web Store privacy policy URL.
 
 ## Postgres Verification
 

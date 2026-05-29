@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
+import Fastify from "fastify";
 import { TokenVerifier } from "livekit-server-sdk";
+import { createAuthStore } from "../src/auth-store";
+import { registerRoutes } from "../src/routes";
+import { createRoomStore } from "../src/room-store";
 import { buildServer } from "../src/server";
 
 describe("CueRoom API", () => {
@@ -13,6 +17,30 @@ describe("CueRoom API", () => {
 
       expect(response.statusCode).toBe(200);
       expect(response.headers["x-content-type-options"]).toBe("nosniff");
+    } finally {
+      await server.close();
+    }
+  });
+
+  it("reports unhealthy when dependency checks fail", async () => {
+    const server = Fastify();
+    registerRoutes(server, createRoomStore(), createAuthStore(), {
+      checkDependencies: async () => {
+        throw new Error("redis unavailable");
+      }
+    });
+
+    try {
+      const response = await server.inject({
+        method: "GET",
+        url: "/health"
+      });
+
+      expect(response.statusCode).toBe(503);
+      expect(response.json()).toEqual({
+        ok: false,
+        service: "cueroom-api"
+      });
     } finally {
       await server.close();
     }

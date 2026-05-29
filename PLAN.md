@@ -58,6 +58,7 @@
 - [x] Close DAST security-header findings.
 - [x] Add production Docker compose, Caddy, and Docker secret-file self-hosting checks.
 - [x] Add production runtime guards for Postgres, Redis, auth-required rooms, non-root containers, and CSP connect sources.
+- [x] Require production Redis auth through Docker secrets and document LiveKit TURN/firewall strategy gates.
 - [x] Replace production `unsafe-inline` CSP with per-request nonces.
 - [x] Make authenticated DAST medium/high findings blocking in CI.
 - [x] Fix DAST PII false positives caused by long decimal runs in random CSP nonces.

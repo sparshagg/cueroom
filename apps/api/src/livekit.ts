@@ -8,7 +8,7 @@ type LiveKitConfig = {
 };
 
 export async function createLiveKitToken(room: Room, participant: Participant) {
-  const { apiKey, apiSecret } = requireLiveKitTokenConfig();
+  const { apiKey, apiSecret } = requireLiveKitTokenConfig(process.env);
 
   const token = new AccessToken(apiKey, apiSecret, {
     identity: participant.id,
@@ -29,7 +29,7 @@ export async function createLiveKitToken(room: Room, participant: Participant) {
 }
 
 export async function removeLiveKitParticipant(roomId: string, participantId: string) {
-  const config = getOptionalLiveKitConfig();
+  const config = getOptionalLiveKitConfig(process.env);
   if (!config) {
     return;
   }
@@ -39,17 +39,18 @@ export async function removeLiveKitParticipant(roomId: string, participantId: st
   await client.removeParticipant(roomId, participantId);
 }
 
-export function validateLiveKitConfig() {
-  if (process.env.NODE_ENV === "production") {
-    requireLiveKitConfig();
+export function validateLiveKitConfig(env: NodeJS.ProcessEnv = process.env) {
+  if (env.NODE_ENV === "production") {
+    const config = requireLiveKitConfig(env);
+    validateProductionLiveKitConfig(config);
     return;
   }
-  getOptionalLiveKitConfig();
+  getOptionalLiveKitConfig(env);
 }
 
-function requireLiveKitTokenConfig() {
-  const apiKey = process.env.LIVEKIT_API_KEY;
-  const apiSecret = process.env.LIVEKIT_API_SECRET;
+function requireLiveKitTokenConfig(env: NodeJS.ProcessEnv) {
+  const apiKey = env.LIVEKIT_API_KEY;
+  const apiSecret = env.LIVEKIT_API_SECRET;
 
   if (!apiKey || !apiSecret) {
     throw new Error("LIVEKIT_API_KEY and LIVEKIT_API_SECRET are required");
@@ -58,23 +59,19 @@ function requireLiveKitTokenConfig() {
   return { apiKey, apiSecret };
 }
 
-function requireLiveKitConfig(): LiveKitConfig {
-  const url = process.env.LIVEKIT_URL;
-  const { apiKey, apiSecret } = requireLiveKitTokenConfig();
+function requireLiveKitConfig(env: NodeJS.ProcessEnv): LiveKitConfig {
+  const url = env.LIVEKIT_URL;
+  const { apiKey, apiSecret } = requireLiveKitTokenConfig(env);
   if (!url) {
     throw new Error("LIVEKIT_URL is required");
   }
   return { url, apiKey, apiSecret };
 }
 
-function getOptionalLiveKitConfig(): LiveKitConfig | null {
-  const values = [
-    process.env.LIVEKIT_URL,
-    process.env.LIVEKIT_API_KEY,
-    process.env.LIVEKIT_API_SECRET
-  ];
+function getOptionalLiveKitConfig(env: NodeJS.ProcessEnv): LiveKitConfig | null {
+  const values = [env.LIVEKIT_URL, env.LIVEKIT_API_KEY, env.LIVEKIT_API_SECRET];
   if (values.every(Boolean)) {
-    return requireLiveKitConfig();
+    return requireLiveKitConfig(env);
   }
   if (values.some(Boolean)) {
     throw new Error(
@@ -82,4 +79,27 @@ function getOptionalLiveKitConfig(): LiveKitConfig | null {
     );
   }
   return null;
+}
+
+function validateProductionLiveKitConfig(config: LiveKitConfig) {
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(config.url);
+  } catch {
+    throw new Error("LIVEKIT_URL must be a valid wss:// URL in production");
+  }
+
+  if (parsedUrl.protocol !== "wss:") {
+    throw new Error("LIVEKIT_URL must use wss:// in production");
+  }
+
+  const forbiddenApiKeys = new Set(["devkey", "replace-with-livekit-api-key"]);
+  if (forbiddenApiKeys.has(config.apiKey)) {
+    throw new Error("LIVEKIT_API_KEY must not use a development placeholder in production");
+  }
+
+  const forbiddenApiSecrets = new Set(["secret", "devsecret", "replace-with-livekit-api-secret"]);
+  if (forbiddenApiSecrets.has(config.apiSecret)) {
+    throw new Error("LIVEKIT_API_SECRET must not use a development placeholder in production");
+  }
 }

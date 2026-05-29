@@ -351,3 +351,23 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-30
   - Learning: Nonce-based App Router CSP should be generated per request and scoped to the production resource origins the app actually needs.
   - Impact: CueRoom keeps localhost connect sources only for development CSP and requires configured HTTPS/WSS origins for production.
+- [ ] Source: https://redis.io/tutorials/operate/orchestration/docker/
+  - Stale-by: 2026-08-30
+  - Learning: Redis Docker deployments can enable persistence with volumes and AOF, and can secure the server with a password argument.
+  - Impact: CueRoom keeps production Redis ephemeral for presence/rate-limit/sync state, but requires a secret-backed password before API or LiveKit can connect.
+- [ ] Source: https://hub.docker.com/_/redis/
+  - Stale-by: 2026-08-30
+  - Learning: The official Redis image disables protected mode for Docker networking convenience, recommends setting a password if Redis is exposed, and drops privileges by default unless overridden.
+  - Impact: CueRoom production compose keeps Redis off host ports, requires authentication, and adds container hardening without overriding the image's default user handling.
+- [ ] Source: https://redis.io/docs/latest/operate/oss_and_stack/management/security/
+  - Stale-by: 2026-08-30
+  - Learning: Redis should be reachable only by trusted clients, should be firewalled from untrusted networks, and `requirepass` makes unauthenticated clients fail before commands run.
+  - Impact: CueRoom production compose keeps Redis internal, requires a secret-backed password, and checks API Redis connectivity before returning healthy.
+- [ ] Source: https://docs.livekit.io/transport/self-hosting/ports-firewall/
+  - Stale-by: 2026-08-30
+  - Learning: LiveKit self-hosting requires firewall access for configured ICE UDP ports, ICE/TCP fallback, and optional TURN/TLS or TURN/UDP ports.
+  - Impact: CueRoom's production runbook requires explicit firewall checks and a public-beta TURN strategy before inviting broad external users.
+- [ ] Source: https://github.com/livekit/livekit/blob/master/config-sample.yaml
+  - Stale-by: 2026-08-30
+  - Learning: LiveKit's sample configuration supports Redis `username` and `password` fields and documents ICE/TCP fallback, UDP port ranges, and optional TURN server settings.
+  - Impact: CueRoom's production LiveKit example includes a Redis password placeholder and TURN comments instead of assuming unauthenticated Redis.

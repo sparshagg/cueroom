@@ -6,7 +6,12 @@ import { registerRoutes } from "./routes.js";
 import { createPostgresPool, runPostgresMigrations } from "./postgres.js";
 import { createPostgresAuthStore } from "./postgres-auth-store.js";
 import { createPostgresRoomStore } from "./postgres-room-store.js";
-import { closeRedisClient, createRedisClient, type RedisClient } from "./redis.js";
+import {
+  assertRedisAvailable,
+  closeRedisClient,
+  createRedisClient,
+  type RedisClient
+} from "./redis.js";
 import { createRedisRoomState } from "./redis-room-state.js";
 import { createRoomStore, type RoomStore } from "./room-store.js";
 import { createAuthStore, validateAuthConfig, type AuthStore } from "./auth-store.js";
@@ -30,6 +35,14 @@ export async function buildServer(options: BuildServerOptions = {}) {
   validateEmailConfig();
   validateLiveKitConfig();
   const redis = process.env.REDIS_URL ? createRedisClient() : undefined;
+  if (redis && process.env.NODE_ENV === "production") {
+    try {
+      await assertRedisAvailable(redis);
+    } catch (error) {
+      redis.disconnect();
+      throw error;
+    }
+  }
   const mailer = options.mailer ?? createConfiguredMailer();
   const server = Fastify({
     logger: {
@@ -87,13 +100,12 @@ export async function buildServer(options: BuildServerOptions = {}) {
     }
     await mailer?.close?.();
   });
-  if (options.removeLiveKitParticipant) {
-    registerRoutes(server, store, authStore, {
-      removeLiveKitParticipant: options.removeLiveKitParticipant
-    });
-  } else {
-    registerRoutes(server, store, authStore);
-  }
+  registerRoutes(server, store, authStore, {
+    ...(options.removeLiveKitParticipant
+      ? { removeLiveKitParticipant: options.removeLiveKitParticipant }
+      : {}),
+    ...(redis ? { checkDependencies: () => assertRedisAvailable(redis) } : {})
+  });
 
   return server;
 }

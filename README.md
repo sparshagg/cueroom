@@ -46,7 +46,7 @@ The development compose stack binds published ports to `127.0.0.1`. Use `.env.ex
 
 Production magic-link delivery uses SMTP. Set `SMTP_HOST`, `SMTP_FROM`, and provider credentials through deployment secrets; use implicit TLS on port 465 or require STARTTLS with `SMTP_REQUIRE_TLS=true`.
 
-For production self-hosting, copy `infra/docker/.env.prod.example`, create the secret files listed in `infra/docker/secrets/README.md`, and run:
+For production self-hosting, follow the Docker Production checklist in `RUNBOOK.md` first: set DNS, create Docker secret files, choose a LiveKit TURN strategy, and confirm the firewall matrix. The final startup command is:
 
 ```bash
 docker compose --env-file infra/docker/.env.prod -f infra/docker/compose.prod.yml up -d --build

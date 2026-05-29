@@ -45,4 +45,27 @@ export function validateProductionRuntimeConfig(env: NodeJS.ProcessEnv = process
       throw new Error(`${requiredName} is required in production`);
     }
   }
+
+  validateProductionRedisUrl(env.REDIS_URL);
+}
+
+function validateProductionRedisUrl(redisUrl: string | undefined) {
+  if (!redisUrl) {
+    throw new Error("REDIS_URL is required in production");
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(redisUrl);
+  } catch {
+    throw new Error("REDIS_URL must be a valid redis:// or rediss:// URL in production");
+  }
+
+  if (!["redis:", "rediss:"].includes(parsed.protocol)) {
+    throw new Error("REDIS_URL must use redis:// or rediss:// in production");
+  }
+
+  if (!parsed.password) {
+    throw new Error("REDIS_URL must include a Redis password in production");
+  }
 }

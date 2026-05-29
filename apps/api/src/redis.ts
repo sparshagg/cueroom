@@ -36,3 +36,10 @@ export async function closeRedisClient(redis: RedisClient) {
     redis.disconnect();
   }
 }
+
+export async function assertRedisAvailable(redis: RedisClient) {
+  const result = await redis.ping();
+  if (result !== "PONG") {
+    throw new Error("Redis health check failed");
+  }
+}

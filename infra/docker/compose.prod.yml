@@ -20,9 +20,25 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    command: ["redis-server", "/run/secrets/redis.conf"]
+    secrets:
+      - source: redis_config
+        target: redis.conf
+      - redis_password
+    tmpfs:
+      - /tmp
+      - /data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:
+        [
+          "CMD-SHELL",
+          'REDISCLI_AUTH="$$(cat /run/secrets/redis_password)" redis-cli ping | grep PONG'
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -61,7 +77,7 @@ services:
       ROOM_STORE: postgres
       POSTGRES_AUTO_MIGRATE: "true"
       POSTGRES_URL_FILE: /run/secrets/postgres_url
-      REDIS_URL: redis://redis:6379
+      REDIS_URL_FILE: /run/secrets/redis_url
       WEB_ORIGIN: https://${CUEROOM_DOMAIN:?set CUEROOM_DOMAIN}
       AUTH_REQUIRED: "true"
       AUTH_RP_NAME: CueRoom
@@ -78,6 +94,7 @@ services:
       LIVEKIT_API_SECRET_FILE: /run/secrets/livekit_api_secret
     secrets:
       - postgres_url
+      - redis_url
       - livekit_api_secret
       - smtp_password
     depends_on:
@@ -164,6 +181,12 @@ secrets:
     file: ./secrets/postgres_password
   postgres_url:
     file: ./secrets/postgres_url
+  redis_password:
+    file: ./secrets/redis_password
+  redis_config:
+    file: ./secrets/redis.conf
+  redis_url:
+    file: ./secrets/redis_url
   livekit_api_secret:
     file: ./secrets/livekit_api_secret
   livekit_config:

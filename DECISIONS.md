@@ -315,3 +315,12 @@
 - [x] Reason: A dedicated production stack keeps dev shortcuts out of public deployments while staying self-hostable and reviewable in source.
 - [x] Security/privacy impact: Postgres, Redis, API, and web stay off public host ports; Caddy owns HTTPS entry points; API secrets are read from Docker secret files; LiveKit production config is mounted as a secret file; production rejects memory room storage and localhost CSP connect sources.
 - [x] Rollback trigger: A managed deployment platform replaces compose and provides equivalent secret mounting, TLS, LiveKit media port, and no-public-database controls.
+
+## ADR-036: Production Redis Auth And LiveKit TURN Stance
+
+- [x] Problem: Production Redis was internal-only but unauthenticated, and LiveKit TURN was only generally mentioned rather than tied to a deployer-owned public beta decision.
+- [x] Options: keep Redis unauthenticated on the private Compose network, require Redis auth through Docker secrets, or replace Redis with a managed provider immediately.
+- [x] Decision: Require Redis auth in production compose with secret-backed `redis_password`, `redis.conf`, and `redis_url` files, pass the same password into LiveKit config, and keep default production compose on direct ICE only until a deployer explicitly enables embedded TURN with a dedicated TURN domain/cert/firewall plan.
+- [x] Reason: Internal networks reduce exposure but are not a sufficient secret boundary; secret-backed Redis auth is a small permanent hardening step while keeping self-hosting simple.
+- [x] Security/privacy impact: Redis-backed presence, rate limits, invites, and sync counters require credentials; API and LiveKit no longer assume unauthenticated Redis; default self-hosting documents direct ICE connectivity limits so restrictive-network support is not accidentally claimed without certificates/firewall coverage.
+- [x] Rollback trigger: A managed Redis/LiveKit platform provides equivalent authenticated Redis, firewall, and TURN/TLS controls with documented operational ownership.
