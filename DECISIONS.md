@@ -53,3 +53,12 @@
 - [x] Reason: Durable authorization state is needed before real calls and extension sync can be trusted across restarts.
 - [x] Security/privacy impact: Session tokens are stored as SHA-256 hashes only; CueRoom still does not persist chat, media, credentials, cookies, DRM data, subtitles, screenshots, or Netflix streams.
 - [x] Rollback trigger: Operational review finds Postgres too heavy for the beta path or a managed auth/database service is selected.
+
+## ADR-007: Redis Ephemeral State
+
+- [x] Problem: Avoid process-local rate limits, invite cache, advisory presence, and sync replay counters in a horizontally scaled API.
+- [x] Options: keep all ephemeral state in memory, move all state to Postgres, use Redis for volatile state while Postgres remains authoritative.
+- [x] Decision: Use Redis for rate limits, invite indexes, advisory presence, and sync sequence counters; never use Redis as durable membership or session authority.
+- [x] Reason: Redis gives fast expiring keys and atomic counter semantics without widening persisted privacy scope.
+- [x] Security/privacy impact: Sync replay protection fails closed when Redis is configured but unavailable; invite and presence keys are best-effort cache/advisory data and are rechecked against Postgres.
+- [x] Rollback trigger: Redis operational failures block beta stability or a managed realtime/presence service replaces it.

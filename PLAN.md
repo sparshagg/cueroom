@@ -23,7 +23,7 @@
 - [x] Add shared contracts and runtime validation.
 - [x] Add in-memory store for local development.
 - [x] Add PostgreSQL persistence.
-- [ ] Add Redis-backed presence, invites, rate limits, and sync counters.
+- [x] Add Redis-backed presence, invites, rate limits, and sync counters.
 - [ ] Add passkey and magic-link auth.
 
 ## M3: LiveKit Calls

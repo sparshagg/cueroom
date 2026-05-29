@@ -24,6 +24,13 @@
 - [ ] Run `POSTGRES_TEST_URL=postgres://cueroom:cueroom@localhost:5432/cueroom pnpm --filter @cueroom/api test`.
 - [ ] Confirm session token rows are stored as hashes, not raw `crs_` tokens.
 
+## Redis Verification
+
+- [ ] Start Redis with `docker compose -f infra/docker/compose.dev.yml up -d redis`.
+- [ ] Run `REDIS_TEST_URL=redis://localhost:6379/1 pnpm --filter @cueroom/api test`.
+- [ ] Run combined state tests with `POSTGRES_TEST_URL=postgres://cueroom:cueroom@localhost:5432/cueroom REDIS_TEST_URL=redis://localhost:6379/1 pnpm --filter @cueroom/api test`.
+- [ ] Confirm sync replay is rejected across two API store instances sharing Redis.
+
 ## Extension Development
 
 - [ ] Run `pnpm --filter @cueroom/extension build`.

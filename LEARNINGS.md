@@ -48,3 +48,19 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: The official Postgres image initializes databases from `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB`, and can run SQL files from the init directory on first start.
   - Impact: Docker dev keeps the official image and passes container-network Postgres URLs to the API service.
+- [ ] Source: https://github.com/fastify/fastify-rate-limit
+  - Stale-by: 2026-08-29
+  - Learning: `@fastify/rate-limit` uses in-memory storage by default, requires `ioredis` for Redis-backed distributed limits, and recommends tuning `connectTimeout` and `maxRetriesPerRequest`.
+  - Impact: API rate limits use one tuned ioredis connection when `REDIS_URL` is configured.
+- [ ] Source: https://redis.github.io/ioredis/interfaces/CommonRedisOptions.html
+  - Stale-by: 2026-08-29
+  - Learning: ioredis exposes connection and retry controls such as `connectTimeout`, `maxRetriesPerRequest`, and `retryStrategy`.
+  - Impact: CueRoom Redis clients use bounded retry behavior so outages fail predictably.
+- [ ] Source: https://redis.io/docs/latest/commands/incr/
+  - Stale-by: 2026-08-29
+  - Learning: Redis counters are atomic and `INCR` initializes missing values to zero.
+  - Impact: Sync sequence state uses Redis as the cross-process monotonic counter boundary.
+- [ ] Source: https://redis.io/docs/latest/commands/expire/
+  - Stale-by: 2026-08-29
+  - Learning: `EXPIRE` makes keys volatile and deletes them automatically when the timeout elapses.
+  - Impact: Invite indexes, presence, and sync sequence keys expire with room/session lifetimes.

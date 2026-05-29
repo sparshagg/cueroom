@@ -14,6 +14,7 @@ import {
 } from "./room-store.js";
 import type { PostgresClient, PostgresPool } from "./postgres.js";
 import { withTransaction } from "./postgres.js";
+import type { RedisRoomState } from "./redis-room-state.js";
 
 type RoomRow = {
   id: string;
@@ -39,7 +40,7 @@ export function hashSessionToken(sessionToken: string) {
   return crypto.createHash("sha256").update(sessionToken).digest("base64url");
 }
 
-export function createPostgresRoomStore(pool: PostgresPool): RoomStore {
+export function createPostgresRoomStore(pool: PostgresPool, roomState?: RedisRoomState): RoomStore {
   const lastSyncSequenceByRoom = new Map<string, number>();
 
   async function insertSession(
@@ -89,6 +90,42 @@ export function createPostgresRoomStore(pool: PostgresPool): RoomStore {
     return roomFromRows(row, participantResult.rows);
   }
 
+  async function findRoomRowByInvite(queryable: Queryable, inviteCode: string) {
+    const cachedRoomId = await bestEffort(() => roomState?.getRoomIdByInvite(inviteCode));
+    if (cachedRoomId) {
+      const cachedResult = await queryable.query<RoomRow>(
+        `
+          SELECT id, invite_code, title, locked, created_at, expires_at
+          FROM rooms
+          WHERE id = $1 AND invite_code = $2
+          FOR UPDATE
+        `,
+        [cachedRoomId, inviteCode]
+      );
+      if (cachedResult.rows[0]) {
+        return cachedResult.rows[0];
+      }
+      await bestEffort(() => roomState?.deleteInvite(inviteCode));
+    }
+
+    const result = await queryable.query<RoomRow>(
+      `
+        SELECT id, invite_code, title, locked, created_at, expires_at
+        FROM rooms
+        WHERE invite_code = $1
+        FOR UPDATE
+      `,
+      [inviteCode]
+    );
+    const roomRow = result.rows[0];
+    if (roomRow) {
+      await bestEffort(() =>
+        roomState?.indexInvite(roomRow.invite_code, roomRow.id, ttlUntil(roomRow.expires_at))
+      );
+    }
+    return roomRow;
+  }
+
   async function requireSession(
     queryable: Queryable,
     roomId: string,
@@ -136,6 +173,7 @@ export function createPostgresRoomStore(pool: PostgresPool): RoomStore {
       return null;
     }
 
+    await bestEffort(() => roomState?.trackPresence(roomId, participant.id, sessionTtlMs));
     return { room, participant };
   }
 
@@ -154,7 +192,7 @@ export function createPostgresRoomStore(pool: PostgresPool): RoomStore {
 
   const store: RoomStore = {
     async createRoom(input: CreateRoomInput): Promise<RoomSession> {
-      return withTransaction(pool, async (client) => {
+      const created = await withTransaction(pool, async (client) => {
         const host = createParticipant(input.hostName, "host");
         const sessionToken = createSessionToken();
         const now = new Date();
@@ -195,20 +233,22 @@ export function createPostgresRoomStore(pool: PostgresPool): RoomStore {
 
         return { room, participant: host, sessionToken };
       });
+      await bestEffort(() =>
+        roomState?.indexInvite(
+          created.room.inviteCode,
+          created.room.id,
+          ttlUntil(created.room.expiresAt)
+        )
+      );
+      await bestEffort(() =>
+        roomState?.trackPresence(created.room.id, created.participant.id, sessionTtlMs)
+      );
+      return created;
     },
 
     async joinRoom(input: JoinRoomInput): Promise<RoomSession | StoreError> {
-      return withTransaction(pool, async (client) => {
-        const roomResult = await client.query<RoomRow>(
-          `
-            SELECT id, invite_code, title, locked, created_at, expires_at
-            FROM rooms
-            WHERE invite_code = $1
-            FOR UPDATE
-          `,
-          [input.inviteCode]
-        );
-        const roomRow = roomResult.rows[0];
+      const result = await withTransaction(pool, async (client) => {
+        const roomRow = await findRoomRowByInvite(client, input.inviteCode);
         if (!roomRow) {
           return { error: "Invite not found" };
         }
@@ -245,6 +285,12 @@ export function createPostgresRoomStore(pool: PostgresPool): RoomStore {
 
         return { room, participant: guest, sessionToken };
       });
+      if (!("error" in result)) {
+        await bestEffort(() =>
+          roomState?.trackPresence(result.room.id, result.participant.id, sessionTtlMs)
+        );
+      }
+      return result;
     },
 
     getRoom(roomId: string) {
@@ -275,7 +321,7 @@ export function createPostgresRoomStore(pool: PostgresPool): RoomStore {
     },
 
     async kick(roomId: string, sessionToken: string, participantId: string) {
-      return withTransaction(pool, async (client) => {
+      const result = await withTransaction(pool, async (client) => {
         const activeSession = await requireRole(client, roomId, sessionToken, ["host", "cohost"]);
         if (!activeSession) {
           return { error: "Forbidden" };
@@ -295,14 +341,19 @@ export function createPostgresRoomStore(pool: PostgresPool): RoomStore {
         }
         return { room, removedParticipantIds };
       });
+      if (!("error" in result)) {
+        await bestEffort(() => roomState?.removePresence(roomId, result.removedParticipantIds));
+      }
+      return result;
     },
 
     async rotateInvite(roomId: string, sessionToken: string) {
-      return withTransaction(pool, async (client) => {
+      const result = await withTransaction(pool, async (client) => {
         const activeSession = await requireRole(client, roomId, sessionToken, ["host", "cohost"]);
         if (!activeSession) {
           return { error: "Forbidden" };
         }
+        const oldInviteCode = activeSession.room.inviteCode;
         await client.query("UPDATE rooms SET invite_code = $1 WHERE id = $2", [
           createInviteCode(),
           roomId
@@ -311,8 +362,20 @@ export function createPostgresRoomStore(pool: PostgresPool): RoomStore {
         if (!room) {
           return { error: "Forbidden" };
         }
-        return { room };
+        return { room, oldInviteCode };
       });
+      if ("error" in result) {
+        return result;
+      }
+      await bestEffort(() => roomState?.deleteInvite(result.oldInviteCode));
+      await bestEffort(() =>
+        roomState?.indexInvite(
+          result.room.inviteCode,
+          result.room.id,
+          ttlUntil(result.room.expiresAt)
+        )
+      );
+      return { room: result.room };
     },
 
     async acceptSyncCommand(roomId: string, sessionToken: string, command: SyncCommand) {
@@ -327,11 +390,23 @@ export function createPostgresRoomStore(pool: PostgresPool): RoomStore {
       if (Math.abs(Date.now() - command.issuedAt) > maxClockSkewMs) {
         return { error: "Stale command" };
       }
-      const lastSequence = lastSyncSequenceByRoom.get(roomId) ?? -1;
-      if (command.sequence <= lastSequence) {
-        return { error: "Replay detected" };
+      if (roomState) {
+        const accepted = await acceptRedisSyncSequence(
+          roomState,
+          roomId,
+          command.sequence,
+          activeSession.room
+        );
+        if (!accepted) {
+          return { error: "Replay detected" };
+        }
+      } else {
+        const lastSequence = lastSyncSequenceByRoom.get(roomId) ?? -1;
+        if (command.sequence <= lastSequence) {
+          return { error: "Replay detected" };
+        }
+        lastSyncSequenceByRoom.set(roomId, command.sequence);
       }
-      lastSyncSequenceByRoom.set(roomId, command.sequence);
       return { accepted: true, command };
     },
 
@@ -368,4 +443,29 @@ function participantFromRow(row: ParticipantRow): Participant {
 
 function toIsoString(value: Date | string) {
   return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
+}
+
+function ttlUntil(value: Date | string) {
+  return Math.max(1_000, Date.parse(toIsoString(value)) - Date.now());
+}
+
+async function bestEffort<T>(callback: () => Promise<T> | undefined) {
+  try {
+    return await callback();
+  } catch {
+    return undefined;
+  }
+}
+
+async function acceptRedisSyncSequence(
+  roomState: RedisRoomState,
+  roomId: string,
+  sequence: number,
+  room: Room
+) {
+  try {
+    return await roomState.acceptSyncSequence(roomId, sequence, ttlUntil(room.expiresAt));
+  } catch {
+    return false;
+  }
 }
