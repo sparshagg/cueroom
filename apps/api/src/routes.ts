@@ -40,13 +40,31 @@ const passkeyAuthenticationVerifySchema = passkeyEmailSchema.extend({
   response: z.record(z.unknown())
 });
 
+const authRequestRateLimit = {
+  config: {
+    rateLimit: {
+      max: 20,
+      timeWindow: "1 minute"
+    }
+  }
+} as const;
+
+const authVerifyRateLimit = {
+  config: {
+    rateLimit: {
+      max: 10,
+      timeWindow: "1 minute"
+    }
+  }
+} as const;
+
 export function registerRoutes(server: FastifyInstance, store: RoomStore, authStore: AuthStore) {
   server.get("/health", async () => ({
     ok: true,
     service: "cueroom-api"
   }));
 
-  server.post("/v1/auth/magic-link/request", async (request, reply) => {
+  server.post("/v1/auth/magic-link/request", authRequestRateLimit, async (request, reply) => {
     const parsed = magicLinkRequestSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply
@@ -60,7 +78,7 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore, authSt
     return authStore.requestMagicLink(input);
   });
 
-  server.post("/v1/auth/magic-link/verify", async (request, reply) => {
+  server.post("/v1/auth/magic-link/verify", authVerifyRateLimit, async (request, reply) => {
     const parsed = magicLinkVerifySchema.safeParse(request.body);
     if (!parsed.success) {
       return reply
@@ -74,7 +92,7 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore, authSt
     return publicAuthSession(result);
   });
 
-  server.get("/v1/auth/me", async (request, reply) => {
+  server.get("/v1/auth/me", authRequestRateLimit, async (request, reply) => {
     const account = await requireAccountSession(request, authStore);
     if (!account) {
       return reply.code(401).send({ error: "Unauthorized" });
@@ -82,65 +100,81 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore, authSt
     return { account };
   });
 
-  server.post("/v1/auth/passkeys/registration/options", async (request, reply) => {
-    const accountSessionToken = getAccountBearerToken(request);
-    if (!accountSessionToken) {
-      return reply.code(401).send({ error: "Unauthorized" });
+  server.post(
+    "/v1/auth/passkeys/registration/options",
+    authRequestRateLimit,
+    async (request, reply) => {
+      const accountSessionToken = getAccountBearerToken(request);
+      if (!accountSessionToken) {
+        return reply.code(401).send({ error: "Unauthorized" });
+      }
+      const result = await authStore.createPasskeyRegistrationOptions(accountSessionToken);
+      if ("error" in result) {
+        return reply.code(403).send(result);
+      }
+      return result;
     }
-    const result = await authStore.createPasskeyRegistrationOptions(accountSessionToken);
-    if ("error" in result) {
-      return reply.code(403).send(result);
-    }
-    return result;
-  });
+  );
 
-  server.post("/v1/auth/passkeys/registration/verify", async (request, reply) => {
-    const accountSessionToken = getAccountBearerToken(request);
-    if (!accountSessionToken) {
-      return reply.code(401).send({ error: "Unauthorized" });
+  server.post(
+    "/v1/auth/passkeys/registration/verify",
+    authVerifyRateLimit,
+    async (request, reply) => {
+      const accountSessionToken = getAccountBearerToken(request);
+      if (!accountSessionToken) {
+        return reply.code(401).send({ error: "Unauthorized" });
+      }
+      const parsed = passkeyRegistrationVerifySchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply
+          .code(400)
+          .send({ error: "Invalid passkey registration", details: parsed.error.flatten() });
+      }
+      const result = await authStore.verifyPasskeyRegistration(
+        accountSessionToken,
+        parsed.data.response as unknown as RegistrationResponseJSON
+      );
+      if ("error" in result) {
+        return reply.code(403).send(result);
+      }
+      return result;
     }
-    const parsed = passkeyRegistrationVerifySchema.safeParse(request.body);
-    if (!parsed.success) {
-      return reply
-        .code(400)
-        .send({ error: "Invalid passkey registration", details: parsed.error.flatten() });
-    }
-    const result = await authStore.verifyPasskeyRegistration(
-      accountSessionToken,
-      parsed.data.response as unknown as RegistrationResponseJSON
-    );
-    if ("error" in result) {
-      return reply.code(403).send(result);
-    }
-    return result;
-  });
+  );
 
-  server.post("/v1/auth/passkeys/authentication/options", async (request, reply) => {
-    const parsed = passkeyEmailSchema.safeParse(request.body);
-    if (!parsed.success) {
-      return reply
-        .code(400)
-        .send({ error: "Invalid passkey request", details: parsed.error.flatten() });
+  server.post(
+    "/v1/auth/passkeys/authentication/options",
+    authRequestRateLimit,
+    async (request, reply) => {
+      const parsed = passkeyEmailSchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply
+          .code(400)
+          .send({ error: "Invalid passkey request", details: parsed.error.flatten() });
+      }
+      return authStore.createPasskeyAuthenticationOptions(parsed.data.email);
     }
-    return authStore.createPasskeyAuthenticationOptions(parsed.data.email);
-  });
+  );
 
-  server.post("/v1/auth/passkeys/authentication/verify", async (request, reply) => {
-    const parsed = passkeyAuthenticationVerifySchema.safeParse(request.body);
-    if (!parsed.success) {
-      return reply
-        .code(400)
-        .send({ error: "Invalid passkey authentication", details: parsed.error.flatten() });
+  server.post(
+    "/v1/auth/passkeys/authentication/verify",
+    authVerifyRateLimit,
+    async (request, reply) => {
+      const parsed = passkeyAuthenticationVerifySchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply
+          .code(400)
+          .send({ error: "Invalid passkey authentication", details: parsed.error.flatten() });
+      }
+      const result = await authStore.verifyPasskeyAuthentication(
+        parsed.data.email,
+        parsed.data.response as unknown as AuthenticationResponseJSON
+      );
+      if ("error" in result) {
+        return reply.code(403).send(result);
+      }
+      return publicAuthSession(result);
     }
-    const result = await authStore.verifyPasskeyAuthentication(
-      parsed.data.email,
-      parsed.data.response as unknown as AuthenticationResponseJSON
-    );
-    if ("error" in result) {
-      return reply.code(403).send(result);
-    }
-    return publicAuthSession(result);
-  });
+  );
 
   server.post("/v1/rooms", async (request, reply) => {
     const parsed = createRoomRequestSchema.safeParse(request.body);
