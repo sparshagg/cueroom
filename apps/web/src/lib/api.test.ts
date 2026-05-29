@@ -4,6 +4,7 @@ import {
   fetchLiveKitConnectionDetails,
   getAccount,
   getApiOrigin,
+  reportRoomParticipant,
   requestMagicLink,
   verifyMagicLink
 } from "./api";
@@ -109,6 +110,58 @@ describe("fetchLiveKitConnectionDetails", () => {
         { fetcher }
       )
     ).rejects.toThrow("Unexpected API response");
+  });
+});
+
+describe("reportRoomParticipant", () => {
+  it("posts bounded room report data to the room-scoped endpoint", async () => {
+    const fetcher = vi.fn(async () =>
+      Response.json({
+        report: {
+          id: "report_12345678",
+          roomId: "room_12345678",
+          reporterParticipantId: "p_12345678",
+          targetParticipantId: "p_87654321",
+          reason: "spam",
+          createdAt: "2099-05-29T12:00:00.000Z"
+        }
+      })
+    );
+
+    await expect(
+      reportRoomParticipant(
+        "room_12345678",
+        {
+          sessionToken: "crs_123456789012345678901234",
+          targetParticipantId: "p_87654321",
+          reason: "spam",
+          details: "Repeated invite spam"
+        },
+        { apiOrigin: "http://api.test", fetcher }
+      )
+    ).resolves.toEqual({
+      report: {
+        id: "report_12345678",
+        roomId: "room_12345678",
+        reporterParticipantId: "p_12345678",
+        targetParticipantId: "p_87654321",
+        reason: "spam",
+        createdAt: "2099-05-29T12:00:00.000Z"
+      }
+    });
+
+    expect(fetcher).toHaveBeenCalledWith(
+      "http://api.test/v1/rooms/room_12345678/report",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          sessionToken: "crs_123456789012345678901234",
+          targetParticipantId: "p_87654321",
+          reason: "spam",
+          details: "Repeated invite spam"
+        })
+      })
+    );
   });
 });
 

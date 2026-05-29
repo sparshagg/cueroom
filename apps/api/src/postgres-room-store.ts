@@ -1,5 +1,12 @@
 import crypto from "node:crypto";
-import type { Participant, Room, RoomRole, RoomSession, SyncCommand } from "@cueroom/shared";
+import type {
+  Participant,
+  Room,
+  RoomReport,
+  RoomRole,
+  RoomSession,
+  SyncCommand
+} from "@cueroom/shared";
 import {
   createInviteCode,
   createParticipant,
@@ -9,6 +16,7 @@ import {
   type ActiveSession,
   type CreateRoomInput,
   type JoinRoomInput,
+  type ReportParticipantInput,
   type RoomStore,
   type StoreError
 } from "./room-store.js";
@@ -32,6 +40,15 @@ type ParticipantRow = {
   joined_at: Date | string;
   muted: boolean;
   camera_enabled: boolean;
+};
+
+type RoomReportRow = {
+  id: string;
+  room_id: string;
+  reporter_participant_id: string;
+  target_participant_id: string;
+  reason: RoomReport["reason"];
+  created_at: Date | string;
 };
 
 type Queryable = PostgresPool | PostgresClient;
@@ -386,6 +403,54 @@ export function createPostgresRoomStore(pool: PostgresPool, roomState?: RedisRoo
       return { room: result.room };
     },
 
+    async reportParticipant(roomId: string, sessionToken: string, input: ReportParticipantInput) {
+      const result = await withTransaction(pool, async (client) => {
+        const activeSession = await requireSession(client, roomId, sessionToken);
+        if (!activeSession) {
+          return { error: "Forbidden" };
+        }
+        if (input.targetParticipantId === activeSession.participant.id) {
+          return { error: "Cannot report yourself" };
+        }
+        const target = activeSession.room.participants.find(
+          (participant) => participant.id === input.targetParticipantId
+        );
+        if (!target) {
+          return { error: "Participant not found" };
+        }
+
+        const reportId = `report_${crypto.randomUUID()}`;
+        const inserted = await client.query<RoomReportRow>(
+          `
+            INSERT INTO room_reports
+              (id, room_id, reporter_participant_id, target_participant_id, reason, details)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING
+              id,
+              room_id,
+              reporter_participant_id,
+              target_participant_id,
+              reason,
+              created_at
+          `,
+          [
+            reportId,
+            roomId,
+            activeSession.participant.id,
+            target.id,
+            input.reason,
+            input.details?.trim() || null
+          ]
+        );
+        const row = inserted.rows[0];
+        if (!row) {
+          return { error: "Report unavailable" };
+        }
+        return { report: reportFromRow(row) };
+      });
+      return result;
+    },
+
     async acceptSyncCommand(roomId: string, sessionToken: string, command: SyncCommand) {
       const activeSession = await requireRole(pool, roomId, sessionToken, ["host", "cohost"]);
       if (!activeSession) {
@@ -445,6 +510,17 @@ function participantFromRow(row: ParticipantRow): Participant {
     joinedAt: toIsoString(row.joined_at),
     muted: row.muted,
     cameraEnabled: row.camera_enabled
+  };
+}
+
+function reportFromRow(row: RoomReportRow): RoomReport {
+  return {
+    id: row.id,
+    roomId: row.room_id,
+    reporterParticipantId: row.reporter_participant_id,
+    targetParticipantId: row.target_participant_id,
+    reason: row.reason,
+    createdAt: toIsoString(row.created_at)
   };
 }
 

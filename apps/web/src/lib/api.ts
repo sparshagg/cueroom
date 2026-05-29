@@ -3,11 +3,15 @@ import {
   joinRoomRequestSchema,
   liveKitTokenRequestSchema,
   liveKitTokenResponseSchema,
+  roomReportRequestSchema,
+  roomReportResponseSchema,
   roomSessionSchema,
   type CreateRoomRequest,
   type JoinRoomRequest,
   type LiveKitTokenRequest,
   type LiveKitTokenResponse,
+  type RoomReportRequest,
+  type RoomReportResponse,
   type RoomSession
 } from "@cueroom/shared";
 
@@ -95,6 +99,20 @@ export async function fetchLiveKitConnectionDetails(
 ): Promise<LiveKitTokenResponse> {
   const body = liveKitTokenRequestSchema.parse(input);
   return postJson("/v1/livekit/token", body, liveKitTokenResponseSchema.parse, options);
+}
+
+export async function reportRoomParticipant(
+  roomId: string,
+  input: RoomReportRequest,
+  options: ApiOptions = {}
+): Promise<RoomReportResponse> {
+  const body = roomReportRequestSchema.parse(input);
+  return postJson(
+    `/v1/rooms/${encodeURIComponent(roomId)}/report`,
+    body,
+    roomReportResponseSchema.parse,
+    options
+  );
 }
 
 export async function requestMagicLink(

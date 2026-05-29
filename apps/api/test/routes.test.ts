@@ -378,6 +378,102 @@ describe("CueRoom API", () => {
     await server.close();
   });
 
+  it("accepts authenticated room participant reports without returning report details", async () => {
+    const server = await buildServer();
+    const created = (
+      await server.inject({
+        method: "POST",
+        url: "/v1/rooms",
+        payload: { hostName: "Host", title: "Room" }
+      })
+    ).json();
+    const guest = (
+      await server.inject({
+        method: "POST",
+        url: "/v1/rooms/join",
+        payload: { inviteCode: created.room.inviteCode, displayName: "Guest" }
+      })
+    ).json();
+
+    const report = await server.inject({
+      method: "POST",
+      url: `/v1/rooms/${created.room.id}/report`,
+      payload: {
+        sessionToken: created.sessionToken,
+        targetParticipantId: guest.participant.id,
+        reason: "spam",
+        details: "Repeated invite spam"
+      }
+    });
+
+    expect(report.statusCode).toBe(200);
+    expect(report.json().report).toMatchObject({
+      roomId: created.room.id,
+      reporterParticipantId: created.participant.id,
+      targetParticipantId: guest.participant.id,
+      reason: "spam"
+    });
+    expect(report.body).not.toContain("Repeated invite spam");
+    await server.close();
+  });
+
+  it("rejects unauthenticated, self, and unknown participant reports", async () => {
+    const server = await buildServer();
+    const created = (
+      await server.inject({
+        method: "POST",
+        url: "/v1/rooms",
+        payload: { hostName: "Host", title: "Room" }
+      })
+    ).json();
+
+    const unauthenticated = await server.inject({
+      method: "POST",
+      url: `/v1/rooms/${created.room.id}/report`,
+      payload: {
+        sessionToken: "crs_wrongwrongwrongwrongwrong",
+        targetParticipantId: created.participant.id,
+        reason: "spam"
+      }
+    });
+    expect(unauthenticated.statusCode).toBe(403);
+
+    const self = await server.inject({
+      method: "POST",
+      url: `/v1/rooms/${created.room.id}/report`,
+      payload: {
+        sessionToken: created.sessionToken,
+        targetParticipantId: created.participant.id,
+        reason: "spam"
+      }
+    });
+    expect(self.statusCode).toBe(403);
+
+    const unknown = await server.inject({
+      method: "POST",
+      url: `/v1/rooms/${created.room.id}/report`,
+      payload: {
+        sessionToken: created.sessionToken,
+        targetParticipantId: "p_missing123",
+        reason: "spam"
+      }
+    });
+    expect(unknown.statusCode).toBe(403);
+
+    const oversized = await server.inject({
+      method: "POST",
+      url: `/v1/rooms/${created.room.id}/report`,
+      payload: {
+        sessionToken: created.sessionToken,
+        targetParticipantId: "p_missing123",
+        reason: "spam",
+        details: "x".repeat(501)
+      }
+    });
+    expect(oversized.statusCode).toBe(400);
+    await server.close();
+  });
+
   it("rejects spoofed or replayed sync commands", async () => {
     const server = await buildServer();
     const created = (

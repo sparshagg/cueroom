@@ -75,6 +75,52 @@ describePostgres("Postgres room store", () => {
     expect(await store.requireSession(created.room.id, guest.sessionToken)).toBeNull();
   });
 
+  it("persists bounded participant reports without exposing details in the response", async () => {
+    const store = createPostgresRoomStore(pool);
+    const created = await store.createRoom({
+      hostName: "Host",
+      title: "Report room"
+    });
+    const guest = await store.joinRoom({
+      inviteCode: created.room.inviteCode,
+      displayName: "Guest"
+    });
+    expect("error" in guest).toBe(false);
+    if ("error" in guest) {
+      throw new Error(guest.error);
+    }
+
+    const reported = await store.reportParticipant(created.room.id, created.sessionToken, {
+      targetParticipantId: guest.participant.id,
+      reason: "harassment",
+      details: "Unwanted repeated messages"
+    });
+
+    expect("error" in reported).toBe(false);
+    if ("error" in reported) {
+      throw new Error(reported.error);
+    }
+    expect(reported.report).toMatchObject({
+      roomId: created.room.id,
+      reporterParticipantId: created.participant.id,
+      targetParticipantId: guest.participant.id,
+      reason: "harassment"
+    });
+    expect(reported.report).not.toHaveProperty("details");
+
+    const rows = await pool.query<{ details: string }>(
+      "SELECT details FROM room_reports WHERE id = $1",
+      [reported.report.id]
+    );
+    expect(rows.rows[0]?.details).toBe("Unwanted repeated messages");
+
+    await store.kick(created.room.id, created.sessionToken, guest.participant.id);
+    const retained = await pool.query<{ id: string }>("SELECT id FROM room_reports WHERE id = $1", [
+      reported.report.id
+    ]);
+    expect(retained.rows).toHaveLength(1);
+  });
+
   it("rejects replayed sync sequences across store instances without Redis", async () => {
     const firstStore = createPostgresRoomStore(pool);
     const secondStore = createPostgresRoomStore(pool);

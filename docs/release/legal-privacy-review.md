@@ -25,6 +25,7 @@ This file records human review evidence before the first public beta. Do not che
 - [ ] Chrome Web Store privacy answers match `PRIVACY.md`.
 - [ ] Extension data handling matches `docs/security/chrome-web-store-review.md`.
 - [ ] Room chat remains transient by default.
+- [ ] Abuse reports persist only bounded report metadata and optional reporter-provided details.
 - [ ] Account/session tokens are hashed server-side where persisted.
 - [ ] Magic-link tokens are sent in URL fragments and verified through request bodies.
 - [ ] LiveKit JWTs are short-lived and held in browser memory only.

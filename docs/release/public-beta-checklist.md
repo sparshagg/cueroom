@@ -16,6 +16,7 @@ This checklist is the source of truth for the first public beta release gate. It
 - [ ] `pnpm extension:package` artifacts have been reviewed, including the ZIP, manifest audit, privacy policy copy, listing draft, and generated images.
 - [ ] Release package `SHA256SUMS` verifies locally.
 - [ ] `pnpm release:check -- --tag v0.1.0` passes before tagging.
+- [x] In-room report-user flow has API, UI, and regression coverage.
 - [ ] No open high or critical security findings remain in CodeQL, Dependabot, DAST review, or manual security review.
 - [ ] Release signing process is recorded in `RUNBOOK.md`, including the approved annotated-tag fallback if signing is unavailable.
 

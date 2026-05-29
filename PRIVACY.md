@@ -11,6 +11,7 @@ CueRoom is an open-source, non-affiliated co-watch companion for private watch r
 - [x] Playback sync metadata: Netflix watch URL fingerprint, title hint, paused state, current time, duration, playback rate, buffering state, timestamp, and sequence number.
 - [x] Call metadata: LiveKit participant identity, room identity, media mute/camera state, and connection state.
 - [x] Chat data: in-room chat messages while the room is active. Chat is not persisted by default.
+- [x] Abuse report data: reporter participant ID, reported participant ID, reason, optional bounded details, room ID, and timestamp when a participant submits a room report.
 - [x] Security data: minimal audit events and rate-limit state needed to protect rooms and investigate abuse.
 
 ## Data CueRoom Does Not Handle
@@ -32,6 +33,7 @@ CueRoom is an open-source, non-affiliated co-watch companion for private watch r
 - [x] Sync local playback state between participants who each use their own lawful Netflix session.
 - [x] Show wrong-title warnings and manual navigation links when participants are not on the same Netflix watch page.
 - [x] Detect abuse, enforce rate limits, debug service health, and respond to security reports.
+- [x] Receive and triage room participant reports without inspecting Netflix content or call media.
 
 CueRoom does not sell personal data, use personal data for targeted advertising, or transfer extension user data to advertising platforms or data brokers.
 
@@ -50,6 +52,7 @@ CueRoom's use of information received from Chrome extension APIs adheres to the 
 - [x] Room session data is stored in web `sessionStorage` for the current browser session.
 - [x] Redis data such as invites, room state, presence, sync counters, and rate limits is ephemeral.
 - [x] PostgreSQL stores only minimal account and room metadata needed for private rooms.
+- [x] PostgreSQL stores room participant reports so maintainers can investigate abuse; report responses and logs omit free-text report details by default.
 - [x] Chat messages are not persisted by default.
 
 ## User Choices
@@ -58,6 +61,7 @@ CueRoom's use of information received from Chrome extension APIs adheres to the 
 - [x] Disconnect the extension from the popup to remove the local room pairing.
 - [x] Leave a room to stop room presence, chat, sync, and call participation.
 - [x] Disable microphone or camera at any time from room controls.
+- [x] Submit room participant reports without including Netflix content, credentials, invite links, account tokens, or private room links.
 
 ## Contact
 

@@ -10,4 +10,5 @@
 - [x] Evidence: ZAP action artifacts plus `cueroom-dast-server-logs`.
 - [x] Current gate: non-blocking ZAP findings with workflow artifact review.
 - [ ] Beta gate: convert ZAP medium/high findings to blocking after the first baseline triage file is approved.
-- [ ] Scope expansion: add authenticated room, join, and report-user crawl contexts before public beta.
+- [x] Scope expansion base: room participant report API and UI exist for authenticated room sessions.
+- [ ] Scope expansion: add authenticated ZAP crawl contexts for room create, join, and report-user flows before public beta.

@@ -26,6 +26,7 @@ CueRoom is a web app, API, LiveKit deployment, and Chrome/Edge MV3 extension for
 - [ ] Extension permissions and release pipeline.
 - [ ] Minimal user account metadata.
 - [ ] Watch metadata such as title fingerprint and playback position.
+- [ ] Abuse report metadata and optional bounded report details.
 
 ## Attacker Stories
 
@@ -42,6 +43,7 @@ CueRoom is a web app, API, LiveKit deployment, and Chrome/Edge MV3 extension for
 - [ ] A trusted CueRoom web origin tries to send a direct extension playback command that bypasses server role checks.
 - [ ] A guest tries to establish playback authority by sending fake `sync.state` messages.
 - [ ] A follower is on the wrong Netflix title and receives drift correction for the host title.
+- [ ] A participant submits abusive or sensitive content through a report form to force over-collection.
 
 ## Required Controls
 
@@ -63,6 +65,8 @@ CueRoom is a web app, API, LiveKit deployment, and Chrome/Edge MV3 extension for
 - [ ] Passkey verification checks stored challenge, exact origin, exact RP ID, credential ownership, and counter updates.
 - [ ] No call recording or chat persistence by default.
 - [ ] Logs exclude secrets, credentials, content, and detailed message payloads.
+- [ ] Abuse report responses and logs exclude free-text report details by default.
+- [ ] Abuse report submission is authenticated, bounded, and endpoint-rate-limited.
 
 ## Severity Calibration
 

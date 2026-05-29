@@ -7,6 +7,7 @@ CueRoom's incident response process is designed for a privacy-preserving co-watc
 - [ ] Prefer GitHub private vulnerability reporting for security vulnerabilities after it is enabled.
 - [ ] Use `SECURITY.md` for vulnerability report expectations and response targets.
 - [ ] Use the abuse report issue template only for non-sensitive abuse reports.
+- [ ] Use the in-room report action for room participant abuse that can be tied to a current room session.
 - [ ] Move reports containing secrets, invite tokens, account tokens, or exploit details into a private channel.
 - [ ] Acknowledge security reports within 72 hours after public beta opens.
 

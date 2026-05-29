@@ -4,6 +4,7 @@ import {
   joinRoomRequestSchema,
   liveKitTokenRequestSchema,
   roomEventSchema,
+  roomReportRequestSchema,
   roomSocketClientMessageSchema,
   syncCommandSchema
 } from "@cueroom/shared";
@@ -65,6 +66,15 @@ const tokenMintRateLimit = {
   config: {
     rateLimit: {
       max: 30,
+      timeWindow: "1 minute"
+    }
+  }
+} as const;
+
+const roomReportRateLimit = {
+  config: {
+    rateLimit: {
+      max: 10,
       timeWindow: "1 minute"
     }
   }
@@ -303,6 +313,35 @@ export function registerRoutes(
     if ("error" in result) {
       return reply.code(403).send(result);
     }
+    return result;
+  });
+
+  server.post("/v1/rooms/:roomId/report", roomReportRateLimit, async (request, reply) => {
+    const { roomId } = z.object({ roomId: z.string().min(8) }).parse(request.params);
+    const body = roomReportRequestSchema.safeParse(request.body);
+    if (!body.success) {
+      return reply
+        .code(400)
+        .send({ error: "Invalid report request", details: body.error.flatten() });
+    }
+    const result = await store.reportParticipant(roomId, body.data.sessionToken, {
+      targetParticipantId: body.data.targetParticipantId,
+      reason: body.data.reason,
+      ...(body.data.details ? { details: body.data.details } : {})
+    });
+    if ("error" in result) {
+      return reply.code(403).send(result);
+    }
+    request.log.warn(
+      {
+        reportId: result.report.id,
+        roomId,
+        reporterParticipantId: result.report.reporterParticipantId,
+        targetParticipantId: result.report.targetParticipantId,
+        reason: result.report.reason
+      },
+      "Room participant reported"
+    );
     return result;
   });
 

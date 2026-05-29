@@ -161,3 +161,12 @@
 - [x] Reason: Repo-owned secret and license checks are reviewable and deterministic, while `pnpm audit` uses the package manager's advisory flow for installed dependencies.
 - [x] Security/privacy impact: Release artifacts are gated on no known dependency vulnerabilities, no denied licenses, and no high-confidence leaked secrets in tracked source.
 - [x] Rollback trigger: A maintained first-party GitHub or pnpm supply-chain gate replaces these scripts with equal or stronger evidence.
+
+## ADR-019: Room Participant Abuse Reports
+
+- [x] Problem: Public beta needs an in-product report-user path without collecting Netflix content, call media, credentials, or private room links.
+- [x] Options: GitHub issue template only, room-scoped report endpoint, or full moderation console.
+- [x] Decision: Add a room-scoped participant report endpoint and compact room UI action backed by authenticated room sessions.
+- [x] Reason: This gives maintainers actionable room/participant metadata for beta abuse triage without building a broad moderation system before launch.
+- [x] Security/privacy impact: Reports reject unauthenticated sessions, self-reports, unknown participant IDs, and oversized details; API responses and logs omit free-text details by default.
+- [x] Rollback trigger: Legal/privacy review requires a different retention model or a dedicated abuse operations backend.

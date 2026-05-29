@@ -131,6 +131,7 @@
 
 ## Abuse Report
 
+- [ ] For in-room reports, look up the `report_` ID in `room_reports` and preserve only the report metadata needed for action.
 - [ ] Use `.github/ISSUE_TEMPLATE/abuse_report.md` only for non-sensitive reports.
 - [ ] Move reports containing exploit detail, invite tokens, account tokens, or secrets into private security handling.
 - [ ] Preserve minimal audit data needed for investigation.

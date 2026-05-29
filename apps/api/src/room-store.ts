@@ -1,5 +1,13 @@
 import crypto from "node:crypto";
-import type { Participant, Room, RoomRole, RoomSession, SyncCommand } from "@cueroom/shared";
+import type {
+  AbuseReportReason,
+  Participant,
+  Room,
+  RoomReport,
+  RoomRole,
+  RoomSession,
+  SyncCommand
+} from "@cueroom/shared";
 
 type SessionRecord = {
   roomId: string;
@@ -27,6 +35,12 @@ export type StoreError = {
   error: string;
 };
 
+export type ReportParticipantInput = {
+  targetParticipantId: string;
+  reason: AbuseReportReason;
+  details?: string;
+};
+
 type Awaitable<T> = T | Promise<T>;
 
 export type RoomStore = {
@@ -50,6 +64,11 @@ export type RoomStore = {
     participantId: string
   ): Awaitable<{ room: Room; removedParticipantIds: string[] } | StoreError>;
   rotateInvite(roomId: string, sessionToken: string): Awaitable<{ room: Room } | StoreError>;
+  reportParticipant(
+    roomId: string,
+    sessionToken: string,
+    input: ReportParticipantInput
+  ): Awaitable<{ report: RoomReport } | StoreError>;
   acceptSyncCommand(
     roomId: string,
     sessionToken: string,
@@ -83,6 +102,7 @@ export function createInviteCode() {
 export function createRoomStore(): RoomStore {
   const rooms = new Map<string, Room>();
   const sessions = new Map<string, SessionRecord>();
+  const reports = new Map<string, RoomReport>();
   const lastSyncSequenceByRoom = new Map<string, number>();
 
   function createSession(roomId: string, participantId: string) {
@@ -212,6 +232,32 @@ export function createRoomStore(): RoomStore {
       }
       activeSession.room.inviteCode = createInviteCode();
       return { room: activeSession.room };
+    },
+
+    reportParticipant(roomId, sessionToken, input) {
+      const activeSession = this.requireSession(roomId, sessionToken) as ActiveSession | null;
+      if (!activeSession) {
+        return { error: "Forbidden" };
+      }
+      if (input.targetParticipantId === activeSession.participant.id) {
+        return { error: "Cannot report yourself" };
+      }
+      const target = activeSession.room.participants.find(
+        (participant) => participant.id === input.targetParticipantId
+      );
+      if (!target) {
+        return { error: "Participant not found" };
+      }
+      const report: RoomReport = {
+        id: `report_${crypto.randomUUID()}`,
+        roomId,
+        reporterParticipantId: activeSession.participant.id,
+        targetParticipantId: target.id,
+        reason: input.reason,
+        createdAt: new Date().toISOString()
+      };
+      reports.set(report.id, report);
+      return { report };
     },
 
     acceptSyncCommand(roomId, sessionToken, command) {

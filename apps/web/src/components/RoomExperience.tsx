@@ -8,6 +8,7 @@ import {
   CameraOff,
   Copy,
   ExternalLink,
+  Flag,
   Lock,
   LogIn,
   MessageCircle,
@@ -21,7 +22,7 @@ import {
   Users
 } from "lucide-react";
 import { toast } from "sonner";
-import type { RoomSession, SyncWarning } from "@cueroom/shared";
+import type { AbuseReportReason, RoomSession, SyncWarning } from "@cueroom/shared";
 import { LiveCallPanel } from "@/components/LiveCallPanel";
 import {
   getExtensionStatus,
@@ -29,6 +30,7 @@ import {
   pairExtension,
   rememberExtensionId
 } from "@/lib/extension";
+import { reportRoomParticipant } from "@/lib/api";
 import { clearRoomSession, readRoomSession } from "@/lib/room-session";
 import { useLiveKitCall } from "./useLiveKitCall";
 
@@ -62,6 +64,11 @@ export function RoomExperience({ roomId }: { roomId: string }) {
   const [syncWarning, setSyncWarning] = useState<SyncWarning | null>(null);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState(initialMessages);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportTargetId, setReportTargetId] = useState("");
+  const [reportReason, setReportReason] = useState<AbuseReportReason>("harassment");
+  const [reportDetails, setReportDetails] = useState("");
+  const [reportBusy, setReportBusy] = useState(false);
   const inviteUrl = useMemo(() => {
     const inviteCode = roomSession?.room.inviteCode ?? roomId;
     const origin = typeof window === "undefined" ? "https://cueroom.app" : window.location.origin;
@@ -69,6 +76,13 @@ export function RoomExperience({ roomId }: { roomId: string }) {
   }, [roomId, roomSession?.room.inviteCode]);
   const displayTitle = roomSession?.room.title ?? "Friday watch room";
   const participantCount = roomSession?.room.participants.length ?? (call.participants.length || 3);
+  const reportableParticipants = useMemo(
+    () =>
+      roomSession?.room.participants.filter(
+        (participant) => participant.id !== roomSession.participant.id
+      ) ?? [],
+    [roomSession]
+  );
   const cameraEnabled = roomSession ? call.localCameraEnabled : previewCameraEnabled;
   const micEnabled = roomSession ? call.localMicrophoneEnabled : previewMicEnabled;
   const syncHeadline = syncWarning
@@ -192,6 +206,35 @@ export function RoomExperience({ roomId }: { roomId: string }) {
       toast.error("Could not pair extension");
     } finally {
       setExtensionBusy(false);
+    }
+  }
+
+  async function submitReport() {
+    if (!roomSession) {
+      toast.message("Join a room before reporting a participant");
+      return;
+    }
+    const targetParticipantId = reportTargetId || reportableParticipants[0]?.id;
+    if (!targetParticipantId) {
+      toast.message("No participant available to report");
+      return;
+    }
+
+    setReportBusy(true);
+    try {
+      await reportRoomParticipant(roomSession.room.id, {
+        sessionToken: roomSession.sessionToken,
+        targetParticipantId,
+        reason: reportReason,
+        ...(reportDetails.trim() ? { details: reportDetails.trim() } : {})
+      });
+      setReportOpen(false);
+      setReportDetails("");
+      toast.success("Report submitted");
+    } catch {
+      toast.error("Could not submit report");
+    } finally {
+      setReportBusy(false);
     }
   }
 
@@ -340,11 +383,65 @@ export function RoomExperience({ roomId }: { roomId: string }) {
                   <h2 className="font-semibold">Chat</h2>
                   <p className="text-sm text-white/50">Ephemeral by default</p>
                 </div>
-                <Badge>
-                  <Users className="size-3.5" />
-                  {participantCount}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="icon"
+                    variant={reportOpen ? "secondary" : "outline"}
+                    onClick={() => setReportOpen((open) => !open)}
+                    disabled={!roomSession || reportableParticipants.length === 0}
+                    aria-label="Report participant"
+                    title="Report participant"
+                  >
+                    <Flag className="size-4" />
+                  </Button>
+                  <Badge>
+                    <Users className="size-3.5" />
+                    {participantCount}
+                  </Badge>
+                </div>
               </div>
+              {reportOpen && (
+                <div className="grid gap-2 border-b border-white/10 p-3">
+                  <select
+                    className="h-10 rounded-lg border border-white/10 bg-black/30 px-3 text-sm text-white outline-none focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/20"
+                    value={reportTargetId || reportableParticipants[0]?.id || ""}
+                    onChange={(event) => setReportTargetId(event.target.value)}
+                    aria-label="Report participant"
+                  >
+                    {reportableParticipants.map((participant) => (
+                      <option key={participant.id} value={participant.id}>
+                        {participant.displayName}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className="h-10 rounded-lg border border-white/10 bg-black/30 px-3 text-sm text-white outline-none focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/20"
+                    value={reportReason}
+                    onChange={(event) => setReportReason(event.target.value as AbuseReportReason)}
+                    aria-label="Report reason"
+                  >
+                    <option value="harassment">Harassment</option>
+                    <option value="spam">Spam</option>
+                    <option value="impersonation">Impersonation</option>
+                    <option value="unsafe_behavior">Unsafe behavior</option>
+                    <option value="other">Other</option>
+                  </select>
+                  <Input
+                    value={reportDetails}
+                    onChange={(event) => setReportDetails(event.target.value.slice(0, 500))}
+                    placeholder="Brief details"
+                    aria-label="Report details"
+                  />
+                  <Button
+                    variant="destructive"
+                    onClick={() => void submitReport()}
+                    disabled={reportBusy || reportableParticipants.length === 0}
+                  >
+                    <Flag className="size-4" />
+                    {reportBusy ? "Submitting..." : "Submit report"}
+                  </Button>
+                </div>
+              )}
               <div className="grid content-start gap-3 overflow-auto p-4">
                 {messages.map((chatMessage) => (
                   <div
