@@ -15,6 +15,7 @@
 
 - [ ] Run `docker compose -f infra/docker/compose.dev.yml up --build`.
 - [ ] Confirm Postgres, Redis, LiveKit, API, and web containers are healthy.
+- [ ] Confirm dev ports are bound to `127.0.0.1`, not all host interfaces.
 - [ ] Confirm the API container uses `ROOM_STORE=postgres` and `POSTGRES_URL=postgres://cueroom:cueroom@postgres:5432/cueroom`.
 - [ ] Use local LiveKit keys from `.env.example` only for development.
 
@@ -30,10 +31,13 @@
 - [ ] Run `REDIS_TEST_URL=redis://localhost:6379/1 pnpm --filter @cueroom/api test`.
 - [ ] Run combined state tests with `POSTGRES_TEST_URL=postgres://cueroom:cueroom@localhost:5432/cueroom REDIS_TEST_URL=redis://localhost:6379/1 pnpm --filter @cueroom/api test`.
 - [ ] Confirm sync replay is rejected across two API store instances sharing Redis.
+- [ ] Confirm Postgres-only sync replay is also rejected across two API store instances when Redis is unavailable.
 
 ## Auth Verification
 
 - [ ] Set `AUTH_REQUIRED=true`, `AUTH_RP_ID=localhost`, and `AUTH_ORIGIN=http://localhost:3000` for local auth-gated room creation.
+- [ ] Set `AUTH_DEV_MAGIC_LINKS=true` only for local development flows that need returned `devToken` or `devLink` values.
+- [ ] Confirm `AUTH_DEV_MAGIC_LINKS=true` is rejected when `NODE_ENV=production`.
 - [ ] Run `POSTGRES_TEST_URL=postgres://cueroom:cueroom@localhost:5432/cueroom pnpm --filter @cueroom/api test`.
 - [ ] Confirm `auth_sessions` and `magic_links` contain only token hashes, never raw `cas_` or `cml_` tokens.
 - [ ] Confirm room sessions use `crs_` tokens and account sessions use `cas_` tokens.
@@ -48,6 +52,7 @@
 - [ ] Confirm LiveKit JWTs are not stored in browser storage or printed in logs.
 - [ ] Confirm decoded LiveKit grants allow `roomJoin`, camera publish, microphone publish, and subscribe only; data publish, admin, create, list, and record grants must remain disabled.
 - [ ] Confirm microphone and camera tracks publish only after explicit user toggle actions.
+- [ ] Confirm kick requests close CueRoom realtime sockets and report failure if LiveKit participant removal fails.
 
 ## Extension Development
 
@@ -57,6 +62,7 @@
 - [ ] Load unpacked extension from `apps/extension/dist`.
 - [ ] Copy the loaded extension ID into `NEXT_PUBLIC_CUEROOM_EXTENSION_ID` or the room page extension ID field.
 - [ ] Confirm the manifest has no forbidden permissions with `pnpm security:extension`.
+- [ ] Confirm the manifest audit covers `permissions`, `optional_permissions`, `host_permissions`, `optional_host_permissions`, `content_scripts.matches`, content-script file paths, content-script world, CSP, and `externally_connectable.matches`.
 - [ ] Pair only with `http://localhost:3000` or approved CueRoom origins.
 - [ ] Confirm the extension WebSocket connects to `/v1/rooms/:roomId/realtime` only after a room pairing message.
 - [ ] Confirm commands from the web page are relayed to the API and are not applied to Netflix until the API broadcasts `sync.command`.

@@ -407,6 +407,10 @@ export function validateAuthConfig() {
       );
     }
   }
+
+  if (process.env.NODE_ENV === "production" && process.env.AUTH_DEV_MAGIC_LINKS === "true") {
+    throw new Error("AUTH_DEV_MAGIC_LINKS must not be enabled in production");
+  }
 }
 
 export function createMagicLinkResult(token: string, expiresAt: number): MagicLinkRequestResult {
@@ -414,7 +418,7 @@ export function createMagicLinkResult(token: string, expiresAt: number): MagicLi
     accepted: true,
     expiresAt: new Date(expiresAt).toISOString()
   };
-  if (process.env.AUTH_DEV_MAGIC_LINKS === "false" || process.env.NODE_ENV === "production") {
+  if (process.env.AUTH_DEV_MAGIC_LINKS !== "true" || process.env.NODE_ENV === "production") {
     return result;
   }
 

@@ -42,4 +42,43 @@ describe("auditExtensionManifest", () => {
       message: "Unexpected externally_connectable match: https://evil.example/*"
     });
   });
+
+  it("audits optional permissions and content script matches", () => {
+    const findings = auditExtensionManifest({
+      optional_permissions: ["tabs"],
+      optional_host_permissions: ["https://example.com/*"],
+      content_scripts: [
+        {
+          matches: ["<all_urls>", "https://example.com/*"],
+          js: ["https://cdn.example.com/content-script.js"],
+          world: "MAIN"
+        }
+      ]
+    });
+
+    expect(findings).toContainEqual({
+      severity: "high",
+      message: "Unexpected extension optional permission: tabs"
+    });
+    expect(findings).toContainEqual({
+      severity: "high",
+      message: "Unexpected optional host permission: https://example.com/*"
+    });
+    expect(findings).toContainEqual({
+      severity: "critical",
+      message: "Extension content scripts must not match broad hosts"
+    });
+    expect(findings).toContainEqual({
+      severity: "high",
+      message: "Unexpected content script match: https://example.com/*"
+    });
+    expect(findings).toContainEqual({
+      severity: "critical",
+      message: "Content script must be bundled locally: https://cdn.example.com/content-script.js"
+    });
+    expect(findings).toContainEqual({
+      severity: "high",
+      message: "Content scripts must run in the isolated world"
+    });
+  });
 });

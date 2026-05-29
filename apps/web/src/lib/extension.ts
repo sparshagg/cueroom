@@ -61,6 +61,7 @@ export async function pairExtension(
   if (!runtime || !trimmedExtensionId) {
     throw new Error("CueRoom extension is unavailable");
   }
+  assertTrustedExtensionId(trimmedExtensionId, window.location.origin);
 
   const request = extensionPairRequestSchema.parse({
     type: "PAIR_ROOM",
@@ -85,6 +86,29 @@ export async function pairExtension(
       resolve(response);
     });
   });
+}
+
+function assertTrustedExtensionId(extensionId: string, appOrigin: string) {
+  const configuredExtensionId = process.env.NEXT_PUBLIC_CUEROOM_EXTENSION_ID?.trim() ?? "";
+  if (configuredExtensionId) {
+    if (extensionId !== configuredExtensionId) {
+      throw new Error("CueRoom extension ID does not match trusted configuration");
+    }
+    return;
+  }
+
+  if (!isLocalAppOrigin(appOrigin)) {
+    throw new Error("Trusted CueRoom extension ID is not configured");
+  }
+}
+
+function isLocalAppOrigin(appOrigin: string) {
+  try {
+    const { hostname } = new URL(appOrigin);
+    return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+  } catch {
+    return false;
+  }
 }
 
 export async function getExtensionStatus(

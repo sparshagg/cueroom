@@ -107,3 +107,12 @@
 - [x] Reason: The scanner needs a running web/API pair and produces evidence better suited to CI artifacts than local source checks.
 - [x] Security/privacy impact: Web security headers are set before scanning; DAST artifacts become part of the release review path.
 - [x] Rollback trigger: Baseline findings are triaged and the workflow can be promoted to fail on medium/high alerts.
+
+## ADR-013: Independent Security Review Hardening
+
+- [x] Problem: Close security-review gaps without widening CueRoom's Netflix, media, or account data boundaries.
+- [x] Options: defer findings to beta, patch only tests/docs, or land source-level controls with focused regression coverage.
+- [x] Decision: Land source-level controls for extension audits, realtime session rechecks, WebSocket rate limits, LiveKit kick failure reporting, Postgres sync replay persistence, Docker loopback ports, and opt-in dev magic links.
+- [x] Reason: These controls are small, local, and reduce production footguns before public beta.
+- [x] Security/privacy impact: Reduces token disclosure risk, stale realtime authorization, replay acceptance across API instances, broad extension-permission drift, unintended dev service exposure, and silent media-removal failure.
+- [x] Rollback trigger: Operational testing shows the controls break supported local development or require a different auth/realtime architecture.

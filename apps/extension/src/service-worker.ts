@@ -481,9 +481,9 @@ chrome.runtime.onMessageExternal.addListener((message: unknown, sender, sendResp
       sendResponse({
         ok: true,
         pairedRoomId: pairing?.roomId ?? null,
-        playbackState: stored["latestPlaybackState"] ?? null,
+        playbackState: pairing ? (stored["latestPlaybackState"] ?? null) : null,
         realtimeConnected: realtimeSocket?.readyState === WebSocket.OPEN,
-        syncWarning: stored[latestSyncWarningKey] ?? null
+        syncWarning: pairing ? (stored[latestSyncWarningKey] ?? null) : null
       });
     });
     return true;
@@ -527,6 +527,11 @@ chrome.runtime.onMessageExternal.addListener((message: unknown, sender, sendResp
 });
 
 chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
+  if (!sender.tab && isUnpairMessage(message)) {
+    void setPairing(null).then(() => sendResponse({ ok: true }));
+    return true;
+  }
+
   if (!sender.tab?.url?.startsWith("https://www.netflix.com/watch/")) {
     sendResponse({ ok: false, error: "Unexpected sender" });
     return false;

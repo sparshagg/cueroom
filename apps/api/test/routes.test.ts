@@ -18,16 +18,10 @@ describe("CueRoom API", () => {
       });
       expect(blocked.statusCode).toBe(401);
 
-      const requested = (
-        await server.inject({
-          method: "POST",
-          url: "/v1/auth/magic-link/request",
-          payload: {
-            email: "host@example.com",
-            displayName: "Host"
-          }
-        })
-      ).json();
+      const requested = await requestDevMagicLink(server, {
+        email: "host@example.com",
+        displayName: "Host"
+      });
       expect(requested.devToken).toMatch(/^cml_/);
 
       const verified = (
@@ -65,16 +59,10 @@ describe("CueRoom API", () => {
 
   it("does not confuse account sessions and room sessions", async () => {
     const server = await buildServer();
-    const requested = (
-      await server.inject({
-        method: "POST",
-        url: "/v1/auth/magic-link/request",
-        payload: {
-          email: "host@example.com",
-          displayName: "Host"
-        }
-      })
-    ).json();
+    const requested = await requestDevMagicLink(server, {
+      email: "host@example.com",
+      displayName: "Host"
+    });
     const verified = (
       await server.inject({
         method: "POST",
@@ -132,16 +120,10 @@ describe("CueRoom API", () => {
     });
     expect(unauthorized.statusCode).toBe(401);
 
-    const requested = (
-      await server.inject({
-        method: "POST",
-        url: "/v1/auth/magic-link/request",
-        payload: {
-          email: "host@example.com",
-          displayName: "Host"
-        }
-      })
-    ).json();
+    const requested = await requestDevMagicLink(server, {
+      email: "host@example.com",
+      displayName: "Host"
+    });
     const verified = (
       await server.inject({
         method: "POST",
@@ -204,7 +186,9 @@ describe("CueRoom API", () => {
     process.env.LIVEKIT_API_KEY = "devkey";
     process.env.LIVEKIT_API_SECRET = "secret";
 
-    const server = await buildServer();
+    const server = await buildServer({
+      removeLiveKitParticipant: async () => undefined
+    });
     try {
       const created = (
         await server.inject({
@@ -419,7 +403,63 @@ describe("CueRoom API", () => {
     expect(spoof.statusCode).toBe(403);
     await server.close();
   });
+
+  it("reports kick failure when LiveKit call removal fails", async () => {
+    const server = await buildServer({
+      removeLiveKitParticipant: async () => {
+        throw new Error("LiveKit unavailable");
+      }
+    });
+    const created = (
+      await server.inject({
+        method: "POST",
+        url: "/v1/rooms",
+        payload: { hostName: "Host", title: "Room" }
+      })
+    ).json();
+    const guest = (
+      await server.inject({
+        method: "POST",
+        url: "/v1/rooms/join",
+        payload: { inviteCode: created.room.inviteCode, displayName: "Guest" }
+      })
+    ).json();
+
+    const kicked = await server.inject({
+      method: "POST",
+      url: `/v1/rooms/${created.room.id}/kick`,
+      payload: {
+        sessionToken: created.sessionToken,
+        participantId: guest.participant.id
+      }
+    });
+
+    expect(kicked.statusCode).toBe(502);
+    expect(kicked.json()).toEqual({
+      error: "Participant removed from room, but call removal failed"
+    });
+    await server.close();
+  });
 });
+
+async function requestDevMagicLink(
+  server: Awaited<ReturnType<typeof buildServer>>,
+  payload: { email: string; displayName?: string }
+) {
+  const previousDevMagicLinks = process.env.AUTH_DEV_MAGIC_LINKS;
+  process.env.AUTH_DEV_MAGIC_LINKS = "true";
+  try {
+    return (
+      await server.inject({
+        method: "POST",
+        url: "/v1/auth/magic-link/request",
+        payload
+      })
+    ).json();
+  } finally {
+    restoreEnv("AUTH_DEV_MAGIC_LINKS", previousDevMagicLinks);
+  }
+}
 
 function restoreEnv(name: string, value: string | undefined) {
   if (value === undefined) {

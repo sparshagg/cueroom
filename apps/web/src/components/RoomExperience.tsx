@@ -89,8 +89,13 @@ export function RoomExperience({ roomId }: { roomId: string }) {
         if (cancelled || !status.ok) {
           return;
         }
-        setExtensionPaired(Boolean(status.pairedRoomId && status.realtimeConnected));
-        setSyncWarning(status.syncWarning);
+        const pairedToCurrentRoom = status.pairedRoomId === roomSession?.room.id;
+        setExtensionPaired(Boolean(pairedToCurrentRoom && status.realtimeConnected));
+        setSyncWarning(
+          pairedToCurrentRoom && status.syncWarning?.roomId === roomSession?.room.id
+            ? status.syncWarning
+            : null
+        );
       } catch {
         if (!cancelled) {
           setExtensionPaired(false);
@@ -104,7 +109,7 @@ export function RoomExperience({ roomId }: { roomId: string }) {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [extensionId]);
+  }, [extensionId, roomSession?.room.id]);
 
   function sendMessage() {
     const trimmed = message.trim();

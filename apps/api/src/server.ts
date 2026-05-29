@@ -10,16 +10,19 @@ import { closeRedisClient, createRedisClient, type RedisClient } from "./redis.j
 import { createRedisRoomState } from "./redis-room-state.js";
 import { createRoomStore, type RoomStore } from "./room-store.js";
 import { createAuthStore, validateAuthConfig, type AuthStore } from "./auth-store.js";
+import { validateLiveKitConfig } from "./livekit.js";
+
+type RemoveLiveKitParticipant = (roomId: string, participantId: string) => Promise<void>;
 
 type BuildServerOptions = {
   store?: RoomStore;
   authStore?: AuthStore;
+  removeLiveKitParticipant?: RemoveLiveKitParticipant;
 };
 
 export async function buildServer(options: BuildServerOptions = {}) {
-  if (process.env.AUTH_REQUIRED === "true" || process.env.AUTH_PASSKEYS_ENABLED === "true") {
-    validateAuthConfig();
-  }
+  validateAuthConfig();
+  validateLiveKitConfig();
   const redis = process.env.REDIS_URL ? createRedisClient() : undefined;
   const server = Fastify({
     logger: {
@@ -65,7 +68,13 @@ export async function buildServer(options: BuildServerOptions = {}) {
       await closeRedisClient(redis);
     }
   });
-  registerRoutes(server, store, authStore);
+  if (options.removeLiveKitParticipant) {
+    registerRoutes(server, store, authStore, {
+      removeLiveKitParticipant: options.removeLiveKitParticipant
+    });
+  } else {
+    registerRoutes(server, store, authStore);
+  }
 
   return server;
 }

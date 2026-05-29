@@ -56,8 +56,10 @@ CueRoom is a web app, API, LiveKit deployment, and Chrome/Edge MV3 extension for
 - [ ] Minimal Chrome permissions and manifest audits.
 - [ ] LiveKit tokens minted only by API.
 - [ ] LiveKit grants are scoped to one room and participant, disable data publishing, and only allow camera/microphone publish sources.
+- [ ] Realtime room sockets recheck membership before accepting room-impacting messages and close kicked participants.
 - [ ] Account tokens and room tokens have separate prefixes and verification paths.
 - [ ] Magic-link tokens are single-use, short-lived, and hashed at rest.
+- [ ] Development magic-link token disclosure is opt-in only and rejected in production configuration.
 - [ ] Passkey verification checks stored challenge, exact origin, exact RP ID, credential ownership, and counter updates.
 - [ ] No call recording or chat persistence by default.
 - [ ] Logs exclude secrets, credentials, content, and detailed message payloads.

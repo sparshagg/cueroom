@@ -12,8 +12,8 @@ CueRoom does not stream Netflix content. Every participant watches through their
 - [x] Postgres-backed room/session persistence.
 - [x] Chrome/Edge MV3 extension skeleton.
 - [x] Docker and CI skeleton.
-- [ ] Redis presence/rate limits/sync counters.
-- [ ] Production auth.
+- [x] Redis presence/rate limits/sync counters.
+- [x] Passkey and magic-link auth foundation.
 - [ ] Public beta.
 
 ## Apps
@@ -40,6 +40,8 @@ For the containerized stack with Postgres, Redis, and LiveKit:
 ```bash
 docker compose -f infra/docker/compose.dev.yml up --build
 ```
+
+The development compose stack binds published ports to `127.0.0.1`. Use `.env.example` values only for local development, including `AUTH_DEV_MAGIC_LINKS=true`.
 
 ## Security Promise
 

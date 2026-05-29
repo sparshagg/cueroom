@@ -1,10 +1,15 @@
 import { z } from "zod";
 import { roomRoleSchema } from "./rooms.js";
 
+export const netflixWatchUrlSchema = z
+  .string()
+  .url()
+  .refine(isNetflixWatchUrl, "Expected a Netflix watch URL");
+
 export const playbackStateSchema = z.object({
   watchId: z.string().min(1).max(256),
   titleHint: z.string().max(160).optional(),
-  url: z.string().url(),
+  url: netflixWatchUrlSchema,
   paused: z.boolean(),
   currentTime: z.number().finite().min(0),
   duration: z.number().finite().min(0),
@@ -45,7 +50,7 @@ export const syncWarningSchema = z.object({
   participantId: z.string().min(8),
   expectedWatchId: z.string().min(1).max(256),
   expectedTitleHint: z.string().max(160).optional(),
-  expectedUrl: z.string().url(),
+  expectedUrl: netflixWatchUrlSchema,
   currentWatchId: z.string().min(1).max(256),
   currentTitleHint: z.string().max(160).optional(),
   detectedAt: z.number().int().positive()
@@ -184,4 +189,19 @@ export type ExtensionStatusResponse = z.infer<typeof extensionStatusResponseSche
 
 export function parseJsonWithSchema<T>(schema: z.ZodSchema<T>, input: unknown): T {
   return schema.parse(input);
+}
+
+function isNetflixWatchUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return (
+      url.protocol === "https:" &&
+      url.hostname === "www.netflix.com" &&
+      url.search === "" &&
+      url.hash === "" &&
+      /^\/watch\/[^/?#]+$/.test(url.pathname)
+    );
+  } catch {
+    return false;
+  }
 }

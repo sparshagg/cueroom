@@ -52,7 +52,7 @@
 - [x] Add CodeQL and dependency workflows.
 - [x] Add PostgreSQL/Redis integration tests.
 - [x] Add DAST and extension store review checklist evidence.
-- [ ] Run independent security review.
+- [x] Run independent security review.
 
 ## M6: Public Beta
 

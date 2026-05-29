@@ -33,7 +33,10 @@ async function refreshPopup() {
 }
 
 document.querySelector("#disconnect")?.addEventListener("click", () => {
-  void chrome.storage.local.remove("pairedRoom").then(refreshPopup);
+  void chrome.runtime
+    .sendMessage({ type: "UNPAIR_ROOM" })
+    .catch(() => chrome.storage.local.remove(["pairedRoom", "latestSyncWarning"]))
+    .then(refreshPopup);
 });
 
 void refreshPopup();

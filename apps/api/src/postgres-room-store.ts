@@ -41,8 +41,6 @@ export function hashSessionToken(sessionToken: string) {
 }
 
 export function createPostgresRoomStore(pool: PostgresPool, roomState?: RedisRoomState): RoomStore {
-  const lastSyncSequenceByRoom = new Map<string, number>();
-
   async function insertSession(
     queryable: Queryable,
     roomId: string,
@@ -411,11 +409,10 @@ export function createPostgresRoomStore(pool: PostgresPool, roomState?: RedisRoo
           return { error: "Replay detected" };
         }
       } else {
-        const lastSequence = lastSyncSequenceByRoom.get(roomId) ?? -1;
-        if (command.sequence <= lastSequence) {
+        const accepted = await acceptPostgresSyncSequence(pool, roomId, command.sequence);
+        if (!accepted) {
           return { error: "Replay detected" };
         }
-        lastSyncSequenceByRoom.set(roomId, command.sequence);
       }
       return { accepted: true, command };
     },
@@ -478,4 +475,20 @@ async function acceptRedisSyncSequence(
   } catch {
     return false;
   }
+}
+
+async function acceptPostgresSyncSequence(queryable: Queryable, roomId: string, sequence: number) {
+  const result = await queryable.query<{ last_sequence: string }>(
+    `
+      INSERT INTO room_sync_sequences (room_id, last_sequence, updated_at)
+      VALUES ($1, $2, NOW())
+      ON CONFLICT (room_id) DO UPDATE
+      SET last_sequence = EXCLUDED.last_sequence,
+          updated_at = NOW()
+      WHERE room_sync_sequences.last_sequence < EXCLUDED.last_sequence
+      RETURNING last_sequence
+    `,
+    [roomId, sequence]
+  );
+  return result.rowCount === 1;
 }

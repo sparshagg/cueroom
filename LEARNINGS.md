@@ -140,3 +140,23 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: Chrome Web Store policy review includes permission/data-use review and bars misleading or undisclosed behavior.
   - Impact: CueRoom records non-affiliation, least-permission, and no-sensitive-Netflix-data evidence as release gates.
+- [ ] Source: https://developer.chrome.com/docs/extensions/develop/concepts/declare-permissions
+  - Stale-by: 2026-08-29
+  - Learning: Chrome MV3 permission surfaces include `permissions`, `optional_permissions`, `host_permissions`, `optional_host_permissions`, and `content_scripts.matches`; host and content-script match changes can trigger warnings.
+  - Impact: The extension manifest audit checks required, optional, host, and content-script permission surfaces instead of only required permissions.
+- [ ] Source: https://developer.chrome.com/docs/extensions/reference/manifest/content-scripts
+  - Stale-by: 2026-08-29
+  - Learning: Manifest content scripts must use extension-local file paths, match explicit URL patterns, and default to the isolated world; `MAIN` world lets the host page interfere with the script.
+  - Impact: The extension audit rejects remote content-script URLs, broad content-script matches, and `MAIN` world injection.
+- [ ] Source: https://docs.docker.com/reference/compose-file/services/#ports
+  - Stale-by: 2026-08-29
+  - Learning: Docker Compose port mappings without a host IP bind to all interfaces, while short syntax supports explicit `127.0.0.1:host:container` bindings and port ranges.
+  - Impact: The dev compose stack binds Postgres, Redis, LiveKit, API, and web ports to loopback.
+- [ ] Source: https://cornucopia.owasp.org/taxonomy/asvs-5.0/07-session-management/02-fundamental-session-management-security
+  - Stale-by: 2026-08-29
+  - Learning: ASVS requires session-token verification by a trusted backend service and dynamically generated session tokens.
+  - Impact: Realtime sockets recheck room sessions before accepting room-impacting messages instead of trusting only initial WebSocket auth.
+- [ ] Source: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+  - Stale-by: 2026-08-29
+  - Learning: Session tokens are equivalent to authentication credentials while active and must be protected from disclosure, logging, and unintended exchange channels.
+  - Impact: Magic-link dev token disclosure is opt-in and rejected in production config.

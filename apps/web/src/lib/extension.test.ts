@@ -1,6 +1,16 @@
 import type { RoomSession } from "@cueroom/shared";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { getExtensionStatus, pairExtension } from "./extension";
+
+const originalTrustedExtensionId = process.env.NEXT_PUBLIC_CUEROOM_EXTENSION_ID;
+
+afterEach(() => {
+  if (originalTrustedExtensionId === undefined) {
+    delete process.env.NEXT_PUBLIC_CUEROOM_EXTENSION_ID;
+  } else {
+    process.env.NEXT_PUBLIC_CUEROOM_EXTENSION_ID = originalTrustedExtensionId;
+  }
+});
 
 describe("pairExtension", () => {
   it("sends only room-scoped pairing details to the configured extension", async () => {
@@ -45,6 +55,18 @@ describe("pairExtension", () => {
     await expect(pairExtension(roomSession, "extension_id", { runtime })).rejects.toThrow(
       "Unexpected extension response"
     );
+  });
+
+  it("does not send room session tokens to untrusted configured extension ids", async () => {
+    process.env.NEXT_PUBLIC_CUEROOM_EXTENSION_ID = "trusted_extension_id";
+    const runtime = {
+      sendMessage: vi.fn()
+    };
+
+    await expect(pairExtension(roomSession, "attacker_extension_id", { runtime })).rejects.toThrow(
+      "trusted configuration"
+    );
+    expect(runtime.sendMessage).not.toHaveBeenCalled();
   });
 });
 

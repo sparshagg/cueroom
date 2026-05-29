@@ -74,6 +74,29 @@ describePostgres("Postgres room store", () => {
     expect("error" in kicked).toBe(false);
     expect(await store.requireSession(created.room.id, guest.sessionToken)).toBeNull();
   });
+
+  it("rejects replayed sync sequences across store instances without Redis", async () => {
+    const firstStore = createPostgresRoomStore(pool);
+    const secondStore = createPostgresRoomStore(pool);
+    const created = await firstStore.createRoom({
+      hostName: "Host",
+      title: "Postgres sync room"
+    });
+    const command = {
+      roomId: created.room.id,
+      actorId: created.participant.id,
+      command: "pause" as const,
+      issuedAt: Date.now(),
+      sequence: 1
+    };
+
+    await expect(
+      firstStore.acceptSyncCommand(created.room.id, created.sessionToken, command)
+    ).resolves.toEqual({ accepted: true, command });
+    await expect(
+      secondStore.acceptSyncCommand(created.room.id, created.sessionToken, command)
+    ).resolves.toEqual({ error: "Replay detected" });
+  });
 });
 
 const describePostgresRedis =

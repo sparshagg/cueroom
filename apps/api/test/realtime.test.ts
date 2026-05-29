@@ -1,10 +1,13 @@
 import type { RoomEvent, RoomSession } from "@cueroom/shared";
 import { describe, expect, it } from "vitest";
+import { createRoomStore, type ActiveSession, type RoomStore } from "../src/room-store";
 import { buildServer } from "../src/server";
 
 type RealtimeTestSocket = {
   on(event: "message", listener: (data: unknown) => void): void;
+  on(event: "close", listener: () => void): void;
   off(event: "message", listener: (data: unknown) => void): void;
+  off(event: "close", listener: () => void): void;
   send(data: string): void;
   terminate(): void;
 };
@@ -337,6 +340,160 @@ describe("CueRoom realtime room WebSocket", () => {
       await server.close();
     }
   });
+
+  it("closes realtime access when a participant is kicked", async () => {
+    const server = await buildServer();
+    await server.ready();
+
+    try {
+      const created = (
+        await server.inject({
+          method: "POST",
+          url: "/v1/rooms",
+          payload: { hostName: "Host", title: "Kick room" }
+        })
+      ).json() as RoomSession;
+      const guest = (
+        await server.inject({
+          method: "POST",
+          url: "/v1/rooms/join",
+          payload: { inviteCode: created.room.inviteCode, displayName: "Guest" }
+        })
+      ).json() as RoomSession;
+      const secondGuest = (
+        await server.inject({
+          method: "POST",
+          url: "/v1/rooms/join",
+          payload: { inviteCode: created.room.inviteCode, displayName: "Second guest" }
+        })
+      ).json() as RoomSession;
+
+      const host = await connectRealtime(server, created);
+      const guestSocket = await connectRealtime(server, guest);
+      const secondGuestSocket = await connectRealtime(server, secondGuest);
+      const kickedNotice = waitForRoomEvent(secondGuestSocket, "presence.left");
+
+      const kickResponse = await server.inject({
+        method: "POST",
+        url: `/v1/rooms/${created.room.id}/kick`,
+        payload: {
+          sessionToken: created.sessionToken,
+          participantId: guest.participant.id
+        }
+      });
+      expect(kickResponse.statusCode).toBe(200);
+      expect(await kickedNotice).toMatchObject({
+        type: "presence.left",
+        roomId: created.room.id,
+        participantId: guest.participant.id
+      });
+
+      const leakedState = expectNoRoomEvent(secondGuestSocket, "sync.state");
+      try {
+        guestSocket.send(
+          JSON.stringify({
+            type: "sync.state",
+            roomId: created.room.id,
+            participantId: guest.participant.id,
+            state: playbackState({ sequence: 40 })
+          })
+        );
+      } catch {
+        // The expected secure state is for the kicked socket to be closed already.
+      }
+      await leakedState;
+
+      host.terminate();
+      secondGuestSocket.terminate();
+    } finally {
+      await server.close();
+    }
+  });
+
+  it("rechecks room membership before accepting playback state", async () => {
+    const backingStore = createRoomStore();
+    let sessionsAreValid = true;
+    const store: RoomStore = {
+      ...backingStore,
+      requireSession(roomId, sessionToken) {
+        return sessionsAreValid
+          ? (backingStore.requireSession(roomId, sessionToken) as ActiveSession | null)
+          : null;
+      }
+    };
+    const server = await buildServer({ store });
+    await server.ready();
+
+    try {
+      const created = (
+        await server.inject({
+          method: "POST",
+          url: "/v1/rooms",
+          payload: { hostName: "Host", title: "Recheck room" }
+        })
+      ).json() as RoomSession;
+      const guest = (
+        await server.inject({
+          method: "POST",
+          url: "/v1/rooms/join",
+          payload: { inviteCode: created.room.inviteCode, displayName: "Guest" }
+        })
+      ).json() as RoomSession;
+
+      const host = await connectRealtime(server, created);
+      const guestSocket = await connectRealtime(server, guest);
+      sessionsAreValid = false;
+
+      const leakedState = expectNoRoomEvent(guestSocket, "sync.state");
+      host.send(
+        JSON.stringify({
+          type: "sync.state",
+          roomId: created.room.id,
+          participantId: created.participant.id,
+          state: playbackState({ sequence: 50 })
+        })
+      );
+      await leakedState;
+
+      guestSocket.terminate();
+    } finally {
+      await server.close();
+    }
+  });
+
+  it("rate limits realtime message bursts", async () => {
+    const server = await buildServer();
+    await server.ready();
+
+    try {
+      const created = (
+        await server.inject({
+          method: "POST",
+          url: "/v1/rooms",
+          payload: { hostName: "Host", title: "Rate limit room" }
+        })
+      ).json() as RoomSession;
+
+      const host = await connectRealtime(server, created);
+      const closed = waitForSocketClose(host);
+      for (let index = 0; index < 35; index += 1) {
+        try {
+          host.send(
+            JSON.stringify({
+              type: "ping",
+              sentAt: Date.now() + index + 1
+            })
+          );
+        } catch {
+          break;
+        }
+      }
+
+      await closed;
+    } finally {
+      await server.close();
+    }
+  });
 });
 
 async function connectRealtime(
@@ -410,6 +567,21 @@ function expectNoRoomEvent<TType extends RoomEvent["type"]>(
     };
 
     socket.on("message", listener);
+  });
+}
+
+function waitForSocketClose(socket: RealtimeTestSocket) {
+  return new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      socket.off("close", listener);
+      reject(new Error("Timed out waiting for socket close"));
+    }, 1_000);
+    const listener = () => {
+      clearTimeout(timeout);
+      socket.off("close", listener);
+      resolve();
+    };
+    socket.on("close", listener);
   });
 }
 

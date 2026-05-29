@@ -70,7 +70,20 @@ const tokenMintRateLimit = {
   }
 } as const;
 
-export function registerRoutes(server: FastifyInstance, store: RoomStore, authStore: AuthStore) {
+type RegisterRoutesOptions = {
+  removeLiveKitParticipant?: (roomId: string, participantId: string) => Promise<void>;
+};
+
+export function registerRoutes(
+  server: FastifyInstance,
+  store: RoomStore,
+  authStore: AuthStore,
+  options: RegisterRoutesOptions = {}
+) {
+  const realtimeRooms = new Map<string, Set<RealtimeClient>>();
+  const authoritativePlaybackByRoom = new Map<string, AuthoritativePlaybackState>();
+  const removeParticipantFromLiveKit = options.removeLiveKitParticipant ?? removeLiveKitParticipant;
+
   server.get("/health", async () => ({
     ok: true,
     service: "cueroom-api"
@@ -253,11 +266,23 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore, authSt
     if ("error" in result) {
       return reply.code(403).send(result);
     }
-    await Promise.allSettled(
-      result.removedParticipantIds.map((participantId) =>
-        removeLiveKitParticipant(roomId, participantId)
-      )
+    const liveKitRemovalPromises = result.removedParticipantIds.map((participantId) =>
+      removeParticipantFromLiveKit(roomId, participantId)
     );
+    closeRealtimeParticipants(realtimeRooms, roomId, result.removedParticipantIds);
+    const liveKitRemovals = await Promise.allSettled(liveKitRemovalPromises);
+    if (liveKitRemovals.some((entry) => entry.status === "rejected")) {
+      request.log.error(
+        {
+          roomId,
+          participantIds: result.removedParticipantIds
+        },
+        "Failed to remove kicked participant from LiveKit"
+      );
+      return reply.code(502).send({
+        error: "Participant removed from room, but call removal failed"
+      });
+    }
     return result;
   });
 
@@ -314,9 +339,6 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore, authSt
     return result;
   });
 
-  const realtimeRooms = new Map<string, Set<RealtimeClient>>();
-  const authoritativePlaybackByRoom = new Map<string, AuthoritativePlaybackState>();
-
   server.get("/v1/rooms/:roomId/realtime", { websocket: true }, (socket, request) => {
     const params = z.object({ roomId: z.string().min(8) }).safeParse(request.params);
     if (!params.success) {
@@ -331,23 +353,30 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore, authSt
         socket.close(1008, "Authentication required");
       }
     }, 5_000);
+    const realtimeRateLimiter = createRealtimeRateLimiter();
 
     socket.on("message", (rawMessage: unknown) => {
+      if (!realtimeRateLimiter.consume()) {
+        socket.close(1008, "Rate limit exceeded");
+        return;
+      }
       void handleRealtimeMessage(rawMessage);
     });
 
     socket.on("close", () => {
       clearTimeout(authTimeout);
       if (client) {
-        removeRealtimeClient(realtimeRooms, client);
+        const wasPresent = removeRealtimeClient(realtimeRooms, client);
         if (client.role === "host") {
           authoritativePlaybackByRoom.delete(client.roomId);
         }
-        broadcastRealtime(realtimeRooms, client.roomId, {
-          type: "presence.left",
-          roomId: client.roomId,
-          participantId: client.participantId
-        });
+        if (wasPresent) {
+          broadcastRealtime(realtimeRooms, client.roomId, {
+            type: "presence.left",
+            roomId: client.roomId,
+            participantId: client.participantId
+          });
+        }
       }
     });
 
@@ -426,6 +455,16 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore, authSt
         socket.close(1008, "Authentication required");
         return;
       }
+
+      const activeSession = await store.requireSession(client.roomId, client.sessionToken);
+      if (!activeSession || activeSession.participant.id !== client.participantId) {
+        socket.close(1008, "Forbidden");
+        return;
+      }
+      if (client.role === "host" && activeSession.participant.role !== "host") {
+        authoritativePlaybackByRoom.delete(client.roomId);
+      }
+      client.role = activeSession.participant.role;
 
       if (parsed.data.type === "ping") {
         sendRealtime(client, {
@@ -533,11 +572,33 @@ function addRealtimeClient(rooms: Map<string, Set<RealtimeClient>>, client: Real
 function removeRealtimeClient(rooms: Map<string, Set<RealtimeClient>>, client: RealtimeClient) {
   const clients = rooms.get(client.roomId);
   if (!clients) {
-    return;
+    return false;
   }
-  clients.delete(client);
+  const wasPresent = clients.delete(client);
   if (clients.size === 0) {
     rooms.delete(client.roomId);
+  }
+  return wasPresent;
+}
+
+function closeRealtimeParticipants(
+  rooms: Map<string, Set<RealtimeClient>>,
+  roomId: string,
+  participantIds: string[]
+) {
+  const removed = new Set(participantIds);
+  for (const client of [...(rooms.get(roomId) ?? [])]) {
+    if (removed.has(client.participantId)) {
+      const wasPresent = removeRealtimeClient(rooms, client);
+      client.socket.close(1008, "Removed from room");
+      if (wasPresent) {
+        broadcastRealtime(rooms, roomId, {
+          type: "presence.left",
+          roomId,
+          participantId: client.participantId
+        });
+      }
+    }
   }
 }
 
@@ -570,6 +631,25 @@ function sendRealtime(client: RealtimeClient | null, event: unknown) {
     return;
   }
   client.socket.send(JSON.stringify(parsed.data));
+}
+
+function createRealtimeRateLimiter() {
+  const windowMs = 1_000;
+  const maxMessages = 30;
+  let windowStartedAt = Date.now();
+  let count = 0;
+
+  return {
+    consume() {
+      const now = Date.now();
+      if (now - windowStartedAt >= windowMs) {
+        windowStartedAt = now;
+        count = 0;
+      }
+      count += 1;
+      return count <= maxMessages;
+    }
+  };
 }
 
 function parseSocketMessage(
