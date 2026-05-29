@@ -62,3 +62,12 @@
 - [x] Reason: Redis gives fast expiring keys and atomic counter semantics without widening persisted privacy scope.
 - [x] Security/privacy impact: Sync replay protection fails closed when Redis is configured but unavailable; invite and presence keys are best-effort cache/advisory data and are rechecked against Postgres.
 - [x] Rollback trigger: Redis operational failures block beta stability or a managed realtime/presence service replaces it.
+
+## ADR-008: Host Account Auth
+
+- [x] Problem: Hosts need abuse-resistant sign-in before creating production rooms without mixing account sessions and room sessions.
+- [x] Options: no accounts, password auth, magic-link only, passkeys with magic-link bootstrap.
+- [x] Decision: Use Postgres-backed accounts, hashed account sessions, one-time hashed magic links, and WebAuthn passkeys with explicit RP ID/origin config.
+- [x] Reason: Passkeys avoid password storage while magic links provide a practical bootstrap path for early open-source testing.
+- [x] Security/privacy impact: Account tokens use a distinct `cas_` prefix, room tokens keep the `crs_` prefix, magic links are body-verified and single-use, and authenticated room creation links rooms to account IDs when `AUTH_REQUIRED=true`.
+- [x] Rollback trigger: Email delivery/recovery requirements or browser compatibility force a managed auth provider.

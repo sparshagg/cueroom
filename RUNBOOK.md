@@ -31,6 +31,15 @@
 - [ ] Run combined state tests with `POSTGRES_TEST_URL=postgres://cueroom:cueroom@localhost:5432/cueroom REDIS_TEST_URL=redis://localhost:6379/1 pnpm --filter @cueroom/api test`.
 - [ ] Confirm sync replay is rejected across two API store instances sharing Redis.
 
+## Auth Verification
+
+- [ ] Set `AUTH_REQUIRED=true`, `AUTH_RP_ID=localhost`, and `AUTH_ORIGIN=http://localhost:3000` for local auth-gated room creation.
+- [ ] Run `POSTGRES_TEST_URL=postgres://cueroom:cueroom@localhost:5432/cueroom pnpm --filter @cueroom/api test`.
+- [ ] Confirm `auth_sessions` and `magic_links` contain only token hashes, never raw `cas_` or `cml_` tokens.
+- [ ] Confirm room sessions use `crs_` tokens and account sessions use `cas_` tokens.
+- [ ] Confirm magic-link verification uses `POST /v1/auth/magic-link/verify` with the token in the JSON body, not in a URL path or query string.
+- [ ] Confirm production deployments set explicit HTTPS `AUTH_ORIGIN` and domain-only `AUTH_RP_ID`.
+
 ## Extension Development
 
 - [ ] Run `pnpm --filter @cueroom/extension build`.

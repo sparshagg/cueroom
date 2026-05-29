@@ -15,6 +15,7 @@ export type ActiveSession = {
 export type CreateRoomInput = {
   hostName: string;
   title: string;
+  accountId?: string;
 };
 
 export type JoinRoomInput = {

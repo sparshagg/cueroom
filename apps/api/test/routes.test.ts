@@ -2,6 +2,168 @@ import { describe, expect, it } from "vitest";
 import { buildServer } from "../src/server";
 
 describe("CueRoom API", () => {
+  it("requires an account session for room creation when auth is required", async () => {
+    const previousAuthRequired = process.env.AUTH_REQUIRED;
+    process.env.AUTH_REQUIRED = "true";
+    const server = await buildServer();
+    try {
+      const blocked = await server.inject({
+        method: "POST",
+        url: "/v1/rooms",
+        payload: {
+          hostName: "Host",
+          title: "Private room"
+        }
+      });
+      expect(blocked.statusCode).toBe(401);
+
+      const requested = (
+        await server.inject({
+          method: "POST",
+          url: "/v1/auth/magic-link/request",
+          payload: {
+            email: "host@example.com",
+            displayName: "Host"
+          }
+        })
+      ).json();
+      expect(requested.devToken).toMatch(/^cml_/);
+
+      const verified = (
+        await server.inject({
+          method: "POST",
+          url: "/v1/auth/magic-link/verify",
+          payload: {
+            token: requested.devToken
+          }
+        })
+      ).json();
+      expect(verified.accountSessionToken).toMatch(/^cas_/);
+
+      const created = await server.inject({
+        method: "POST",
+        url: "/v1/rooms",
+        headers: {
+          authorization: `Bearer ${verified.accountSessionToken}`
+        },
+        payload: {
+          hostName: "Host",
+          title: "Private room"
+        }
+      });
+      expect(created.statusCode).toBe(200);
+    } finally {
+      await server.close();
+      if (previousAuthRequired === undefined) {
+        delete process.env.AUTH_REQUIRED;
+      } else {
+        process.env.AUTH_REQUIRED = previousAuthRequired;
+      }
+    }
+  });
+
+  it("does not confuse account sessions and room sessions", async () => {
+    const server = await buildServer();
+    const requested = (
+      await server.inject({
+        method: "POST",
+        url: "/v1/auth/magic-link/request",
+        payload: {
+          email: "host@example.com",
+          displayName: "Host"
+        }
+      })
+    ).json();
+    const verified = (
+      await server.inject({
+        method: "POST",
+        url: "/v1/auth/magic-link/verify",
+        payload: {
+          token: requested.devToken
+        }
+      })
+    ).json();
+    const created = (
+      await server.inject({
+        method: "POST",
+        url: "/v1/rooms",
+        payload: {
+          hostName: "Host",
+          title: "Room"
+        }
+      })
+    ).json();
+
+    const roomTokenForAccountRoute = await server.inject({
+      method: "GET",
+      url: "/v1/auth/me",
+      headers: {
+        authorization: `Bearer ${created.sessionToken}`
+      }
+    });
+    expect(roomTokenForAccountRoute.statusCode).toBe(401);
+
+    const accountTokenForRoomRoute = await server.inject({
+      method: "GET",
+      url: `/v1/rooms/${created.room.id}`,
+      headers: {
+        authorization: `Bearer ${verified.accountSessionToken}`
+      }
+    });
+    expect(accountTokenForRoomRoute.statusCode).toBe(403);
+
+    const accountRoute = await server.inject({
+      method: "GET",
+      url: "/v1/auth/me",
+      headers: {
+        authorization: `Bearer ${verified.accountSessionToken}`
+      }
+    });
+    expect(accountRoute.statusCode).toBe(200);
+    await server.close();
+  });
+
+  it("creates passkey registration options for authenticated accounts only", async () => {
+    const server = await buildServer();
+    const unauthorized = await server.inject({
+      method: "POST",
+      url: "/v1/auth/passkeys/registration/options"
+    });
+    expect(unauthorized.statusCode).toBe(401);
+
+    const requested = (
+      await server.inject({
+        method: "POST",
+        url: "/v1/auth/magic-link/request",
+        payload: {
+          email: "host@example.com",
+          displayName: "Host"
+        }
+      })
+    ).json();
+    const verified = (
+      await server.inject({
+        method: "POST",
+        url: "/v1/auth/magic-link/verify",
+        payload: {
+          token: requested.devToken
+        }
+      })
+    ).json();
+    const options = await server.inject({
+      method: "POST",
+      url: "/v1/auth/passkeys/registration/options",
+      headers: {
+        authorization: `Bearer ${verified.accountSessionToken}`
+      }
+    });
+
+    expect(options.statusCode).toBe(200);
+    expect(options.json().challenge).toBeTruthy();
+    expect(options.json().authenticatorSelection.userVerification).toBe("required");
+    await server.close();
+  });
+
   it("creates and joins an invite-only room", async () => {
     const server = await buildServer();
 

@@ -4,16 +4,22 @@ import websocket from "@fastify/websocket";
 import Fastify from "fastify";
 import { registerRoutes } from "./routes.js";
 import { createPostgresPool, runPostgresMigrations } from "./postgres.js";
+import { createPostgresAuthStore } from "./postgres-auth-store.js";
 import { createPostgresRoomStore } from "./postgres-room-store.js";
 import { closeRedisClient, createRedisClient, type RedisClient } from "./redis.js";
 import { createRedisRoomState } from "./redis-room-state.js";
 import { createRoomStore, type RoomStore } from "./room-store.js";
+import { createAuthStore, validateAuthConfig, type AuthStore } from "./auth-store.js";
 
 type BuildServerOptions = {
   store?: RoomStore;
+  authStore?: AuthStore;
 };
 
 export async function buildServer(options: BuildServerOptions = {}) {
+  if (process.env.AUTH_REQUIRED === "true" || process.env.AUTH_PASSKEYS_ENABLED === "true") {
+    validateAuthConfig();
+  }
   const redis = process.env.REDIS_URL ? createRedisClient() : undefined;
   const server = Fastify({
     logger: {
@@ -46,26 +52,44 @@ export async function buildServer(options: BuildServerOptions = {}) {
   });
   await server.register(websocket);
 
-  const store = options.store ?? (await createConfiguredRoomStore(redis));
+  const configuredStores = await createConfiguredStores(redis, options);
+  const store = configuredStores.store;
+  const authStore = configuredStores.authStore;
   server.addHook("onClose", async () => {
     await store.close?.();
     if (redis) {
       await closeRedisClient(redis);
     }
   });
-  registerRoutes(server, store);
+  registerRoutes(server, store, authStore);
 
   return server;
 }
 
-async function createConfiguredRoomStore(redis?: RedisClient) {
+async function createConfiguredStores(
+  redis: RedisClient | undefined,
+  options: BuildServerOptions
+): Promise<{ store: RoomStore; authStore: AuthStore }> {
+  if (options.store || options.authStore) {
+    return {
+      store: options.store ?? createRoomStore(),
+      authStore: options.authStore ?? createAuthStore()
+    };
+  }
+
   if (process.env.ROOM_STORE === "postgres") {
     const pool = createPostgresPool();
     if (process.env.POSTGRES_AUTO_MIGRATE !== "false") {
       await runPostgresMigrations(pool);
     }
-    return createPostgresRoomStore(pool, redis ? createRedisRoomState(redis) : undefined);
+    return {
+      store: createPostgresRoomStore(pool, redis ? createRedisRoomState(redis) : undefined),
+      authStore: createPostgresAuthStore(pool)
+    };
   }
 
-  return createRoomStore();
+  return {
+    store: createRoomStore(),
+    authStore: createAuthStore()
+  };
 }

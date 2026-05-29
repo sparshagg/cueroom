@@ -5,8 +5,10 @@ import {
   liveKitTokenRequestSchema,
   syncCommandSchema
 } from "@cueroom/shared";
+import type { AuthenticationResponseJSON, RegistrationResponseJSON } from "@simplewebauthn/server";
 import { z } from "zod";
 import { createLiveKitToken, removeLiveKitParticipant } from "./livekit.js";
+import type { AuthSession, AuthStore } from "./auth-store.js";
 import type { RoomStore } from "./room-store.js";
 
 const sessionBodySchema = z.object({
@@ -17,11 +19,128 @@ const kickBodySchema = sessionBodySchema.extend({
   participantId: z.string().min(8)
 });
 
-export function registerRoutes(server: FastifyInstance, store: RoomStore) {
+const magicLinkRequestSchema = z.object({
+  email: z.string().email().max(254),
+  displayName: z.string().min(1).max(48).optional()
+});
+
+const magicLinkVerifySchema = z.object({
+  token: z.string().startsWith("cml_").min(24)
+});
+
+const passkeyEmailSchema = z.object({
+  email: z.string().email().max(254)
+});
+
+const passkeyRegistrationVerifySchema = z.object({
+  response: z.record(z.unknown())
+});
+
+const passkeyAuthenticationVerifySchema = passkeyEmailSchema.extend({
+  response: z.record(z.unknown())
+});
+
+export function registerRoutes(server: FastifyInstance, store: RoomStore, authStore: AuthStore) {
   server.get("/health", async () => ({
     ok: true,
     service: "cueroom-api"
   }));
+
+  server.post("/v1/auth/magic-link/request", async (request, reply) => {
+    const parsed = magicLinkRequestSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply
+        .code(400)
+        .send({ error: "Invalid magic link request", details: parsed.error.flatten() });
+    }
+    const input = {
+      email: parsed.data.email,
+      ...(parsed.data.displayName ? { displayName: parsed.data.displayName } : {})
+    };
+    return authStore.requestMagicLink(input);
+  });
+
+  server.post("/v1/auth/magic-link/verify", async (request, reply) => {
+    const parsed = magicLinkVerifySchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply
+        .code(400)
+        .send({ error: "Invalid magic link verification", details: parsed.error.flatten() });
+    }
+    const result = await authStore.verifyMagicLink(parsed.data.token);
+    if ("error" in result) {
+      return reply.code(403).send(result);
+    }
+    return publicAuthSession(result);
+  });
+
+  server.get("/v1/auth/me", async (request, reply) => {
+    const account = await requireAccountSession(request, authStore);
+    if (!account) {
+      return reply.code(401).send({ error: "Unauthorized" });
+    }
+    return { account };
+  });
+
+  server.post("/v1/auth/passkeys/registration/options", async (request, reply) => {
+    const accountSessionToken = getAccountBearerToken(request);
+    if (!accountSessionToken) {
+      return reply.code(401).send({ error: "Unauthorized" });
+    }
+    const result = await authStore.createPasskeyRegistrationOptions(accountSessionToken);
+    if ("error" in result) {
+      return reply.code(403).send(result);
+    }
+    return result;
+  });
+
+  server.post("/v1/auth/passkeys/registration/verify", async (request, reply) => {
+    const accountSessionToken = getAccountBearerToken(request);
+    if (!accountSessionToken) {
+      return reply.code(401).send({ error: "Unauthorized" });
+    }
+    const parsed = passkeyRegistrationVerifySchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply
+        .code(400)
+        .send({ error: "Invalid passkey registration", details: parsed.error.flatten() });
+    }
+    const result = await authStore.verifyPasskeyRegistration(
+      accountSessionToken,
+      parsed.data.response as unknown as RegistrationResponseJSON
+    );
+    if ("error" in result) {
+      return reply.code(403).send(result);
+    }
+    return result;
+  });
+
+  server.post("/v1/auth/passkeys/authentication/options", async (request, reply) => {
+    const parsed = passkeyEmailSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply
+        .code(400)
+        .send({ error: "Invalid passkey request", details: parsed.error.flatten() });
+    }
+    return authStore.createPasskeyAuthenticationOptions(parsed.data.email);
+  });
+
+  server.post("/v1/auth/passkeys/authentication/verify", async (request, reply) => {
+    const parsed = passkeyAuthenticationVerifySchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply
+        .code(400)
+        .send({ error: "Invalid passkey authentication", details: parsed.error.flatten() });
+    }
+    const result = await authStore.verifyPasskeyAuthentication(
+      parsed.data.email,
+      parsed.data.response as unknown as AuthenticationResponseJSON
+    );
+    if ("error" in result) {
+      return reply.code(403).send(result);
+    }
+    return publicAuthSession(result);
+  });
 
   server.post("/v1/rooms", async (request, reply) => {
     const parsed = createRoomRequestSchema.safeParse(request.body);
@@ -30,7 +149,11 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore) {
         .code(400)
         .send({ error: "Invalid room request", details: parsed.error.flatten() });
     }
-    return store.createRoom(parsed.data);
+    const account = await getOptionalAccountSession(request, authStore);
+    if (process.env.AUTH_REQUIRED === "true" && !account) {
+      return reply.code(401).send({ error: "Unauthorized" });
+    }
+    return store.createRoom({ ...parsed.data, ...(account ? { accountId: account.id } : {}) });
   });
 
   server.get("/v1/rooms/:roomId", async (request, reply) => {
@@ -144,4 +267,42 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore) {
     }
     return result;
   });
+}
+
+function getBearerToken(request: { headers: { authorization?: string | undefined } }) {
+  const authHeader = request.headers.authorization;
+  return authHeader?.startsWith("Bearer ") ? authHeader.slice("Bearer ".length) : "";
+}
+
+function getAccountBearerToken(request: { headers: { authorization?: string | undefined } }) {
+  const token = getBearerToken(request);
+  return token.startsWith("cas_") ? token : "";
+}
+
+async function requireAccountSession(
+  request: { headers: { authorization?: string | undefined } },
+  authStore: AuthStore
+) {
+  const sessionToken = getAccountBearerToken(request);
+  return sessionToken ? authStore.requireSession(sessionToken) : null;
+}
+
+async function getOptionalAccountSession(
+  request: { headers: { authorization?: string | undefined } },
+  authStore: AuthStore
+) {
+  try {
+    return await requireAccountSession(request, authStore);
+  } catch {
+    return null;
+  }
+}
+
+function publicAuthSession(session: AuthSession) {
+  return {
+    account: session.account,
+    accountSessionToken: session.sessionToken,
+    expiresAt: session.expiresAt,
+    authMethod: session.authMethod
+  };
 }

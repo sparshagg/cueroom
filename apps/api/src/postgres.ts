@@ -39,8 +39,31 @@ export async function withTransaction<T>(
 }
 
 export async function runPostgresMigrations(pool: PostgresPool) {
-  const migrationSql = await readMigration("001_rooms_sessions.sql");
-  await pool.query(migrationSql);
+  const migrationNames = await listMigrations();
+  for (const migrationName of migrationNames) {
+    const migrationSql = await readMigration(migrationName);
+    await pool.query(migrationSql);
+  }
+}
+
+async function listMigrations() {
+  const candidates = [
+    path.resolve(process.cwd(), "migrations"),
+    path.resolve(process.cwd(), "apps/api/migrations")
+  ];
+
+  for (const candidate of candidates) {
+    try {
+      const entries = await fs.readdir(candidate);
+      return entries.filter((entry) => entry.endsWith(".sql")).sort();
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        throw error;
+      }
+    }
+  }
+
+  throw new Error("Unable to find Postgres migrations directory");
 }
 
 async function readMigration(fileName: string) {

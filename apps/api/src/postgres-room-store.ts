@@ -208,16 +208,25 @@ export function createPostgresRoomStore(pool: PostgresPool, roomState?: RedisRoo
 
         await client.query(
           `
-            INSERT INTO rooms (id, invite_code, title, locked, created_at, expires_at)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO rooms
+              (id, invite_code, title, locked, created_at, expires_at, host_account_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
           `,
-          [room.id, room.inviteCode, room.title, room.locked, room.createdAt, room.expiresAt]
+          [
+            room.id,
+            room.inviteCode,
+            room.title,
+            room.locked,
+            room.createdAt,
+            room.expiresAt,
+            input.accountId ?? null
+          ]
         );
         await client.query(
           `
             INSERT INTO participants
-              (id, room_id, display_name, role, joined_at, muted, camera_enabled)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+              (id, room_id, display_name, role, joined_at, muted, camera_enabled, account_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
           `,
           [
             host.id,
@@ -226,7 +235,8 @@ export function createPostgresRoomStore(pool: PostgresPool, roomState?: RedisRoo
             host.role,
             host.joinedAt,
             host.muted,
-            host.cameraEnabled
+            host.cameraEnabled,
+            input.accountId ?? null
           ]
         );
         await insertSession(client, room.id, host.id, sessionToken);

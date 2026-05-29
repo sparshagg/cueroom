@@ -64,3 +64,19 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: `EXPIRE` makes keys volatile and deletes them automatically when the timeout elapses.
   - Impact: Invite indexes, presence, and sync sequence keys expire with room/session lifetimes.
+- [ ] Source: https://simplewebauthn.dev/docs/packages/server/
+  - Stale-by: 2026-08-29
+  - Learning: SimpleWebAuthn server helpers generate registration/authentication options and verify responses against stored challenges, expected origin, expected RP ID, stored credentials, and counters.
+  - Impact: CueRoom passkey routes store short-lived challenges, verify exact `AUTH_ORIGIN`/`AUTH_RP_ID`, and update credential counters after authentication.
+- [ ] Source: https://simplewebauthn.dev/docs/advanced/passkeys/
+  - Stale-by: 2026-08-29
+  - Learning: Passkey registration can require resident credentials and user verification for stronger account sign-in.
+  - Impact: CueRoom passkey options request resident credentials and required user verification.
+- [ ] Source: https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html
+  - Stale-by: 2026-08-29
+  - Learning: Email-token flows should use random, single-use, expiring tokens and avoid account enumeration.
+  - Impact: Magic-link tokens are random, hashed at rest, consumed once, and returned through uniform request responses.
+- [ ] Source: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+  - Stale-by: 2026-08-29
+  - Learning: Session identifiers need high entropy, server-side validation, expiration, and protection from logging or disclosure.
+  - Impact: Account session tokens use a distinct `cas_` prefix, are stored as hashes, expire server-side, and are redacted from logs.

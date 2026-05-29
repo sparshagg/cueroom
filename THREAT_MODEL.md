@@ -19,6 +19,7 @@ CueRoom is a web app, API, LiveKit deployment, and Chrome/Edge MV3 extension for
 
 - [ ] Camera and microphone streams.
 - [ ] Room membership and invite links.
+- [ ] Account sessions, magic-link tokens, and passkey credentials.
 - [ ] Host/co-host authority.
 - [ ] LiveKit API keys and participant tokens.
 - [ ] Extension permissions and release pipeline.
@@ -34,6 +35,8 @@ CueRoom is a web app, API, LiveKit deployment, and Chrome/Edge MV3 extension for
 - [ ] A dependency or build script tries to broaden extension permissions.
 - [ ] An XSS payload tries to steal room tokens or issue commands.
 - [ ] A replayed WebSocket message tries to rewind or pause a room.
+- [ ] A leaked magic-link or account session token tries to create rooms as another host.
+- [ ] A malicious site tries to complete passkey authentication for the wrong origin or RP ID.
 
 ## Required Controls
 
@@ -43,6 +46,9 @@ CueRoom is a web app, API, LiveKit deployment, and Chrome/Edge MV3 extension for
 - [ ] Strict CSP and no extension remote code.
 - [ ] Minimal Chrome permissions and manifest audits.
 - [ ] LiveKit tokens minted only by API.
+- [ ] Account tokens and room tokens have separate prefixes and verification paths.
+- [ ] Magic-link tokens are single-use, short-lived, and hashed at rest.
+- [ ] Passkey verification checks stored challenge, exact origin, exact RP ID, credential ownership, and counter updates.
 - [ ] No call recording or chat persistence by default.
 - [ ] Logs exclude secrets, credentials, content, and detailed message payloads.
 

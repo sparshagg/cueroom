@@ -24,7 +24,8 @@
 - [x] Add in-memory store for local development.
 - [x] Add PostgreSQL persistence.
 - [x] Add Redis-backed presence, invites, rate limits, and sync counters.
-- [ ] Add passkey and magic-link auth.
+- [x] Add passkey and magic-link auth.
+- [ ] Add production email delivery and account management UI.
 
 ## M3: LiveKit Calls
 
