@@ -243,3 +243,12 @@
 - [x] Reason: A deterministic ZIP gives maintainers a stable `SHA256SUMS` value for the same source tree and makes package review reproducible.
 - [x] Security/privacy impact: Reduces release substitution and review drift risk without changing extension runtime permissions or data access.
 - [x] Rollback trigger: CI artifact attestations become the sole release integrity source and make local deterministic ZIP hashes redundant.
+
+## ADR-028: Release Workflow Integrity Gate
+
+- [x] Problem: The release workflow produced checksums, release notes, GitHub artifacts, attestations, and a prerelease, but `pnpm release:check` did not fail if a future edit removed those provenance-critical steps.
+- [x] Options: rely on code review, add a YAML linter dependency, or add repo-owned workflow invariant checks to the existing release readiness script.
+- [x] Decision: Extend `pnpm release:check` to assert the release workflow trigger, permissions, ordered supply-chain/check/package/checksum/attestation/prerelease steps, and required release attachments.
+- [x] Reason: A small repo-owned gate keeps the beta release path auditable without adding another parser dependency or network-dependent check.
+- [x] Security/privacy impact: Reduces the chance of shipping an extension ZIP without checksum verification, artifact provenance, reviewed release notes, or tag/main beta gates.
+- [x] Rollback trigger: A maintained workflow policy engine replaces these string invariants with equal or stronger release-provenance enforcement.

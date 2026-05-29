@@ -292,3 +292,15 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: PostgreSQL `CREATE TABLE IF NOT EXISTS` avoids an error when the table already exists, and a `PRIMARY KEY` provides unique/not-null enforcement backed by an index.
   - Impact: CueRoom records applied migration filenames in a `schema_migrations` table so startup/test workers skip already-applied DDL instead of replaying it under load.
+- [ ] Source: https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations
+  - Stale-by: 2026-08-29
+  - Learning: GitHub artifact attestations for binaries require workflow permissions for `id-token: write` and `attestations: write`, plus an `actions/attest` step with `subject-path` pointing at the artifact.
+  - Impact: `pnpm release:check` now guards CueRoom's release workflow so the extension ZIP attestation step and subject path cannot be removed silently.
+- [ ] Source: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions
+  - Stale-by: 2026-08-29
+  - Learning: When a workflow declares explicit `permissions`, unspecified token scopes are unavailable unless listed.
+  - Impact: CueRoom's release workflow keeps only the write scopes needed for GitHub prerelease creation and artifact attestation, and the release readiness check enforces those scopes.
+- [ ] Source: https://cli.github.com/manual/gh_attestation_verify
+  - Stale-by: 2026-08-29
+  - Learning: `gh attestation verify` can bind verification to a repository, signer workflow, and source ref with `--repo`, `--signer-workflow`, and `--source-ref`.
+  - Impact: CueRoom's runbook verifies the extension ZIP provenance against the release workflow and release tag before Chrome Web Store upload.

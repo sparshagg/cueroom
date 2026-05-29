@@ -4,11 +4,13 @@
 
 - [x] Workflow: `.github/workflows/supply-chain.yml`.
 - [x] Trigger: pull requests, pushes to `main`, release tags, weekly schedule, and manual dispatch.
-- [x] Token scope: `contents: read` only.
+- [x] Supply-chain workflow token scope: `contents: read` only.
 - [x] Secret scan: `pnpm security:secrets`.
 - [x] License policy: `pnpm security:licenses`.
 - [x] Dependency audit: `pnpm security:audit`.
 - [x] Release workflow runs `pnpm security:supply-chain` before building release artifacts.
+- [x] Release readiness check fails if the release workflow drops checksum verification, artifact upload, attestation, or prerelease attachment steps.
+- [x] Release workflow uses write/OIDC scopes only for the tag release path that must publish and attest artifacts.
 
 ## License Policy
 

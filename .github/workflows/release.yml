@@ -78,8 +78,12 @@ jobs:
       - name: Resolve packaged extension
         id: packaged-extension
         run: |
-          ZIP_PATH="$(ls artifacts/chrome-web-store/cueroom-extension-*.zip | head -n 1)"
-          test -n "$ZIP_PATH"
+          VERSION="${RELEASE_TAG#v}"
+          ZIP_PATH="artifacts/chrome-web-store/cueroom-extension-${VERSION}.zip"
+          ZIP_COUNT="$(find artifacts/chrome-web-store -maxdepth 1 -type f -name 'cueroom-extension-*.zip' | wc -l | tr -d ' ')"
+          test "$ZIP_COUNT" = "1"
+          test -f "$ZIP_PATH"
+          grep -F "  cueroom-extension-${VERSION}.zip" artifacts/chrome-web-store/SHA256SUMS
           echo "zip_path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
       - name: Upload Chrome Web Store release package
         uses: actions/upload-artifact@v4
