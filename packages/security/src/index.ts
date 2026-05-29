@@ -8,10 +8,17 @@ export const forbiddenExtensionPermissions = new Set([
 ]);
 
 export const allowedExtensionHostPermissions = new Set(["https://www.netflix.com/watch/*"]);
+export const allowedExternallyConnectableMatches = new Set([
+  "http://localhost:3000/*",
+  "https://cueroom.app/*"
+]);
 
 export type ExtensionManifestLike = {
   permissions?: string[];
   host_permissions?: string[];
+  externally_connectable?: {
+    matches?: string[];
+  };
   content_security_policy?: {
     extension_pages?: string;
   };
@@ -51,6 +58,26 @@ export function auditExtensionManifest(manifest: ExtensionManifestLike): Manifes
       findings.push({
         severity: "high",
         message: `Unexpected host permission: ${host}`
+      });
+    }
+  }
+
+  const externalMatches = manifest.externally_connectable?.matches ?? [];
+  if (
+    externalMatches.includes("<all_urls>") ||
+    externalMatches.some((entry) => entry === "*://*/*")
+  ) {
+    findings.push({
+      severity: "critical",
+      message: "Extension must not trust arbitrary external web origins"
+    });
+  }
+
+  for (const match of externalMatches) {
+    if (!allowedExternallyConnectableMatches.has(match)) {
+      findings.push({
+        severity: "high",
+        message: `Unexpected externally_connectable match: ${match}`
       });
     }
   }

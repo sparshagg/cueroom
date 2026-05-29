@@ -25,4 +25,21 @@ describe("auditExtensionManifest", () => {
       message: "Unexpected host permission: https://evil-netflix.com/watch/*"
     });
   });
+
+  it("does not trust arbitrary externally connectable origins", () => {
+    const findings = auditExtensionManifest({
+      externally_connectable: {
+        matches: ["<all_urls>", "https://evil.example/*"]
+      }
+    });
+
+    expect(findings).toContainEqual({
+      severity: "critical",
+      message: "Extension must not trust arbitrary external web origins"
+    });
+    expect(findings).toContainEqual({
+      severity: "high",
+      message: "Unexpected externally_connectable match: https://evil.example/*"
+    });
+  });
 });

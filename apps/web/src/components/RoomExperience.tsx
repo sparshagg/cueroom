@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import type { RoomSession } from "@cueroom/shared";
 import { LiveCallPanel } from "@/components/LiveCallPanel";
+import { getStoredExtensionId, pairExtension, rememberExtensionId } from "@/lib/extension";
 import { clearRoomSession, readRoomSession } from "@/lib/room-session";
 import { useLiveKitCall } from "./useLiveKitCall";
 
@@ -48,6 +49,9 @@ export function RoomExperience({ roomId }: { roomId: string }) {
   const [previewCameraEnabled, setPreviewCameraEnabled] = useState(false);
   const [previewMicEnabled, setPreviewMicEnabled] = useState(false);
   const [chatOpen, setChatOpen] = useState(true);
+  const [extensionBusy, setExtensionBusy] = useState(false);
+  const [extensionId, setExtensionId] = useState("");
+  const [extensionPaired, setExtensionPaired] = useState(false);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState(initialMessages);
   const inviteUrl = useMemo(() => {
@@ -62,6 +66,7 @@ export function RoomExperience({ roomId }: { roomId: string }) {
 
   useEffect(() => {
     setRoomSession(readRoomSession(roomId));
+    setExtensionId(getStoredExtensionId());
   }, [roomId]);
 
   function sendMessage() {
@@ -112,6 +117,34 @@ export function RoomExperience({ roomId }: { roomId: string }) {
     clearRoomSession(roomId);
     setRoomSession(null);
     toast.message("Left room");
+  }
+
+  async function connectExtension() {
+    if (!roomSession) {
+      toast.message("Create or join a room before pairing the extension");
+      return;
+    }
+    if (!extensionId.trim()) {
+      toast.error("Extension ID is required");
+      return;
+    }
+    setExtensionBusy(true);
+    try {
+      rememberExtensionId(extensionId);
+      const response = await pairExtension(roomSession, extensionId);
+      if (!response.ok) {
+        toast.error(response.error ?? "Extension pairing failed");
+        return;
+      }
+      setExtensionPaired(true);
+      toast.success(
+        response.tabPaired ? "Extension paired" : "Extension paired; open Netflix next"
+      );
+    } catch {
+      toast.error("Could not pair extension");
+    } finally {
+      setExtensionBusy(false);
+    }
   }
 
   return (
@@ -167,21 +200,33 @@ export function RoomExperience({ roomId }: { roomId: string }) {
                         CueRoom extension installed
                       </li>
                       <li className="flex items-center gap-2">
-                        <span className="size-2 rounded-full bg-amber-300" />
-                        Netflix watch tab pending
+                        <span
+                          className={`size-2 rounded-full ${extensionPaired ? "bg-emerald-300" : "bg-amber-300"}`}
+                        />
+                        {extensionPaired ? "Realtime sync connected" : "Netflix watch tab pending"}
                       </li>
                       <li className="flex items-center gap-2">
                         <span className="size-2 rounded-full bg-white/25" />
                         Pairing token ready
                       </li>
                     </ul>
+                    <Input
+                      className="mt-3"
+                      value={extensionId}
+                      onChange={(event) => setExtensionId(event.target.value)}
+                      placeholder="Extension ID"
+                      aria-label="CueRoom extension ID"
+                    />
                   </Panel>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                  <Button>
+                  <Button
+                    onClick={() => void connectExtension()}
+                    disabled={!roomSession || extensionBusy || !extensionId.trim()}
+                  >
                     <Play className="size-4" />
-                    Pair extension
+                    {extensionBusy ? "Pairing..." : "Pair extension"}
                   </Button>
                   <Button variant="secondary">
                     <SkipForward className="size-4" />

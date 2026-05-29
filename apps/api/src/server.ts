@@ -50,7 +50,11 @@ export async function buildServer(options: BuildServerOptions = {}) {
         }
       : {})
   });
-  await server.register(websocket);
+  await server.register(websocket, {
+    options: {
+      maxPayload: 64 * 1024
+    }
+  });
 
   const configuredStores = await createConfiguredStores(redis, options);
   const store = configuredStores.store;

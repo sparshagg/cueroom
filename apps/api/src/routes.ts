@@ -3,13 +3,15 @@ import {
   createRoomRequestSchema,
   joinRoomRequestSchema,
   liveKitTokenRequestSchema,
+  roomEventSchema,
+  roomSocketClientMessageSchema,
   syncCommandSchema
 } from "@cueroom/shared";
 import type { AuthenticationResponseJSON, RegistrationResponseJSON } from "@simplewebauthn/server";
 import { z } from "zod";
 import { createLiveKitToken, removeLiveKitParticipant } from "./livekit.js";
 import type { AuthSession, AuthStore } from "./auth-store.js";
-import type { RoomStore } from "./room-store.js";
+import type { ActiveSession, RoomStore } from "./room-store.js";
 
 const sessionBodySchema = z.object({
   sessionToken: z.string().min(24)
@@ -310,6 +312,245 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore, authSt
     }
     return result;
   });
+
+  const realtimeRooms = new Map<string, Set<RealtimeClient>>();
+
+  server.get("/v1/rooms/:roomId/realtime", { websocket: true }, (socket, request) => {
+    const params = z.object({ roomId: z.string().min(8) }).safeParse(request.params);
+    if (!params.success) {
+      socket.close(1008, "Invalid room");
+      return;
+    }
+    const roomId = params.data.roomId;
+
+    let client: RealtimeClient | null = null;
+    const authTimeout = setTimeout(() => {
+      if (!client) {
+        socket.close(1008, "Authentication required");
+      }
+    }, 5_000);
+
+    socket.on("message", (rawMessage: unknown) => {
+      void handleRealtimeMessage(rawMessage);
+    });
+
+    socket.on("close", () => {
+      clearTimeout(authTimeout);
+      if (client) {
+        removeRealtimeClient(realtimeRooms, client);
+        broadcastRealtime(realtimeRooms, client.roomId, {
+          type: "presence.left",
+          roomId: client.roomId,
+          participantId: client.participantId
+        });
+      }
+    });
+
+    async function handleRealtimeMessage(rawMessage: unknown) {
+      const parsedMessage = parseSocketMessage(rawMessage);
+      if (!parsedMessage.ok) {
+        sendRealtime(client, {
+          type: "sync.error",
+          roomId,
+          reason: parsedMessage.error
+        });
+        return;
+      }
+
+      const parsed = roomSocketClientMessageSchema.safeParse(parsedMessage.value);
+      if (!parsed.success) {
+        sendRealtime(client, {
+          type: "sync.error",
+          roomId,
+          reason: "Invalid realtime message"
+        });
+        return;
+      }
+
+      if (parsed.data.type === "room.auth") {
+        if (client) {
+          sendRealtime(client, {
+            type: "sync.error",
+            roomId,
+            reason: "Already authenticated"
+          });
+          return;
+        }
+        if (parsed.data.roomId !== roomId) {
+          socket.close(1008, "Room mismatch");
+          return;
+        }
+        const activeSession = await store.requireSession(
+          parsed.data.roomId,
+          parsed.data.sessionToken
+        );
+        if (!activeSession || activeSession.participant.id !== parsed.data.participantId) {
+          socket.close(1008, "Forbidden");
+          return;
+        }
+        client = {
+          roomId: activeSession.room.id,
+          participantId: activeSession.participant.id,
+          role: activeSession.participant.role,
+          sessionToken: parsed.data.sessionToken,
+          socket
+        };
+        addRealtimeClient(realtimeRooms, client);
+        clearTimeout(authTimeout);
+        sendRealtime(client, {
+          type: "room.ready",
+          roomId: client.roomId,
+          participantId: client.participantId,
+          role: client.role
+        });
+        broadcastRealtime(
+          realtimeRooms,
+          client.roomId,
+          {
+            type: "presence.joined",
+            roomId: client.roomId,
+            participantId: client.participantId,
+            displayName: activeSession.participant.displayName
+          },
+          client
+        );
+        return;
+      }
+
+      if (!client) {
+        socket.close(1008, "Authentication required");
+        return;
+      }
+
+      if (parsed.data.type === "ping") {
+        sendRealtime(client, {
+          type: "pong",
+          sentAt: parsed.data.sentAt,
+          receivedAt: Date.now()
+        });
+        return;
+      }
+
+      if (
+        "roomId" in parsed.data &&
+        (parsed.data.roomId !== client.roomId || parsed.data.participantId !== client.participantId)
+      ) {
+        sendRealtime(client, {
+          type: "sync.error",
+          roomId: client.roomId,
+          reason: "Realtime actor mismatch"
+        });
+        return;
+      }
+
+      if (parsed.data.type === "sync.state") {
+        broadcastRealtime(realtimeRooms, client.roomId, {
+          type: "sync.state",
+          roomId: client.roomId,
+          participantId: client.participantId,
+          state: parsed.data.state
+        });
+        return;
+      }
+
+      const result = await store.acceptSyncCommand(
+        client.roomId,
+        client.sessionToken,
+        parsed.data.command
+      );
+      if ("error" in result) {
+        sendRealtime(client, {
+          type: "sync.error",
+          roomId: client.roomId,
+          reason: result.error
+        });
+        return;
+      }
+      broadcastRealtime(realtimeRooms, client.roomId, {
+        type: "sync.command",
+        command: result.command
+      });
+    }
+  });
+}
+
+type RealtimeSocket = {
+  close(code?: number, data?: string): void;
+  on(event: "message", listener: (data: unknown) => void): void;
+  on(event: "close", listener: () => void): void;
+  readyState: number;
+  send(data: string): void;
+};
+
+type RealtimeClient = Pick<ActiveSession["participant"], "role"> & {
+  roomId: string;
+  participantId: string;
+  sessionToken: string;
+  socket: RealtimeSocket;
+};
+
+function addRealtimeClient(rooms: Map<string, Set<RealtimeClient>>, client: RealtimeClient) {
+  const clients = rooms.get(client.roomId) ?? new Set<RealtimeClient>();
+  clients.add(client);
+  rooms.set(client.roomId, clients);
+}
+
+function removeRealtimeClient(rooms: Map<string, Set<RealtimeClient>>, client: RealtimeClient) {
+  const clients = rooms.get(client.roomId);
+  if (!clients) {
+    return;
+  }
+  clients.delete(client);
+  if (clients.size === 0) {
+    rooms.delete(client.roomId);
+  }
+}
+
+function broadcastRealtime(
+  rooms: Map<string, Set<RealtimeClient>>,
+  roomId: string,
+  event: unknown,
+  except?: RealtimeClient
+) {
+  for (const client of rooms.get(roomId) ?? []) {
+    if (client !== except) {
+      sendRealtime(client, event);
+    }
+  }
+}
+
+function sendRealtime(client: RealtimeClient | null, event: unknown) {
+  if (!client || client.socket.readyState !== 1) {
+    return;
+  }
+  const parsed = roomEventSchema.safeParse(event);
+  if (!parsed.success) {
+    client.socket.send(
+      JSON.stringify({
+        type: "sync.error",
+        roomId: client.roomId,
+        reason: "Invalid realtime event"
+      })
+    );
+    return;
+  }
+  client.socket.send(JSON.stringify(parsed.data));
+}
+
+function parseSocketMessage(
+  rawMessage: unknown
+): { ok: true; value: unknown } | { ok: false; error: string } {
+  try {
+    const text =
+      typeof rawMessage === "string"
+        ? rawMessage
+        : rawMessage instanceof Buffer
+          ? rawMessage.toString("utf8")
+          : String(rawMessage);
+    return { ok: true, value: JSON.parse(text) as unknown };
+  } catch {
+    return { ok: false, error: "Malformed realtime message" };
+  }
 }
 
 function getBearerToken(request: { headers: { authorization?: string | undefined } }) {

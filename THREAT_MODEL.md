@@ -39,11 +39,13 @@ CueRoom is a web app, API, LiveKit deployment, and Chrome/Edge MV3 extension for
 - [ ] A leaked magic-link or account session token tries to create rooms as another host.
 - [ ] A malicious site tries to complete passkey authentication for the wrong origin or RP ID.
 - [ ] A guest tries to use LiveKit data channels or broad media grants to bypass CueRoom's server-authorized sync/chat path.
+- [ ] A trusted CueRoom web origin tries to send a direct extension playback command that bypasses server role checks.
 
 ## Required Controls
 
 - [ ] Short-lived invite tokens and room lock/rotate/kick controls.
 - [ ] Server-side RBAC on every command.
+- [ ] Extension applies only server-broadcast sync commands, never raw website-originated commands.
 - [ ] Runtime schema validation at every trust boundary.
 - [ ] Strict CSP and no extension remote code.
 - [ ] Minimal Chrome permissions and manifest audits.

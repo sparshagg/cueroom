@@ -104,3 +104,11 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: The current jsdom registry release checked for this slice is 29.1.1.
   - Impact: Web tests run in a jsdom environment so React controls can exercise browser storage and media-device boundaries.
+- [ ] Source: https://developer.chrome.com/docs/extensions/how-to/web-platform/websockets
+  - Stale-by: 2026-08-29
+  - Learning: Chrome extension service-worker WebSockets remain active in Chrome 116+ when messages are exchanged more frequently than the worker inactivity window.
+  - Impact: The extension declares Chrome 116+ and sends room WebSocket pings every 20 seconds while paired.
+- [ ] Source: https://github.com/fastify/fastify-websocket
+  - Stale-by: 2026-08-29
+  - Learning: `@fastify/websocket` exposes route-level `{ websocket: true }` handlers and `injectWS` for endpoint tests.
+  - Impact: The API exposes an authenticated room realtime endpoint and tests server-vetted playback state and command broadcasts without opening a network port.

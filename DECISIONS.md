@@ -80,3 +80,12 @@
 - [x] Reason: Direct room lifecycle control is the smallest durable change and avoids importing prefab UI assumptions while the room/session bridge is still maturing.
 - [x] Security/privacy impact: LiveKit JWTs stay in memory, room sessions stay in `sessionStorage`, token minting is rate-limited, data publishing is disabled, and publish sources are limited to camera and microphone.
 - [x] Rollback trigger: Connect/disconnect races or media rendering complexity require adopting official React room hooks/components.
+
+## ADR-010: Playback Realtime Authority
+
+- [x] Problem: Connect the extension to live room sync without letting a trusted web origin bypass server role and replay checks.
+- [x] Options: direct website-to-extension commands, REST polling, authenticated API WebSocket with server-broadcast room events.
+- [x] Decision: Use an authenticated API WebSocket; the extension forwards playback state and applies only server-broadcast commands.
+- [x] Reason: A single room channel gives low-latency sync while keeping command authority at the API.
+- [x] Security/privacy impact: Room tokens are sent only inside the first WebSocket auth message, commands pass through room membership/role/replay validation, and the extension no longer directly applies website-originated commands.
+- [x] Rollback trigger: Service-worker WebSocket lifecycle proves unreliable and requires a different realtime transport.

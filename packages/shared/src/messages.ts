@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { roomRoleSchema } from "./rooms.js";
 
 export const playbackStateSchema = z.object({
   watchId: z.string().min(1).max(256),
@@ -28,8 +29,9 @@ export const extensionPairRequestSchema = z.object({
   type: z.literal("PAIR_ROOM"),
   roomId: z.string().min(8),
   participantId: z.string().min(8),
-  sessionToken: z.string().min(24),
-  appOrigin: z.string().url()
+  sessionToken: z.string().startsWith("crs_").min(24),
+  appOrigin: z.string().url(),
+  apiOrigin: z.string().url().optional()
 });
 export type ExtensionPairRequest = z.infer<typeof extensionPairRequestSchema>;
 
@@ -49,7 +51,45 @@ export const extensionMessageSchema = z.discriminatedUnion("type", [
 ]);
 export type ExtensionMessage = z.infer<typeof extensionMessageSchema>;
 
+export const roomSocketAuthMessageSchema = z.object({
+  type: z.literal("room.auth"),
+  roomId: z.string().min(8),
+  participantId: z.string().min(8),
+  sessionToken: z.string().startsWith("crs_").min(24)
+});
+
+export const roomSocketPlaybackMessageSchema = z.object({
+  type: z.literal("sync.state"),
+  roomId: z.string().min(8),
+  participantId: z.string().min(8),
+  state: playbackStateSchema
+});
+
+export const roomSocketCommandMessageSchema = z.object({
+  type: z.literal("sync.command"),
+  command: syncCommandSchema
+});
+
+export const roomSocketPingMessageSchema = z.object({
+  type: z.literal("ping"),
+  sentAt: z.number().int().positive()
+});
+
+export const roomSocketClientMessageSchema = z.discriminatedUnion("type", [
+  roomSocketAuthMessageSchema,
+  roomSocketPlaybackMessageSchema,
+  roomSocketCommandMessageSchema,
+  roomSocketPingMessageSchema
+]);
+export type RoomSocketClientMessage = z.infer<typeof roomSocketClientMessageSchema>;
+
 export const roomEventSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("room.ready"),
+    roomId: z.string(),
+    participantId: z.string(),
+    role: roomRoleSchema
+  }),
   z.object({
     type: z.literal("presence.joined"),
     roomId: z.string(),
@@ -75,6 +115,11 @@ export const roomEventSchema = z.discriminatedUnion("type", [
     type: z.literal("sync.error"),
     roomId: z.string(),
     reason: z.string().max(160)
+  }),
+  z.object({
+    type: z.literal("pong"),
+    sentAt: z.number().int().positive(),
+    receivedAt: z.number().int().positive()
   })
 ]);
 export type RoomEvent = z.infer<typeof roomEventSchema>;

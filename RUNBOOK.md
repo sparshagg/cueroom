@@ -55,8 +55,11 @@
 - [ ] Open Chrome or Edge extension management.
 - [ ] Enable developer mode.
 - [ ] Load unpacked extension from `apps/extension/dist`.
+- [ ] Copy the loaded extension ID into `NEXT_PUBLIC_CUEROOM_EXTENSION_ID` or the room page extension ID field.
 - [ ] Confirm the manifest has no forbidden permissions with `pnpm security:extension`.
 - [ ] Pair only with `http://localhost:3000` or approved CueRoom origins.
+- [ ] Confirm the extension WebSocket connects to `/v1/rooms/:roomId/realtime` only after a room pairing message.
+- [ ] Confirm commands from the web page are relayed to the API and are not applied to Netflix until the API broadcasts `sync.command`.
 
 ## Release
 

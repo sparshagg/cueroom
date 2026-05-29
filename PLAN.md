@@ -41,7 +41,7 @@
 - [x] Add service-worker pairing and validation skeleton.
 - [x] Add extension popup.
 - [x] Add extension permission audit.
-- [ ] Connect extension to live room WebSocket.
+- [x] Connect extension to live room WebSocket.
 - [ ] Implement host-authoritative drift correction.
 - [ ] Add wrong-title warning in room UI.
 

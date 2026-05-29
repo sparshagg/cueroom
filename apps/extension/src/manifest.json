@@ -3,6 +3,7 @@
   "name": "CueRoom",
   "description": "Private co-watch companion extension for local playback sync. Not affiliated with Netflix.",
   "version": "0.1.0",
+  "minimum_chrome_version": "116",
   "action": {
     "default_title": "CueRoom",
     "default_popup": "popup.html",
