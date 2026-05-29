@@ -105,6 +105,7 @@
 - [ ] If repo watch verification is needed, refresh GitHub CLI with `gh auth refresh -h github.com -s notifications`, then run `gh api repos/sparshagg/cueroom/subscription`.
 - [ ] Run `pnpm verify`.
 - [ ] Run `pnpm security:supply-chain`.
+- [ ] Run `pnpm security:api-rate-limits` and confirm room/session authorization routes keep route-level limits.
 - [ ] Run `pnpm release:check -- --tag v0.1.0` and confirm versions, release files, and checklist files are present.
 - [ ] Confirm `pnpm release:check -- --tag v0.1.0` also validates the release workflow's checksum, attestation, prerelease, and required attachment steps.
 - [ ] Review the `cueroom-visual-regression` CI artifact for home, room, and extension popup screenshots.

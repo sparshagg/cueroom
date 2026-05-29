@@ -83,6 +83,7 @@
 - [x] Add source-level legal copy drift checks for non-affiliation and Netflix content-boundary claims.
 - [x] Add public origin consistency checks for extension matches, store listing, and production domain docs.
 - [x] Add privacy implementation evidence index and automated source/test coverage check.
+- [x] Add explicit API route-level rate limits for room/session authorization endpoints.
 - [ ] Complete human legal/privacy review.
 - [x] Publish public repository.
 - [ ] Tag first signed release.

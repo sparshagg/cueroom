@@ -21,6 +21,7 @@
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "security:extension": "pnpm --filter @cueroom/security build && node scripts/audit-extension.mjs",
+    "security:api-rate-limits": "node scripts/check-api-rate-limits.mjs",
     "security:audit": "pnpm audit",
     "security:licenses": "node scripts/check-licenses.mjs",
     "security:secrets": "node scripts/secret-scan.mjs",
@@ -37,7 +38,7 @@
     "cleanup:check": "node scripts/cleanup-check.mjs",
     "privacy:evidence": "node scripts/check-privacy-evidence.mjs",
     "docs:freshness": "node scripts/check-docs-freshness.mjs",
-    "verify": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm visual:test && pnpm security:extension && pnpm cleanup:check && pnpm docker:prod-check && pnpm docs:freshness && pnpm privacy:evidence"
+    "verify": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm visual:test && pnpm security:extension && pnpm security:api-rate-limits && pnpm cleanup:check && pnpm docker:prod-check && pnpm docs:freshness && pnpm privacy:evidence"
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",

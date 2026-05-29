@@ -369,3 +369,12 @@
 - [x] Reason: Release privacy review should be repeatable and inspectable without treating unchecked human sign-off as complete.
 - [x] Security/privacy impact: Reduces risk that privacy disclosures drift from implementation for transient chat, abuse reports, hashed tokens, magic links, LiveKit tokens, and Netflix sensitive-data exclusions.
 - [x] Rollback trigger: A stronger generated privacy-control matrix replaces the hand-authored evidence index and validates the same or broader claims.
+
+## ADR-042: API Room Route Rate-Limit Guard
+
+- [x] Problem: Room and session endpoints perform authorization and abuse-sensitive actions, but some route handlers relied only on the broad global API rate limit.
+- [x] Options: keep only the global limiter, add ad hoc limits to a few endpoints, or require explicit route-level limits for every room/session authorization route.
+- [x] Decision: Add named route-level `config.rateLimit` objects for room creation, room joins, room reads, room controls, HTTP sync commands, reports, LiveKit token minting, and realtime handshakes; enforce them with `pnpm security:api-rate-limits`.
+- [x] Reason: Explicit per-route limits document the threat model and make future regressions visible in local verification and CI.
+- [x] Security/privacy impact: Reduces brute-force, invite guessing, token guessing, room-control abuse, and realtime handshake pressure before requests reach sensitive room/session authorization logic.
+- [x] Rollback trigger: A centralized typed route registry replaces source-text guarding while proving the same route coverage.

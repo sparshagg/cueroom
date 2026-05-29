@@ -80,6 +80,61 @@ const roomReportRateLimit = {
   }
 } as const;
 
+const roomCreateRateLimit = {
+  config: {
+    rateLimit: {
+      max: 20,
+      timeWindow: "1 minute"
+    }
+  }
+} as const;
+
+const roomJoinRateLimit = {
+  config: {
+    rateLimit: {
+      max: 30,
+      timeWindow: "1 minute"
+    }
+  }
+} as const;
+
+const roomReadRateLimit = {
+  config: {
+    rateLimit: {
+      max: 60,
+      timeWindow: "1 minute"
+    }
+  }
+} as const;
+
+const roomControlRateLimit = {
+  config: {
+    rateLimit: {
+      max: 30,
+      timeWindow: "1 minute"
+    }
+  }
+} as const;
+
+const syncCommandRateLimit = {
+  config: {
+    rateLimit: {
+      max: 60,
+      timeWindow: "1 minute"
+    }
+  }
+} as const;
+
+const realtimeHandshakeRateLimit = {
+  websocket: true,
+  config: {
+    rateLimit: {
+      max: 30,
+      timeWindow: "1 minute"
+    }
+  }
+} as const;
+
 type RegisterRoutesOptions = {
   removeLiveKitParticipant?: (roomId: string, participantId: string) => Promise<void>;
   checkDependencies?: () => Promise<void>;
@@ -228,7 +283,7 @@ export function registerRoutes(
     }
   );
 
-  server.post("/v1/rooms", async (request, reply) => {
+  server.post("/v1/rooms", roomCreateRateLimit, async (request, reply) => {
     const parsed = createRoomRequestSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply
@@ -242,7 +297,7 @@ export function registerRoutes(
     return store.createRoom({ ...parsed.data, ...(account ? { accountId: account.id } : {}) });
   });
 
-  server.get("/v1/rooms/:roomId", async (request, reply) => {
+  server.get("/v1/rooms/:roomId", roomReadRateLimit, async (request, reply) => {
     const { roomId } = z.object({ roomId: z.string().min(8) }).parse(request.params);
     const authHeader = request.headers.authorization;
     const sessionToken = authHeader?.startsWith("Bearer ")
@@ -256,7 +311,7 @@ export function registerRoutes(
     return { room: safeRoom, participant: activeSession.participant };
   });
 
-  server.post("/v1/rooms/join", async (request, reply) => {
+  server.post("/v1/rooms/join", roomJoinRateLimit, async (request, reply) => {
     const parsed = joinRoomRequestSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply
@@ -270,7 +325,7 @@ export function registerRoutes(
     return result;
   });
 
-  server.post("/v1/rooms/:roomId/lock", async (request, reply) => {
+  server.post("/v1/rooms/:roomId/lock", roomControlRateLimit, async (request, reply) => {
     const { roomId } = z.object({ roomId: z.string().min(8) }).parse(request.params);
     const body = sessionBodySchema.extend({ locked: z.boolean() }).safeParse(request.body);
     if (!body.success) {
@@ -283,7 +338,7 @@ export function registerRoutes(
     return result;
   });
 
-  server.post("/v1/rooms/:roomId/kick", async (request, reply) => {
+  server.post("/v1/rooms/:roomId/kick", roomControlRateLimit, async (request, reply) => {
     const { roomId } = z.object({ roomId: z.string().min(8) }).parse(request.params);
     const body = kickBodySchema.safeParse(request.body);
     if (!body.success) {
@@ -313,7 +368,7 @@ export function registerRoutes(
     return result;
   });
 
-  server.post("/v1/rooms/:roomId/rotate-invite", async (request, reply) => {
+  server.post("/v1/rooms/:roomId/rotate-invite", roomControlRateLimit, async (request, reply) => {
     const { roomId } = z.object({ roomId: z.string().min(8) }).parse(request.params);
     const body = sessionBodySchema.safeParse(request.body);
     if (!body.success) {
@@ -375,7 +430,7 @@ export function registerRoutes(
     };
   });
 
-  server.post("/v1/rooms/:roomId/sync-command", async (request, reply) => {
+  server.post("/v1/rooms/:roomId/sync-command", syncCommandRateLimit, async (request, reply) => {
     const { roomId } = z.object({ roomId: z.string().min(8) }).parse(request.params);
     const body = z
       .object({
@@ -395,7 +450,7 @@ export function registerRoutes(
     return result;
   });
 
-  server.get("/v1/rooms/:roomId/realtime", { websocket: true }, (socket, request) => {
+  server.get("/v1/rooms/:roomId/realtime", realtimeHandshakeRateLimit, (socket, request) => {
     const params = z.object({ roomId: z.string().min(8) }).safeParse(request.params);
     if (!params.success) {
       socket.close(1008, "Invalid room");

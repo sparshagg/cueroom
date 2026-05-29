@@ -391,3 +391,7 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-30
   - Learning: Chrome treats authentication data, website content/resources, browsing activity, personal communications, and user-generated content as personal or sensitive user data that should be accurately disclosed and securely handled.
   - Impact: CueRoom now keeps an automated privacy implementation evidence index linking core privacy claims to source files, tests/checks, and verification commands.
+- [ ] Source: https://github.com/fastify/fastify-rate-limit
+  - Stale-by: 2026-08-30
+  - Learning: `@fastify/rate-limit` supports route-level `config.rateLimit` overrides with per-route `max` and `timeWindow` values, and exceeded requests return HTTP 429 with rate-limit headers.
+  - Impact: CueRoom now gives room creation, join, room reads, control actions, sync commands, reports, LiveKit token minting, and realtime handshakes explicit route-level rate limits backed by `pnpm security:api-rate-limits`.
