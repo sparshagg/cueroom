@@ -10,6 +10,7 @@ const staleLanguageFindings = [];
 const legalCopyFindings = [];
 const privacyPageFindings = [];
 const privacyDisclosureFindings = [];
+const originConsistencyFindings = [];
 
 for (const [index, match] of sourceMatches.entries()) {
   const nextMatch = sourceMatches[index + 1];
@@ -58,7 +59,11 @@ const homePage = await readFile("apps/web/src/app/page.tsx", "utf8");
 const readme = await readFile("README.md", "utf8");
 const storeListing = await readFile("docs/release/chrome-web-store-listing.md", "utf8");
 const extensionManifest = await readFile("apps/extension/src/manifest.json", "utf8");
+const parsedExtensionManifest = JSON.parse(extensionManifest);
 const extensionPopup = await readFile("apps/extension/src/popup.html", "utf8");
+const productionEnvExample = await readFile("infra/docker/.env.prod.example", "utf8");
+const runbook = await readFile("RUNBOOK.md", "utf8");
+const publicBetaChecklist = await readFile("docs/release/public-beta-checklist.md", "utf8");
 const privacyChecklistItems = [...privacyPolicy.matchAll(/^- \[x\] (.+)$/gm)].map(
   (match) => match[1]
 );
@@ -218,6 +223,60 @@ for (const requirement of [
   }
 }
 
+const externalMatches = parsedExtensionManifest.externally_connectable?.matches;
+if (!Array.isArray(externalMatches)) {
+  originConsistencyFindings.push(
+    "apps/extension/src/manifest.json missing externally_connectable.matches."
+  );
+} else {
+  const publicOrigins = externalMatches
+    .filter((match) => match.startsWith("https://") && !match.includes("localhost"))
+    .map((match) => match.replace(/\/\*$/, ""));
+  if (publicOrigins.length !== 1) {
+    originConsistencyFindings.push(
+      `apps/extension/src/manifest.json must list exactly one public HTTPS CueRoom origin, found ${publicOrigins.length}.`
+    );
+  } else {
+    const [publicOrigin] = publicOrigins;
+    const publicDomain = new URL(publicOrigin).hostname;
+    for (const requirement of [
+      {
+        filePath: "docs/release/chrome-web-store-listing.md",
+        content: storeListing,
+        expectedText: `Website: \`${publicOrigin}\``
+      },
+      {
+        filePath: "docs/release/chrome-web-store-listing.md",
+        content: storeListing,
+        expectedText: `Privacy policy URL: \`${publicOrigin}/privacy\``
+      },
+      {
+        filePath: "infra/docker/.env.prod.example",
+        content: productionEnvExample,
+        expectedText: `CUEROOM_DOMAIN=${publicDomain}`
+      },
+      {
+        filePath: "docs/release/public-beta-checklist.md",
+        content: publicBetaChecklist,
+        expectedText:
+          "Public beta web domain is live and matches `apps/extension/src/manifest.json` `externally_connectable.matches`."
+      },
+      {
+        filePath: "RUNBOOK.md",
+        content: runbook,
+        expectedText:
+          "Confirm `https://$CUEROOM_DOMAIN/privacy` renders the in-app privacy policy before entering the Chrome Web Store privacy policy URL."
+      }
+    ]) {
+      if (!normalizedIncludes(requirement.content, requirement.expectedText)) {
+        originConsistencyFindings.push(
+          `${requirement.filePath} missing origin consistency text: ${requirement.expectedText}`
+        );
+      }
+    }
+  }
+}
+
 if (!homePage.includes('href="/privacy"')) {
   privacyPageFindings.push("apps/web/src/app/page.tsx must link to /privacy from the home page.");
 }
@@ -241,6 +300,11 @@ if (privacyPageFindings.length > 0) {
 
 if (privacyDisclosureFindings.length > 0) {
   console.error(`Privacy disclosure parity drift found:\n${privacyDisclosureFindings.join("\n")}`);
+  process.exit(1);
+}
+
+if (originConsistencyFindings.length > 0) {
+  console.error(`Public origin consistency drift found:\n${originConsistencyFindings.join("\n")}`);
   process.exit(1);
 }
 

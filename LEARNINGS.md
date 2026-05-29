@@ -383,3 +383,7 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-30
   - Learning: Netflix Terms continue to restrict redistribution, reproduction, modification, public performance, content protection circumvention, automated access, and code/product manipulation of the Netflix service.
   - Impact: `pnpm docs:freshness` now checks public CueRoom surfaces for non-affiliation language, negative Netflix content-boundary statements, and possible positive Netflix streaming/redistribution/bypass claims.
+- [ ] Source: https://developer.chrome.com/docs/extensions/develop/concepts/messaging
+  - Stale-by: 2026-08-30
+  - Learning: Chrome extension messaging crosses execution contexts, so website-to-extension communication should be restricted to deliberate, allowlisted extension origins and validated message paths.
+  - Impact: `pnpm docs:freshness` now verifies the public `externally_connectable.matches` origin stays aligned with the Chrome Web Store listing, production domain example, and public-beta release checklist.

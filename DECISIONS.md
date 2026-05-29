@@ -351,3 +351,12 @@
 - [x] Reason: This catches obvious legal-copy regressions early while preserving qualified human legal review as the release blocker.
 - [x] Security/privacy impact: Reduces user-confusion and content-handling risk without changing runtime data collection, sync behavior, or extension permissions.
 - [x] Rollback trigger: A dedicated legal-copy policy checker replaces the repo-owned regex guard with equal or stronger surface coverage.
+
+## ADR-040: Public Origin Consistency Guard
+
+- [x] Problem: The public beta domain in extension `externally_connectable.matches` could drift from Chrome Web Store listing docs, production domain examples, or release checklist language.
+- [x] Options: rely on release review, duplicate the domain manually in more docs, or add a source-level consistency check around the manifest's public origin.
+- [x] Decision: Extend `pnpm docs:freshness` to parse the extension manifest, require exactly one public HTTPS CueRoom origin, and verify that origin against the store listing, production `.env` example, and public-beta checklist.
+- [x] Reason: The manifest is the security-sensitive source for website-to-extension reachability, so documentation and deployment examples should align with it before beta packaging.
+- [x] Security/privacy impact: Reduces risk of publishing a store listing or production config that points users to an origin not authorized for extension pairing.
+- [x] Rollback trigger: A typed deployment manifest becomes the single source for public domains and generates extension, docs, and production env examples.

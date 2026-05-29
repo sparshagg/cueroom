@@ -117,6 +117,7 @@
 - [ ] Review `docs/release/public-beta-checklist.md` and leave any incomplete blocker unchecked.
 - [ ] Run `pnpm docs:freshness` and confirm it passes privacy parity checks for `PRIVACY.md`, `/privacy`, and Chrome Web Store privacy answers.
 - [ ] Confirm `pnpm docs:freshness` also passes legal-copy checks for non-affiliation and no Netflix streaming, redistribution, recording, or DRM-bypass claims across README, web UI, extension, and store listing sources.
+- [ ] Confirm `pnpm docs:freshness` also passes public-origin checks for `apps/extension/src/manifest.json`, `docs/release/chrome-web-store-listing.md`, `infra/docker/.env.prod.example`, and `docs/release/public-beta-checklist.md`.
 - [ ] Confirm the deployed web app renders `/privacy`, links it from the home page, and matches `PRIVACY.md` before entering the hosted privacy URL in external dashboards.
 - [ ] Review `docs/release/legal-privacy-review.md` and confirm real reviewer, review date, review scope, public beta domain, hosted privacy policy URL, and Chrome Web Store developer owner evidence is recorded before tagging.
 - [ ] Confirm `pnpm release:check -- --tag v0.1.0 --require-beta-gates` fails while legal/privacy evidence is unchecked or placeholder-only, and passes only after real evidence is recorded.

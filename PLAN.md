@@ -81,6 +81,7 @@
 - [x] Add release gate for concrete legal/privacy review evidence before beta tagging.
 - [x] Add source-level privacy parity checks for policy, in-app route, and Chrome Web Store answers.
 - [x] Add source-level legal copy drift checks for non-affiliation and Netflix content-boundary claims.
+- [x] Add public origin consistency checks for extension matches, store listing, and production domain docs.
 - [ ] Complete human legal/privacy review.
 - [x] Publish public repository.
 - [ ] Tag first signed release.
