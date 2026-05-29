@@ -116,3 +116,12 @@
 - [x] Reason: These controls are small, local, and reduce production footguns before public beta.
 - [x] Security/privacy impact: Reduces token disclosure risk, stale realtime authorization, replay acceptance across API instances, broad extension-permission drift, unintended dev service exposure, and silent media-removal failure.
 - [x] Rollback trigger: Operational testing shows the controls break supported local development or require a different auth/realtime architecture.
+
+## ADR-014: PostCSS CVE Override
+
+- [x] Problem: GitHub Dependabot reported CVE-2026-41305 / GHSA-qx2v-qp2m-jg93 for a transitive `postcss` version below 8.5.10.
+- [x] Options: wait for upstream framework release, add a root pnpm override, or remove the dependent framework.
+- [x] Decision: Add a root workspace override forcing `postcss` to the patched 8.5.x line.
+- [x] Reason: The vulnerable version is transitive through the web framework, while pnpm overrides are the smallest repo-local control until upstream dependency metadata catches up.
+- [x] Security/privacy impact: Removes a known CSS stringification XSS advisory from the installed graph without changing CueRoom's runtime data boundaries.
+- [x] Rollback trigger: Upstream framework releases a compatible dependency update that resolves to patched `postcss` without an override.

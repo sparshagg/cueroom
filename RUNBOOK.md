@@ -101,6 +101,7 @@
 
 - [ ] Confirm affected package and reachable code path.
 - [ ] Upgrade or remove dependency.
+- [ ] For transitive npm CVEs, prefer package-manager overrides only when the parent package has no safe release available and record the rollback trigger in `DECISIONS.md`.
 - [ ] Run tests and security checks.
 - [ ] Publish advisory if released users are affected.
 

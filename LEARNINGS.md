@@ -160,3 +160,11 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: Session tokens are equivalent to authentication credentials while active and must be protected from disclosure, logging, and unintended exchange channels.
   - Impact: Magic-link dev token disclosure is opt-in and rejected in production config.
+- [ ] Source: https://github.com/advisories/GHSA-qx2v-qp2m-jg93
+  - Stale-by: 2026-06-29
+  - Learning: `postcss` versions before 8.5.10 are affected by CVE-2026-41305 / GHSA-qx2v-qp2m-jg93 when CSS is stringified into HTML style contexts.
+  - Impact: CueRoom forces transitive `postcss` resolution to a patched 8.5.x line even when framework dependencies request an older patched-incompatible version.
+- [ ] Source: https://pnpm.io/settings#overrides
+  - Stale-by: 2026-08-29
+  - Learning: pnpm root `overrides` can enforce a dependency version across the dependency graph, including transitive dependencies.
+  - Impact: CueRoom uses a workspace-level `postcss` override instead of editing framework internals or relying on a direct app dependency to affect transitive resolution.

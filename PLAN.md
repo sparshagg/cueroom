@@ -53,6 +53,7 @@
 - [x] Add PostgreSQL/Redis integration tests.
 - [x] Add DAST and extension store review checklist evidence.
 - [x] Run independent security review.
+- [x] Resolve Dependabot PostCSS CVE-2026-41305 alert with a workspace override.
 
 ## M6: Public Beta
 
