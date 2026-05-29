@@ -89,3 +89,12 @@
 - [x] Reason: A single room channel gives low-latency sync while keeping command authority at the API.
 - [x] Security/privacy impact: Room tokens are sent only inside the first WebSocket auth message, commands pass through room membership/role/replay validation, and the extension no longer directly applies website-originated commands.
 - [x] Rollback trigger: Service-worker WebSocket lifecycle proves unreliable and requires a different realtime transport.
+
+## ADR-011: Drift Correction Authority
+
+- [x] Problem: Keep followers synced without letting local extension logic invent playback commands or mutate the wrong Netflix title.
+- [x] Options: extension-local drift correction, reuse `sync.command`, API-targeted `sync.correction` and `sync.warning` events.
+- [x] Decision: API stores ephemeral host playback authority and sends targeted correction/warning events to followers.
+- [x] Reason: Drift policy belongs at the same authorization boundary as room membership, while warnings can be shown without opening a second room socket from the web app.
+- [x] Security/privacy impact: Guests cannot establish playback authority, corrections include the expected watch ID, the content script refuses mismatched watch IDs, and wrong-title states produce warnings instead of automatic navigation.
+- [x] Rollback trigger: Multi-process realtime scaling requires moving host authority from process memory to Redis pub/sub/state.

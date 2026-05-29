@@ -1,4 +1,5 @@
-import { syncCommandSchema, type SyncCommand } from "@cueroom/shared";
+import { syncCommandSchema, syncCorrectionSchema, type SyncCommand } from "@cueroom/shared";
+import { applySyncCommandToVideo, applySyncCorrectionToVideo } from "./media-control";
 
 let sequence = 0;
 let lastFingerprint = "";
@@ -48,19 +49,16 @@ function applySyncCommand(command: SyncCommand) {
     return;
   }
 
-  if (command.command === "seek" || command.command === "catch-up") {
-    if (typeof command.position === "number" && Number.isFinite(command.position)) {
-      video.currentTime = Math.max(0, command.position);
-    }
-  }
+  applySyncCommandToVideo(video, command);
+}
 
-  if (command.command === "play" || command.command === "catch-up") {
-    void video.play().catch(() => undefined);
+function applySyncCorrection(correction: unknown) {
+  const parsed = syncCorrectionSchema.safeParse(correction);
+  const video = getVideo();
+  if (!parsed.success || !video) {
+    return false;
   }
-
-  if (command.command === "pause") {
-    video.pause();
-  }
+  return applySyncCorrectionToVideo(video, parsed.data, getWatchId());
 }
 
 chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
@@ -77,6 +75,11 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
     }
     applySyncCommand(parsed.data);
     sendResponse({ ok: true });
+    return false;
+  }
+
+  if (message.type === "APPLY_SYNC_CORRECTION" && "correction" in message) {
+    sendResponse({ ok: applySyncCorrection(message.correction) });
     return false;
   }
 

@@ -1,4 +1,9 @@
-import { extensionPairRequestSchema, type RoomSession } from "@cueroom/shared";
+import {
+  extensionPairRequestSchema,
+  extensionStatusResponseSchema,
+  type ExtensionStatusResponse,
+  type RoomSession
+} from "@cueroom/shared";
 import { getApiOrigin } from "@/lib/api";
 
 type ChromeRuntime = {
@@ -78,6 +83,33 @@ export async function pairExtension(
         return;
       }
       resolve(response);
+    });
+  });
+}
+
+export async function getExtensionStatus(
+  extensionId: string,
+  options: { runtime?: ChromeRuntime } = {}
+) {
+  const runtime = options.runtime ?? (window as WindowWithChrome).chrome?.runtime;
+  const trimmedExtensionId = extensionId.trim();
+  if (!runtime || !trimmedExtensionId) {
+    throw new Error("CueRoom extension is unavailable");
+  }
+
+  return new Promise<ExtensionStatusResponse>((resolve, reject) => {
+    runtime.sendMessage(trimmedExtensionId, { type: "GET_STATUS" }, (response) => {
+      const error = runtime.lastError?.message;
+      if (error) {
+        reject(new Error(error));
+        return;
+      }
+      const parsed = extensionStatusResponseSchema.safeParse(response);
+      if (!parsed.success) {
+        reject(new Error("Unexpected extension response"));
+        return;
+      }
+      resolve(parsed.data);
     });
   });
 }

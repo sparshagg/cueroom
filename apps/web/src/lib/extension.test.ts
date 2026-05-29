@@ -1,6 +1,6 @@
 import type { RoomSession } from "@cueroom/shared";
 import { describe, expect, it, vi } from "vitest";
-import { pairExtension } from "./extension";
+import { getExtensionStatus, pairExtension } from "./extension";
 
 describe("pairExtension", () => {
   it("sends only room-scoped pairing details to the configured extension", async () => {
@@ -48,6 +48,62 @@ describe("pairExtension", () => {
   });
 });
 
+describe("getExtensionStatus", () => {
+  it("parses wrong-title warnings from the extension", async () => {
+    const runtime = {
+      sendMessage: vi.fn(
+        (_extensionId: string, _message: unknown, callback: (response: unknown) => void) => {
+          callback({
+            ok: true,
+            pairedRoomId: "room_12345678",
+            playbackState: playbackState("81234567", "Current title"),
+            realtimeConnected: true,
+            syncWarning: {
+              type: "wrong-title",
+              roomId: "room_12345678",
+              participantId: "participant_guest",
+              expectedWatchId: "89999999",
+              expectedTitleHint: "Host title",
+              expectedUrl: "https://www.netflix.com/watch/89999999",
+              currentWatchId: "81234567",
+              currentTitleHint: "Current title",
+              detectedAt: 1_779_984_000_000
+            }
+          });
+        }
+      )
+    };
+
+    await expect(getExtensionStatus("extension_id", { runtime })).resolves.toMatchObject({
+      ok: true,
+      syncWarning: {
+        type: "wrong-title",
+        expectedWatchId: "89999999",
+        currentWatchId: "81234567"
+      }
+    });
+    expect(runtime.sendMessage).toHaveBeenCalledWith(
+      "extension_id",
+      { type: "GET_STATUS" },
+      expect.any(Function)
+    );
+  });
+
+  it("rejects malformed status responses", async () => {
+    const runtime = {
+      sendMessage: vi.fn(
+        (_extensionId: string, _message: unknown, callback: (response: unknown) => void) => {
+          callback({ ok: true, realtimeConnected: true });
+        }
+      )
+    };
+
+    await expect(getExtensionStatus("extension_id", { runtime })).rejects.toThrow(
+      "Unexpected extension response"
+    );
+  });
+});
+
 const roomSession: RoomSession = {
   participant: {
     cameraEnabled: false,
@@ -68,3 +124,18 @@ const roomSession: RoomSession = {
   },
   sessionToken: "crs_123456789012345678901234"
 };
+
+function playbackState(watchId: string, titleHint: string) {
+  return {
+    watchId,
+    titleHint,
+    url: `https://www.netflix.com/watch/${watchId}`,
+    paused: true,
+    currentTime: 120,
+    duration: 3600,
+    playbackRate: 1,
+    buffering: false,
+    observedAt: 1_779_984_000_000,
+    sequence: 1
+  };
+}

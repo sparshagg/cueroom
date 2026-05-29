@@ -12,6 +12,7 @@ import { z } from "zod";
 import { createLiveKitToken, removeLiveKitParticipant } from "./livekit.js";
 import type { AuthSession, AuthStore } from "./auth-store.js";
 import type { ActiveSession, RoomStore } from "./room-store.js";
+import { decideFollowerSync, type AuthoritativePlaybackState } from "./sync-policy.js";
 
 const sessionBodySchema = z.object({
   sessionToken: z.string().min(24)
@@ -314,6 +315,7 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore, authSt
   });
 
   const realtimeRooms = new Map<string, Set<RealtimeClient>>();
+  const authoritativePlaybackByRoom = new Map<string, AuthoritativePlaybackState>();
 
   server.get("/v1/rooms/:roomId/realtime", { websocket: true }, (socket, request) => {
     const params = z.object({ roomId: z.string().min(8) }).safeParse(request.params);
@@ -338,6 +340,9 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore, authSt
       clearTimeout(authTimeout);
       if (client) {
         removeRealtimeClient(realtimeRooms, client);
+        if (client.role === "host") {
+          authoritativePlaybackByRoom.delete(client.roomId);
+        }
         broadcastRealtime(realtimeRooms, client.roomId, {
           type: "presence.left",
           roomId: client.roomId,
@@ -444,10 +449,40 @@ export function registerRoutes(server: FastifyInstance, store: RoomStore, authSt
       }
 
       if (parsed.data.type === "sync.state") {
+        if (client.role === "host") {
+          authoritativePlaybackByRoom.set(client.roomId, {
+            participantId: client.participantId,
+            state: parsed.data.state
+          });
+        } else {
+          const authority = authoritativePlaybackByRoom.get(client.roomId);
+          if (authority) {
+            const decision = decideFollowerSync({
+              roomId: client.roomId,
+              participantId: client.participantId,
+              authority,
+              followerState: parsed.data.state,
+              now: Date.now()
+            });
+            if (decision.warning) {
+              sendRealtime(client, {
+                type: "sync.warning",
+                warning: decision.warning
+              });
+            } else if (decision.correction) {
+              sendRealtime(client, {
+                type: "sync.correction",
+                correction: decision.correction
+              });
+            }
+          }
+        }
+
         broadcastRealtime(realtimeRooms, client.roomId, {
           type: "sync.state",
           roomId: client.roomId,
           participantId: client.participantId,
+          role: client.role,
           state: parsed.data.state
         });
         return;

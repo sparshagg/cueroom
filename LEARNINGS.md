@@ -108,6 +108,10 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: Chrome extension service-worker WebSockets remain active in Chrome 116+ when messages are exchanged more frequently than the worker inactivity window.
   - Impact: The extension declares Chrome 116+ and sends room WebSocket pings every 20 seconds while paired.
+- [ ] Source: https://developer.chrome.com/docs/extensions/develop/concepts/messaging
+  - Stale-by: 2026-08-29
+  - Learning: Extension message endpoints should validate sender identity and explicitly handle external web-page messages separately from internal extension messages.
+  - Impact: CueRoom keeps external website messages limited to pairing/status/command relay, and applies automatic drift correction only from API WebSocket room events.
 - [ ] Source: https://github.com/fastify/fastify-websocket
   - Stale-by: 2026-08-29
   - Learning: `@fastify/websocket` exposes route-level `{ websocket: true }` handlers and `injectWS` for endpoint tests.

@@ -13,6 +13,7 @@ const allowedApiOriginsByAppOrigin = new Map<string, Set<string>>([
   ["https://cueroom.app", new Set(["https://api.cueroom.app", "https://cueroom.app"])]
 ]);
 const realtimeKeepAliveMs = 20_000;
+const latestSyncWarningKey = "latestSyncWarning";
 
 type PairedRoom = {
   roomId: string;
@@ -47,7 +48,7 @@ async function getPairing(): Promise<PairedRoom | null> {
 async function setPairing(pairing: PairedRoom | null) {
   if (!pairing) {
     disconnectRealtime();
-    await chrome.storage.local.remove("pairedRoom");
+    await chrome.storage.local.remove(["pairedRoom", latestSyncWarningKey, "latestSyncCorrection"]);
     return;
   }
   await chrome.storage.local.set({ pairedRoom: pairing });
@@ -156,6 +157,12 @@ function isStatusMessage(message: unknown) {
     message !== null &&
     "type" in message &&
     message.type === "GET_STATUS"
+  );
+}
+
+function isOkResponse(response: unknown) {
+  return (
+    typeof response === "object" && response !== null && "ok" in response && response.ok === true
   );
 }
 
@@ -287,6 +294,16 @@ async function handleRealtimeEvent(pairing: PairedRoom, rawEvent: unknown, markR
     return;
   }
 
+  if (parsed.data.type === "sync.correction") {
+    await applyServerCorrection(parsed.data);
+    return;
+  }
+
+  if (parsed.data.type === "sync.warning") {
+    await storeServerWarning(parsed.data);
+    return;
+  }
+
   if (parsed.data.type === "sync.error") {
     await chrome.storage.local.set({
       latestRealtimeError: parsed.data.reason,
@@ -336,6 +353,67 @@ async function applyServerCommand(event: Extract<RoomEvent, { type: "sync.comman
     tabId: target.id,
     lastCommandSequence: event.command.sequence
   });
+}
+
+async function applyServerCorrection(event: Extract<RoomEvent, { type: "sync.correction" }>) {
+  const pairing = await getPairing();
+  if (
+    !pairing ||
+    event.correction.roomId !== pairing.roomId ||
+    event.correction.participantId !== pairing.participantId
+  ) {
+    return;
+  }
+
+  const target = await findPairedTab(pairing);
+  if (!target?.id) {
+    await chrome.storage.local.set({
+      latestRealtimeError: "No Netflix watch tab found",
+      latestRealtimeErrorAt: Date.now()
+    });
+    return;
+  }
+
+  let response: unknown;
+  try {
+    response = await chrome.tabs.sendMessage(target.id, {
+      type: "APPLY_SYNC_CORRECTION",
+      correction: event.correction
+    });
+  } catch {
+    await chrome.storage.local.set({
+      latestRealtimeError: "Unable to reach Netflix tab",
+      latestRealtimeErrorAt: Date.now()
+    });
+    return;
+  }
+  if (!isOkResponse(response)) {
+    await chrome.storage.local.set({
+      latestRealtimeError: "Correction skipped for active Netflix tab",
+      latestRealtimeErrorAt: Date.now()
+    });
+    return;
+  }
+
+  await chrome.storage.local.set({
+    latestSyncCorrection: {
+      correctedAt: Date.now(),
+      driftSeconds: event.correction.driftSeconds,
+      command: event.correction.command
+    }
+  });
+}
+
+async function storeServerWarning(event: Extract<RoomEvent, { type: "sync.warning" }>) {
+  const pairing = await getPairing();
+  if (
+    !pairing ||
+    event.warning.roomId !== pairing.roomId ||
+    event.warning.participantId !== pairing.participantId
+  ) {
+    return;
+  }
+  await chrome.storage.local.set({ [latestSyncWarningKey]: event.warning });
 }
 
 chrome.runtime.onMessageExternal.addListener((message: unknown, sender, sendResponse) => {
@@ -392,20 +470,22 @@ chrome.runtime.onMessageExternal.addListener((message: unknown, sender, sendResp
   }
 
   if (isStatusMessage(message)) {
-    void Promise.all([getPairing(), chrome.storage.local.get("latestPlaybackState")]).then(
-      ([pairing, stored]) => {
-        if (pairing && !isPairedSender(sender, pairing)) {
-          sendResponse({ ok: false, error: "Sender does not match paired origin" });
-          return;
-        }
-        sendResponse({
-          ok: true,
-          pairedRoomId: pairing?.roomId ?? null,
-          playbackState: stored["latestPlaybackState"] ?? null,
-          realtimeConnected: realtimeSocket?.readyState === WebSocket.OPEN
-        });
+    void Promise.all([
+      getPairing(),
+      chrome.storage.local.get(["latestPlaybackState", latestSyncWarningKey])
+    ]).then(([pairing, stored]) => {
+      if (pairing && !isPairedSender(sender, pairing)) {
+        sendResponse({ ok: false, error: "Sender does not match paired origin" });
+        return;
       }
-    );
+      sendResponse({
+        ok: true,
+        pairedRoomId: pairing?.roomId ?? null,
+        playbackState: stored["latestPlaybackState"] ?? null,
+        realtimeConnected: realtimeSocket?.readyState === WebSocket.OPEN,
+        syncWarning: stored[latestSyncWarningKey] ?? null
+      });
+    });
     return true;
   }
 
@@ -467,6 +547,7 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) =>
       latestPlaybackState: {
         watchId: parsed.data.watchId,
         titleHint: parsed.data.titleHint,
+        url: parsed.data.url,
         paused: parsed.data.paused,
         currentTime: parsed.data.currentTime,
         duration: parsed.data.duration,
@@ -478,6 +559,11 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) =>
         receivedAt: Date.now()
       }
     });
+    const stored = await chrome.storage.local.get(latestSyncWarningKey);
+    const syncWarning = stored[latestSyncWarningKey] as { expectedWatchId?: string } | undefined;
+    if (syncWarning?.expectedWatchId === parsed.data.watchId) {
+      await chrome.storage.local.remove(latestSyncWarningKey);
+    }
 
     const pairedTabId = sender.tab?.id ?? null;
     const shouldForward = Boolean(

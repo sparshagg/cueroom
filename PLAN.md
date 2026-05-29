@@ -42,8 +42,8 @@
 - [x] Add extension popup.
 - [x] Add extension permission audit.
 - [x] Connect extension to live room WebSocket.
-- [ ] Implement host-authoritative drift correction.
-- [ ] Add wrong-title warning in room UI.
+- [x] Implement host-authoritative drift correction.
+- [x] Add wrong-title warning in room UI.
 
 ## M5: Hardening
 

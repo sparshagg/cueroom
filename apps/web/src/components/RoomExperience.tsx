@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, Input, Panel } from "@cueroom/ui";
 import {
+  AlertTriangle,
   Camera,
   CameraOff,
   Copy,
+  ExternalLink,
   Lock,
   LogIn,
   MessageCircle,
@@ -19,9 +21,14 @@ import {
   Users
 } from "lucide-react";
 import { toast } from "sonner";
-import type { RoomSession } from "@cueroom/shared";
+import type { RoomSession, SyncWarning } from "@cueroom/shared";
 import { LiveCallPanel } from "@/components/LiveCallPanel";
-import { getStoredExtensionId, pairExtension, rememberExtensionId } from "@/lib/extension";
+import {
+  getExtensionStatus,
+  getStoredExtensionId,
+  pairExtension,
+  rememberExtensionId
+} from "@/lib/extension";
 import { clearRoomSession, readRoomSession } from "@/lib/room-session";
 import { useLiveKitCall } from "./useLiveKitCall";
 
@@ -52,6 +59,7 @@ export function RoomExperience({ roomId }: { roomId: string }) {
   const [extensionBusy, setExtensionBusy] = useState(false);
   const [extensionId, setExtensionId] = useState("");
   const [extensionPaired, setExtensionPaired] = useState(false);
+  const [syncWarning, setSyncWarning] = useState<SyncWarning | null>(null);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState(initialMessages);
   const inviteUrl = useMemo(() => {
@@ -68,6 +76,35 @@ export function RoomExperience({ roomId }: { roomId: string }) {
     setRoomSession(readRoomSession(roomId));
     setExtensionId(getStoredExtensionId());
   }, [roomId]);
+
+  useEffect(() => {
+    if (!extensionId.trim()) {
+      return undefined;
+    }
+
+    let cancelled = false;
+    async function refreshExtensionStatus() {
+      try {
+        const status = await getExtensionStatus(extensionId);
+        if (cancelled || !status.ok) {
+          return;
+        }
+        setExtensionPaired(Boolean(status.pairedRoomId && status.realtimeConnected));
+        setSyncWarning(status.syncWarning);
+      } catch {
+        if (!cancelled) {
+          setExtensionPaired(false);
+        }
+      }
+    }
+
+    void refreshExtensionStatus();
+    const interval = window.setInterval(() => void refreshExtensionStatus(), 3_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [extensionId]);
 
   function sendMessage() {
     const trimmed = message.trim();
@@ -137,6 +174,7 @@ export function RoomExperience({ roomId }: { roomId: string }) {
         return;
       }
       setExtensionPaired(true);
+      setSyncWarning(null);
       toast.success(
         response.tabPaired ? "Extension paired" : "Extension paired; open Netflix next"
       );
@@ -187,10 +225,44 @@ export function RoomExperience({ roomId }: { roomId: string }) {
               <div className="relative flex h-full min-h-[420px] flex-col justify-between p-6">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <Badge tone="warning">Netflix tab not paired</Badge>
+                    <Badge tone={syncWarning ? "warning" : extensionPaired ? "sync" : "warning"}>
+                      {syncWarning
+                        ? "Wrong Netflix title"
+                        : extensionPaired
+                          ? "Sync connected"
+                          : "Netflix tab not paired"}
+                    </Badge>
                     <h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-normal md:text-6xl">
-                      Open your Netflix title, then pair the extension.
+                      {syncWarning
+                        ? "Switch to the host's Netflix title to rejoin sync."
+                        : "Open your Netflix title, then pair the extension."}
                     </h2>
+                    {syncWarning && (
+                      <div className="mt-5 max-w-2xl rounded-lg border border-amber-300/25 bg-amber-300/10 p-4 text-sm text-amber-50">
+                        <div className="flex items-start gap-3">
+                          <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-200" />
+                          <div className="grid gap-3">
+                            <p>
+                              Host is watching{" "}
+                              <span className="font-semibold">
+                                {syncWarning.expectedTitleHint ?? syncWarning.expectedWatchId}
+                              </span>
+                              . Your tab is on{" "}
+                              <span className="font-semibold">
+                                {syncWarning.currentTitleHint ?? syncWarning.currentWatchId}
+                              </span>
+                              .
+                            </p>
+                            <Button asChild size="sm" variant="outline">
+                              <a href={syncWarning.expectedUrl} target="_blank" rel="noreferrer">
+                                <ExternalLink className="size-4" />
+                                Open host title
+                              </a>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <Panel className="w-full max-w-sm p-4">
                     <p className="text-sm font-semibold">Extension checklist</p>

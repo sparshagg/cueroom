@@ -40,12 +40,17 @@ CueRoom is a web app, API, LiveKit deployment, and Chrome/Edge MV3 extension for
 - [ ] A malicious site tries to complete passkey authentication for the wrong origin or RP ID.
 - [ ] A guest tries to use LiveKit data channels or broad media grants to bypass CueRoom's server-authorized sync/chat path.
 - [ ] A trusted CueRoom web origin tries to send a direct extension playback command that bypasses server role checks.
+- [ ] A guest tries to establish playback authority by sending fake `sync.state` messages.
+- [ ] A follower is on the wrong Netflix title and receives drift correction for the host title.
 
 ## Required Controls
 
 - [ ] Short-lived invite tokens and room lock/rotate/kick controls.
 - [ ] Server-side RBAC on every command.
 - [ ] Extension applies only server-broadcast sync commands, never raw website-originated commands.
+- [ ] API sends automatic drift corrections only from host playback authority; guest playback state cannot establish authority.
+- [ ] Extension applies targeted drift corrections only when the active watch ID matches the correction watch ID.
+- [ ] Wrong-title state produces a warning and manual navigation link, never automatic navigation.
 - [ ] Runtime schema validation at every trust boundary.
 - [ ] Strict CSP and no extension remote code.
 - [ ] Minimal Chrome permissions and manifest audits.
