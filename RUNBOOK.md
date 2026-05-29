@@ -96,6 +96,7 @@
 - [ ] Pair only with `http://localhost:3000` or approved CueRoom origins.
 - [ ] Confirm the extension WebSocket connects to `/v1/rooms/:roomId/realtime` only after a room pairing message.
 - [ ] Confirm commands from the web page are relayed to the API and are not applied to Netflix until the API broadcasts `sync.command`.
+- [ ] Confirm host `sync.command` events include a target watch ID and the extension skips commands when the active Netflix watch ID differs.
 - [ ] Confirm host playback state produces targeted follower `sync.correction` events for same-title drift.
 - [ ] Confirm wrong-title followers receive `sync.warning`, the room UI shows the manual Netflix link, and the extension does not auto-navigate.
 - [ ] Confirm guests cannot establish playback authority by sending `sync.state`.

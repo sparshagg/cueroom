@@ -407,3 +407,11 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-30
   - Learning: Playwright can monitor page request/response events, wait for specific responses after UI actions, route or abort requests through a browser context, and configure a browser or context HTTP proxy; blocking service workers keeps routed network traffic visible.
   - Impact: CueRoom's DAST flow now drives magic-link sign-in through the browser UI, waits for API responses, blocks service workers, and sends the account-authenticated room flow through the configured ZAP proxy.
+- [ ] Source: https://developer.chrome.com/docs/extensions/develop/concepts/messaging
+  - Stale-by: 2026-08-30
+  - Learning: Chrome extension messages are JSON-serialized one-time or port messages across extension contexts, and sender-side success depends on recipient responses or rejected listener errors.
+  - Impact: CueRoom will keep playback command messages explicit and serializable, and content-script command handlers must return deterministic success/failure responses after checking the active watch target.
+- [ ] Source: https://developer.chrome.com/docs/extensions/develop/concepts/content-scripts
+  - Stale-by: 2026-08-30
+  - Learning: Content scripts run with isolated extension execution but share access to the host page DOM, so any page mutation must be tightly scoped to the active matched page and current local state.
+  - Impact: CueRoom's Netflix content script must validate the current watch ID before applying host play/pause/seek commands, not only before reporting playback state.

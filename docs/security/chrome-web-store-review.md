@@ -17,6 +17,7 @@
 - [x] Extension observes local playback metadata only: watch ID, title hint, safe watch URL, pause state, timing, playback rate, buffering, timestamp, and sequence.
 - [x] Extension does not read Netflix credentials, cookies, local/session storage, DRM keys, subtitles, frames, screenshots, video, or audio.
 - [x] Pairing stores only room-scoped CueRoom session data, the allowed app/API origins, and the paired Netflix tab ID.
+- [x] Host sync commands and follower corrections apply only when the active Netflix watch ID matches the server-provided target watch ID.
 - [x] Wrong-title handling shows a manual link to the expected Netflix title and never auto-navigates.
 - [x] Store privacy form draft: disclose playback metadata, room-pairing token use, optional auth data, transient chat, and no advertising use.
 - [x] Privacy policy source: `PRIVACY.md`.

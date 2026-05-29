@@ -57,6 +57,7 @@
 - [x] Add DAST and extension store review checklist evidence.
 - [x] Close DAST security-header findings.
 - [x] Add account-authenticated DAST coverage for auth-required room creation.
+- [x] Require watch-ID-targeted host sync commands before extension playback mutation.
 - [x] Add production Docker compose, Caddy, and Docker secret-file self-hosting checks.
 - [x] Add production runtime guards for Postgres, Redis, auth-required rooms, non-root containers, and CSP connect sources.
 - [x] Require production Redis auth through Docker secrets and document LiveKit TURN/firewall strategy gates.

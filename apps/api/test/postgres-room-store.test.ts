@@ -149,6 +149,7 @@ describePostgres("Postgres room store", () => {
     const command = {
       roomId: created.room.id,
       actorId: created.participant.id,
+      watchId: "81234567",
       command: "pause" as const,
       issuedAt: Date.now(),
       sequence: 1
@@ -253,6 +254,7 @@ describePostgresRedis("Postgres room store with Redis ephemeral state", () => {
     const command = {
       roomId: created.room.id,
       actorId: created.participant.id,
+      watchId: "81234567",
       command: "pause" as const,
       issuedAt: Date.now(),
       sequence: 1

@@ -381,6 +381,7 @@ describe("CueRoom API", () => {
         command: {
           roomId: created.room.id,
           actorId: guest.participant.id,
+          watchId: "81234567",
           command: "pause",
           issuedAt: Date.now(),
           sequence: 1
@@ -530,10 +531,22 @@ describe("CueRoom API", () => {
     const command = {
       roomId: created.room.id,
       actorId: created.participant.id,
+      watchId: "81234567",
       command: "pause",
       issuedAt: Date.now(),
       sequence: 1
     };
+    const { watchId: _watchId, ...untargetedCommand } = command;
+
+    const missingTarget = await server.inject({
+      method: "POST",
+      url: `/v1/rooms/${created.room.id}/sync-command`,
+      payload: {
+        sessionToken: created.sessionToken,
+        command: untargetedCommand
+      }
+    });
+    expect(missingTarget.statusCode).toBe(400);
 
     const accepted = await server.inject({
       method: "POST",

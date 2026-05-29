@@ -23,6 +23,7 @@ export type PlaybackState = z.infer<typeof playbackStateSchema>;
 export const syncCommandSchema = z.object({
   roomId: z.string().min(8),
   actorId: z.string().min(8),
+  watchId: z.string().min(1).max(256),
   command: z.enum(["play", "pause", "seek", "catch-up"]),
   position: z.number().finite().min(0).optional(),
   playbackRate: z.number().finite().min(0.25).max(3).optional(),

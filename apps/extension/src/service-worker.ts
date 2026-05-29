@@ -336,14 +336,22 @@ async function applyServerCommand(event: Extract<RoomEvent, { type: "sync.comman
     });
     return;
   }
+  let response: unknown;
   try {
-    await chrome.tabs.sendMessage(target.id, {
+    response = await chrome.tabs.sendMessage(target.id, {
       type: "APPLY_SYNC_COMMAND",
       command: event.command
     });
   } catch {
     await chrome.storage.local.set({
       latestRealtimeError: "Unable to reach Netflix tab",
+      latestRealtimeErrorAt: Date.now()
+    });
+    return;
+  }
+  if (!isOkResponse(response)) {
+    await chrome.storage.local.set({
+      latestRealtimeError: "Command skipped for active Netflix tab",
       latestRealtimeErrorAt: Date.now()
     });
     return;

@@ -7,7 +7,15 @@ type ControlledVideo = {
   play(): Promise<void>;
 };
 
-export function applySyncCommandToVideo(video: ControlledVideo, command: SyncCommand) {
+export function applySyncCommandToVideo(
+  video: ControlledVideo,
+  command: SyncCommand,
+  currentWatchId: string
+) {
+  if (command.watchId !== currentWatchId) {
+    return false;
+  }
+
   if (typeof command.playbackRate === "number" && Number.isFinite(command.playbackRate)) {
     video.playbackRate = command.playbackRate;
   }
@@ -23,6 +31,8 @@ export function applySyncCommandToVideo(video: ControlledVideo, command: SyncCom
   if (command.command === "pause") {
     video.pause();
   }
+
+  return true;
 }
 
 export function applySyncCorrectionToVideo(

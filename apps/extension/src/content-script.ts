@@ -46,10 +46,10 @@ function publishPlaybackState() {
 function applySyncCommand(command: SyncCommand) {
   const video = getVideo();
   if (!video) {
-    return;
+    return false;
   }
 
-  applySyncCommandToVideo(video, command);
+  return applySyncCommandToVideo(video, command, getWatchId());
 }
 
 function applySyncCorrection(correction: unknown) {
@@ -73,8 +73,7 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
       sendResponse({ ok: false });
       return false;
     }
-    applySyncCommand(parsed.data);
-    sendResponse({ ok: true });
+    sendResponse({ ok: applySyncCommand(parsed.data) });
     return false;
   }
 

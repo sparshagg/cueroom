@@ -396,3 +396,12 @@
 - [x] Reason: This keeps the DAST surface close to the real browser workflow while avoiding real SMTP secrets or external identity providers in CI.
 - [x] Security/privacy impact: Increases confidence that account-session authorization, redaction, and ZAP coverage work together for production-style room creation without uploading raw proxy traffic or real magic-link delivery artifacts.
 - [x] Rollback trigger: A dedicated production-staging DAST environment with real email test inboxes replaces dev magic links and proves equivalent auth-required coverage.
+
+## ADR-045: Watch-ID-Targeted Host Commands
+
+- [x] Problem: Host `sync.command` events could be role-authorized and replay-protected while still lacking the target Netflix watch ID needed for the extension to refuse playback mutation on the wrong title.
+- [x] Options: keep command payloads untargeted, make `watchId` optional during rollout, or require `watchId` and reject legacy commands without a target.
+- [x] Decision: Require `watchId` in `syncCommandSchema`, preserve it through API/realtime broadcasts, and have the Netflix content script return `{ ok: false }` without touching playback when the active watch ID differs.
+- [x] Reason: Host commands and drift corrections should use the same wrong-title safety boundary; rejecting untargeted legacy commands is safer than preserving an ambiguous mutation path.
+- [x] Security/privacy impact: Reduces risk that a valid room command pauses, seeks, or changes rate on a different Netflix title; the extension records a skip instead of advancing command sequence when the active tab refuses the command.
+- [x] Rollback trigger: A future backwards-compatible command negotiation proves legacy clients can be upgraded without ever applying untargeted commands.

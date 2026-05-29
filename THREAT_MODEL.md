@@ -51,6 +51,7 @@ CueRoom is a web app, API, LiveKit deployment, and Chrome/Edge MV3 extension for
 - [ ] Server-side RBAC on every command.
 - [ ] Extension applies only server-broadcast sync commands, never raw website-originated commands.
 - [ ] API sends automatic drift corrections only from host playback authority; guest playback state cannot establish authority.
+- [ ] Extension applies host sync commands only when the active watch ID matches the command watch ID.
 - [ ] Extension applies targeted drift corrections only when the active watch ID matches the correction watch ID.
 - [ ] Wrong-title state produces a warning and manual navigation link, never automatic navigation.
 - [ ] Runtime schema validation at every trust boundary.
