@@ -1,0 +1,36 @@
+{
+  "name": "cueroom",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Open-source, non-affiliated co-watch companion with video calls, chat, and Netflix playback sync.",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@10.12.1",
+  "engines": {
+    "node": "^22.13.0 || >=24.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm dev:prepare && turbo dev",
+    "dev:prepare": "pnpm --filter @cueroom/shared build && pnpm --filter @cueroom/security build && pnpm --filter @cueroom/ui build",
+    "build": "turbo build",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "format": "prettier --check .",
+    "format:write": "prettier --write .",
+    "security:extension": "node scripts/audit-extension.mjs",
+    "cleanup:check": "node scripts/cleanup-check.mjs",
+    "docs:freshness": "node scripts/check-docs-freshness.mjs",
+    "verify": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm security:extension && pnpm cleanup:check && pnpm docs:freshness"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.28.0",
+    "@types/node": "^22.15.29",
+    "eslint": "^9.28.0",
+    "knip": "^5.55.0",
+    "prettier": "^3.5.3",
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.33.1"
+  }
+}

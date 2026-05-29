@@ -1,0 +1,53 @@
+name: Cleanup Review
+
+on:
+  pull_request:
+  schedule:
+    - cron: "12 6 * * 2"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Run cleanup check
+        id: cleanup
+        run: pnpm cleanup:check
+        continue-on-error: true
+      - name: Open scheduled cleanup issue
+        if: github.event_name == 'schedule' && steps.cleanup.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = 'chore: review cleanup candidates';
+            const marker = '<!-- cueroom-cleanup-review -->';
+            const existing = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'cleanup'
+            });
+            if (!existing.some((issue) => issue.title === title)) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                labels: ['cleanup'],
+                body: `${marker}\nScheduled cleanup found candidates. Review the failed workflow logs, open a PR with tests for source deletions, and do not silently delete protected-branch source.`
+              });
+            }
+      - name: Fail on cleanup findings
+        if: steps.cleanup.outcome == 'failure'
+        run: exit 1

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    "apps/api": {
+      "entry": ["test/**/*.ts"]
+    },
+    "apps/extension": {
+      "entry": ["src/service-worker.ts", "src/content-script.ts", "src/popup.ts", "scripts/*.mjs"]
+    }
+  }
+}

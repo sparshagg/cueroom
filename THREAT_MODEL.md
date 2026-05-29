@@ -1,0 +1,54 @@
+# CueRoom Threat Model
+
+## Overview
+
+CueRoom is a web app, API, LiveKit deployment, and Chrome/Edge MV3 extension for private co-watching. The extension observes local Netflix playback state and applies user-authorized playback commands. CueRoom does not stream, capture, store, decrypt, or redistribute Netflix content.
+
+## Trust Boundaries And Assumptions
+
+- [ ] Browser UI to API: all requests are attacker-controlled until authenticated and authorized.
+- [ ] WebSocket channel: all messages require schema validation, membership checks, role checks, replay protection, and rate limits.
+- [ ] Extension boundary: website-to-extension and content-script-to-service-worker messages are untrusted.
+- [ ] Netflix page boundary: the page can change DOM behavior; extension must only observe media state and never collect sensitive Netflix data.
+- [ ] LiveKit boundary: tokens must be minted server-side and scoped to one room/member.
+- [ ] Storage boundary: PostgreSQL stores minimal account metadata; Redis stores ephemeral room state.
+- [ ] Assumption: every viewer has their own lawful Netflix access.
+- [ ] Assumption: no official Netflix API or partnership exists for v1.
+
+## Assets
+
+- [ ] Camera and microphone streams.
+- [ ] Room membership and invite links.
+- [ ] Host/co-host authority.
+- [ ] LiveKit API keys and participant tokens.
+- [ ] Extension permissions and release pipeline.
+- [ ] Minimal user account metadata.
+- [ ] Watch metadata such as title fingerprint and playback position.
+
+## Attacker Stories
+
+- [ ] A leaked invite link lets an unwanted guest join.
+- [ ] A guest tries to promote themselves or issue host sync commands.
+- [ ] A malicious webpage tries to connect to the extension.
+- [ ] A compromised Netflix page script tries to influence content-script messages.
+- [ ] A dependency or build script tries to broaden extension permissions.
+- [ ] An XSS payload tries to steal room tokens or issue commands.
+- [ ] A replayed WebSocket message tries to rewind or pause a room.
+
+## Required Controls
+
+- [ ] Short-lived invite tokens and room lock/rotate/kick controls.
+- [ ] Server-side RBAC on every command.
+- [ ] Runtime schema validation at every trust boundary.
+- [ ] Strict CSP and no extension remote code.
+- [ ] Minimal Chrome permissions and manifest audits.
+- [ ] LiveKit tokens minted only by API.
+- [ ] No call recording or chat persistence by default.
+- [ ] Logs exclude secrets, credentials, content, and detailed message payloads.
+
+## Severity Calibration
+
+- [ ] Critical: leaking LiveKit API secret, extension update that captures Netflix credentials, XSS that steals host sessions.
+- [ ] High: guest role escalation to host, broad extension permissions, replayable sync commands, invite tokens that never expire.
+- [ ] Medium: room metadata retained too long, denial of service on room sync, missing kick/lock enforcement.
+- [ ] Low: cosmetic UI defects, non-sensitive telemetry labeling issues, stale docs without behavior impact.

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CueRoom</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <img src="icons/icon48.svg" alt="" />
+        <div>
+          <h1>CueRoom</h1>
+          <p>Local playback sync</p>
+        </div>
+      </header>
+      <section class="status">
+        <p id="pairing">Checking pairing...</p>
+        <p id="playback">Checking Netflix tab...</p>
+      </section>
+      <button id="disconnect" type="button">Disconnect room</button>
+      <p class="note">
+        CueRoom never reads Netflix credentials, cookies, video, audio, subtitles, or DRM data.
+      </p>
+    </main>
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>

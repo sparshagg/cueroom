@@ -1,0 +1,8 @@
+<svg width="420" height="120" viewBox="0 0 420 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="120" height="120" rx="26" fill="#071014"/>
+  <circle cx="60" cy="60" r="42" fill="#0F1D24" stroke="#2DD4BF" stroke-width="8"/>
+  <path d="M51 39L82 60L51 81V39Z" fill="#F7FBFF"/>
+  <circle cx="84" cy="36" r="8" fill="#FB7185"/>
+  <text x="146" y="71" font-family="Inter, Arial, sans-serif" font-size="44" font-weight="700" fill="#F7FBFF">CueRoom</text>
+  <text x="149" y="94" font-family="Inter, Arial, sans-serif" font-size="16" fill="#8D99A8">Watch together. Stay private.</text>
+</svg>
