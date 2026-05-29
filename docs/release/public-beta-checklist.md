@@ -9,7 +9,7 @@ This checklist is the source of truth for the first public beta release gate. It
 - [ ] Human privacy review confirms `PRIVACY.md`, Chrome Web Store privacy answers, and in-app data boundary match current behavior.
 - [ ] Hosted privacy policy URL is live and matches `PRIVACY.md`.
 - [ ] Public beta web domain is live and matches `apps/extension/src/manifest.json` `externally_connectable.matches`.
-- [ ] Maintainer has enabled GitHub private vulnerability reporting for the public repository.
+- [x] Maintainer has enabled GitHub private vulnerability reporting for the public repository.
 - [ ] Maintainer has watched the repository for security notifications.
 - [ ] Current `main` has green `verify`, `docker`, `CodeQL`, `cleanup`, `supply-chain`, and `zap-baseline` checks.
 - [x] DAST workflow includes authenticated room-session create, join, and report-user flow evidence.

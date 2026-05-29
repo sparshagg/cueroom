@@ -43,7 +43,7 @@ CueRoom's incident response process is designed for a privacy-preserving co-watc
 
 ## Public Beta Operational Readiness
 
-- [ ] Enable GitHub private vulnerability reporting before the first public beta tag.
+- [x] Enable GitHub private vulnerability reporting before the first public beta tag.
 - [ ] Confirm at least one maintainer watches repository security notifications.
 - [ ] Confirm `SECURITY.md` points to a working sensitive-report path.
 - [ ] Confirm non-sensitive abuse reports use `.github/ISSUE_TEMPLATE/abuse_report.md`.

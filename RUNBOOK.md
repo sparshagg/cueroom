@@ -78,6 +78,8 @@
 
 ## Release
 
+- [ ] Confirm `gh api repos/sparshagg/cueroom/private-vulnerability-reporting` returns `{"enabled":true}`.
+- [ ] If repo watch verification is needed, refresh GitHub CLI with `gh auth refresh -h github.com -s notifications`, then run `gh api repos/sparshagg/cueroom/subscription`.
 - [ ] Run `pnpm verify`.
 - [ ] Run `pnpm security:supply-chain`.
 - [ ] Run `pnpm release:check -- --tag v0.1.0` and confirm versions, release files, and checklist files are present.

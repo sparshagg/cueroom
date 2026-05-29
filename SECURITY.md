@@ -8,7 +8,7 @@
 ## Reporting A Vulnerability
 
 - [ ] Do not open a public issue for an exploitable vulnerability.
-- [ ] Prefer GitHub private vulnerability reporting at `https://github.com/sparshagg/cueroom/security/advisories/new` after it is enabled for the public repository.
+- [ ] Prefer GitHub private vulnerability reporting at `https://github.com/sparshagg/cueroom/security/advisories/new`.
 - [ ] Until a dedicated security mailbox is live, use the maintainer contact listed in the GitHub repository profile for sensitive reports that cannot use private vulnerability reporting.
 - [ ] Include affected version, reproduction steps, impact, and suggested fix if available.
 - [ ] Expect acknowledgement within 72 hours after the project is public.

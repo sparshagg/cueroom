@@ -308,3 +308,7 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: GitHub Actions supports job-specific `GITHUB_TOKEN` permissions, and unspecified scopes are set to `none` when permissions are explicitly declared.
   - Impact: CueRoom splits the release workflow so package build/test steps run with read-only contents access and only the publish job can create releases or attest artifacts.
+- [ ] Source: https://docs.github.com/en/rest/repos/repos
+  - Stale-by: 2026-08-29
+  - Learning: GitHub exposes repository private vulnerability reporting through `/repos/{owner}/{repo}/private-vulnerability-reporting`, with `GET` returning the enabled state and `PUT` enabling the feature for authorized repository administrators.
+  - Impact: Private vulnerability reporting was enabled for `sparshagg/cueroom` and the public beta checklist records the setting as complete.
