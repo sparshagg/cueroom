@@ -61,6 +61,8 @@ jobs:
           if-no-files-found: warn
       - name: Build Chrome Web Store review evidence
         run: pnpm extension:package
+      - name: Check Chrome Web Store review evidence
+        run: pnpm store:check-package
       - name: Upload Chrome Web Store review evidence
         uses: actions/upload-artifact@v4
         with:

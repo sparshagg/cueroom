@@ -219,6 +219,10 @@ function requireReleaseWorkflowIntegrity(filePath) {
     ["pnpm verify", "run full verification before packaging"],
     ["pnpm extension:package", "build the Chrome Web Store package"],
     [
+      "pnpm store:check-package",
+      "check the Chrome Web Store package evidence before release notes"
+    ],
+    [
       "artifacts/chrome-web-store/release-notes.md",
       "generate release notes into the package evidence directory"
     ],
@@ -228,6 +232,10 @@ function requireReleaseWorkflowIntegrity(filePath) {
     ["node scripts/check-release-readiness.mjs --", "re-run release gates before publishing"],
     ["actions/download-artifact@v4", "download the package artifact in the publish job"],
     ["Verify downloaded checksum", "verify downloaded checksums before attestation"],
+    [
+      "node scripts/check-store-package.mjs",
+      "recheck downloaded package evidence before attestation"
+    ],
     ["actions/attest@v4", "generate package provenance attestation"],
     [
       "subject-path: ${{ steps.packaged-extension.outputs.zip_path }}",

@@ -26,6 +26,7 @@
 - [x] Attach CI extension artifact zip from `pnpm --filter @cueroom/extension build`.
 - [x] Attach manifest permission audit output.
 - [x] Attach `SHA256SUMS` and `release-manifest.json` from `pnpm extension:package`.
+- [x] Package evidence gate: `pnpm store:check-package`.
 - [x] Attach latest DAST artifact summary.
 - [x] Attach deterministic release notes from `pnpm release:notes` to the GitHub prerelease.
 - [x] Include tester instructions from `docs/release/chrome-web-store-listing.md`.

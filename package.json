@@ -29,6 +29,7 @@
     "dast:export-zap-evidence": "node scripts/export-zap-evidence.mjs",
     "dast:check-zap-evidence": "node scripts/check-zap-evidence.mjs",
     "store:assets": "node scripts/generate-store-assets.mjs",
+    "store:check-package": "node scripts/check-store-package.mjs",
     "extension:package": "node scripts/package-extension.mjs",
     "release:check": "node scripts/check-release-readiness.mjs",
     "release:notes": "node scripts/generate-release-notes.mjs",

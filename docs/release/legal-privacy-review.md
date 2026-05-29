@@ -37,4 +37,4 @@ This file records human review evidence before the first public beta. Do not che
 - [ ] `git tag -s v0.1.0 -m "CueRoom v0.1.0"` or approved annotated fallback is recorded.
 - [ ] `git verify-tag v0.1.0` passes for signed tags.
 - [ ] Release workflow uploads the extension ZIP, `SHA256SUMS`, and `release-manifest.json`.
-- [ ] `gh attestation verify artifacts/chrome-web-store/cueroom-extension-0.1.0.zip --repo sparshagg/cueroom` passes for the release artifact.
+- [ ] `gh attestation verify artifacts/chrome-web-store/cueroom-extension-0.1.0.zip --repo sparshagg/cueroom --signer-workflow sparshagg/cueroom/.github/workflows/release.yml --source-ref refs/tags/v0.1.0` passes for the release artifact.

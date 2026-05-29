@@ -73,6 +73,7 @@ jobs:
           --require-beta-gates
       - run: pnpm verify
       - run: pnpm extension:package
+      - run: pnpm store:check-package
       - name: Generate release notes
         run: pnpm release:notes -- --tag "$RELEASE_TAG" --output artifacts/chrome-web-store/release-notes.md
       - name: Verify packaged checksum
@@ -125,6 +126,8 @@ jobs:
           path: artifacts/chrome-web-store
       - name: Verify downloaded checksum
         run: cd artifacts/chrome-web-store && sha256sum -c SHA256SUMS
+      - name: Check downloaded Chrome Web Store package
+        run: node scripts/check-store-package.mjs
       - name: Resolve downloaded extension
         id: packaged-extension
         run: |

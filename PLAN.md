@@ -60,6 +60,7 @@
 - [x] Make extension ZIP packaging deterministic for stable local SHA review.
 - [x] Make the local release readiness gate enforce release workflow checksum, attestation, and prerelease invariants.
 - [x] Split release workflow package-building and prerelease publishing into read-only and write-scoped jobs.
+- [x] Add a Chrome Web Store package evidence checker for ZIP checksum, copied docs, store images, and privacy boundary text.
 - [x] Run independent security review.
 - [x] Resolve Dependabot PostCSS CVE-2026-41305 alert with a workspace override.
 
