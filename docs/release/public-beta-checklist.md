@@ -16,6 +16,7 @@ This checklist is the source of truth for the first public beta release gate. It
 - [ ] Latest DAST artifacts are reviewed, and every medium/high finding is either fixed or explicitly accepted in a tracked security note.
 - [ ] `pnpm extension:package` artifacts have been reviewed, including the ZIP, manifest audit, privacy policy copy, listing draft, and generated images.
 - [ ] Release package `SHA256SUMS` verifies locally.
+- [ ] `pnpm release:notes -- --tag v0.1.0 --output artifacts/release-notes/v0.1.0.md` has been reviewed for user-facing accuracy.
 - [ ] `pnpm release:check -- --tag v0.1.0` passes before tagging.
 - [x] In-room report-user flow has API, UI, and regression coverage.
 - [ ] No open high or critical security findings remain in CodeQL, Dependabot, DAST review, or manual security review.
@@ -33,7 +34,7 @@ This checklist is the source of truth for the first public beta release gate. It
 
 ## Required After Beta Opens
 
-- [ ] Create a GitHub release note linking the Chrome Web Store listing, privacy policy, and security reporting path.
+- [ ] Confirm the GitHub prerelease notes link the Chrome Web Store listing, privacy policy, and security reporting path after those URLs are live.
 - [ ] Monitor GitHub private vulnerability reports, Dependabot alerts, CodeQL, DAST artifacts, and abuse reports daily for the first week.
 - [ ] Track Chrome Web Store rejection or policy feedback in a public issue unless it contains sensitive details.
 - [ ] Record any material release finding in `LEARNINGS.md` and update this checklist before the next beta.

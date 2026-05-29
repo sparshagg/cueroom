@@ -71,6 +71,8 @@ jobs:
           --require-beta-gates
       - run: pnpm verify
       - run: pnpm extension:package
+      - name: Generate release notes
+        run: pnpm release:notes -- --tag "$RELEASE_TAG" --output artifacts/chrome-web-store/release-notes.md
       - name: Verify packaged checksum
         run: cd artifacts/chrome-web-store && sha256sum -c SHA256SUMS
       - name: Resolve packaged extension
@@ -96,7 +98,8 @@ jobs:
             "${{ steps.packaged-extension.outputs.zip_path }}#CueRoom Chrome Web Store extension ZIP" \
             "artifacts/chrome-web-store/SHA256SUMS#SHA256SUMS" \
             "artifacts/chrome-web-store/release-manifest.json#Release manifest" \
-            --generate-notes \
+            "artifacts/chrome-web-store/release-notes.md#Release notes" \
+            --notes-file artifacts/chrome-web-store/release-notes.md \
             --prerelease \
             --title "CueRoom ${RELEASE_TAG}" \
             --verify-tag

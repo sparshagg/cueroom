@@ -54,6 +54,12 @@ pnpm extension:package
 
 The package and review evidence are written under `artifacts/chrome-web-store`.
 
+To draft deterministic release notes from Conventional Commits:
+
+```bash
+pnpm release:notes -- --tag v0.1.0 --output artifacts/release-notes/v0.1.0.md
+```
+
 ## Security Promise
 
 - [ ] No Netflix credentials.

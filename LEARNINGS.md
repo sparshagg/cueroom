@@ -252,3 +252,19 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: Chromium-based browsers normally bypass proxies for localhost unless launched with loopback proxy-bypass settings.
   - Impact: CueRoom's authenticated DAST script passes `--proxy-bypass-list=<-loopback>` so localhost web/API traffic reaches the ZAP proxy.
+- [ ] Source: https://www.conventionalcommits.org/en/v1.0.0/
+  - Stale-by: 2026-08-29
+  - Learning: Conventional Commits define `feat`, `fix`, optional scopes, `!`, and `BREAKING CHANGE` footers in a machine-readable format intended to support changelog generation and SemVer decisions.
+  - Impact: `pnpm release:notes` parses CueRoom commit subjects and breaking-change markers directly instead of relying on free-form release copy.
+- [ ] Source: https://cli.github.com/manual/gh_release_create
+  - Stale-by: 2026-08-29
+  - Learning: `gh release create` supports `--notes-file`, `--verify-tag`, and attached asset labels, while generated notes can be replaced by a maintained local notes file.
+  - Impact: CueRoom's release workflow now creates prerelease notes from the repo-owned generator and passes them through `--notes-file`.
+- [ ] Source: https://www.postgresql.org/docs/current/explicit-locking.html
+  - Stale-by: 2026-08-29
+  - Learning: PostgreSQL warns that deadlocks are best avoided by acquiring locks in a consistent order, and advisory locks are intended for application-defined locking strategies.
+  - Impact: CueRoom serializes schema migration execution with one app-scoped advisory lock instead of relying on every parallel worker to acquire catalog locks in the same order.
+- [ ] Source: https://www.postgresql.org/docs/current/functions-admin.html
+  - Stale-by: 2026-08-29
+  - Learning: `pg_advisory_xact_lock` obtains an exclusive transaction-level advisory lock and automatically releases it at transaction end.
+  - Impact: CueRoom's migration runner wraps migrations in a transaction and uses `pg_advisory_xact_lock` to release the migration lock automatically on commit or rollback.

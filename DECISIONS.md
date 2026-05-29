@@ -179,3 +179,21 @@
 - [x] Reason: The browser flow exercises the real UI and room-session API contract without introducing a test-only auth bypass or changing the production app.
 - [x] Security/privacy impact: Authenticated DAST artifacts redact room/session/invite/report identifiers and do not upload raw proxy traffic, Netflix traffic, LiveKit media, or extension traffic.
 - [x] Rollback trigger: ZAP Automation Framework replaces the custom daemon/export flow with equivalent authenticated coverage and redaction guarantees.
+
+## ADR-021: Deterministic Release Notes
+
+- [x] Problem: The beta runbook required a changelog, but the release workflow only delegated notes to GitHub's generated release-note service.
+- [x] Options: keep GitHub generated notes only, adopt a third-party changelog package, or add a repo-owned Conventional Commits release-note generator.
+- [x] Decision: Add `pnpm release:notes` and use its generated `release-notes.md` as the prerelease body and attached release asset.
+- [x] Reason: A repo-owned script keeps release copy deterministic, reviewable in local beta gates, and aligned with CueRoom's Conventional Commit policy without adding a dependency.
+- [x] Security/privacy impact: The release body carries explicit publisher checks for legal/privacy gates, extension provenance, and non-affiliation language before users install the extension.
+- [x] Rollback trigger: GitHub generated notes or a maintained changelog tool is configured to produce equivalent reviewed output with the same privacy and non-affiliation checks.
+
+## ADR-022: Serialized Postgres Migrations
+
+- [x] Problem: Parallel API test workers can run idempotent migrations against the same local Postgres database and deadlock on schema locks.
+- [x] Options: disable parallel tests, retry deadlocked migrations, create per-worker databases, or serialize migrations with a Postgres advisory transaction lock.
+- [x] Decision: `runPostgresMigrations` takes a stable transaction-level advisory lock before applying migration SQL.
+- [x] Reason: The lock is a small production-safe guard that keeps migrations idempotent while preserving parallel test execution and startup behavior.
+- [x] Security/privacy impact: Reduces deployment and CI reliability risk without changing stored data, token handling, extension permissions, or CueRoom's Netflix data boundary.
+- [x] Rollback trigger: A dedicated migration tool replaces the current runner and provides equivalent distributed migration locking.

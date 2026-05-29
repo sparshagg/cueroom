@@ -3,6 +3,9 @@ import path from "node:path";
 import pg from "pg";
 
 const { Pool } = pg;
+// Stable app-scoped advisory lock keys: "CUER" / "MIGR".
+const POSTGRES_MIGRATION_LOCK_NAMESPACE = 0x43554552;
+const POSTGRES_MIGRATION_LOCK_KEY = 0x4d494752;
 
 export type PostgresPool = pg.Pool;
 export type PostgresClient = pg.PoolClient;
@@ -40,10 +43,17 @@ export async function withTransaction<T>(
 
 export async function runPostgresMigrations(pool: PostgresPool) {
   const migrationNames = await listMigrations();
-  for (const migrationName of migrationNames) {
-    const migrationSql = await readMigration(migrationName);
-    await pool.query(migrationSql);
-  }
+  await withTransaction(pool, async (client) => {
+    await client.query("SELECT pg_advisory_xact_lock($1::integer, $2::integer)", [
+      POSTGRES_MIGRATION_LOCK_NAMESPACE,
+      POSTGRES_MIGRATION_LOCK_KEY
+    ]);
+
+    for (const migrationName of migrationNames) {
+      const migrationSql = await readMigration(migrationName);
+      await client.query(migrationSql);
+    }
+  });
 }
 
 async function listMigrations() {

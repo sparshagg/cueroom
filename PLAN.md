@@ -51,6 +51,7 @@
 - [x] Add cleanup check and docs freshness check.
 - [x] Add CodeQL and dependency workflows.
 - [x] Add PostgreSQL/Redis integration tests.
+- [x] Serialize Postgres migrations for parallel API workers.
 - [x] Add DAST and extension store review checklist evidence.
 - [x] Run independent security review.
 - [x] Resolve Dependabot PostCSS CVE-2026-41305 alert with a workspace override.
@@ -60,6 +61,7 @@
 - [x] Create public privacy policy draft and Chrome Web Store listing/privacy form checklist.
 - [x] Package Chrome Web Store artifact with a repeatable release script.
 - [x] Generate Chrome Web Store screenshot and promo assets.
+- [x] Add deterministic release notes generation from Conventional Commits.
 - [ ] Complete human legal/privacy review.
 - [x] Publish public repository.
 - [ ] Tag first signed release.

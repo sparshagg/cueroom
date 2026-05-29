@@ -42,6 +42,15 @@ describePostgres("Postgres room store", () => {
     expect(tokenRows.rows[0]?.token_hash).not.toBe(created.sessionToken);
   });
 
+  it("serializes concurrent migration runners", async () => {
+    const secondPool = createPostgresPool(process.env.POSTGRES_TEST_URL);
+    try {
+      await Promise.all([runPostgresMigrations(pool), runPostgresMigrations(secondPool)]);
+    } finally {
+      await secondPool.end();
+    }
+  });
+
   it("rotates invites and rejects removed participant sessions", async () => {
     const store = createPostgresRoomStore(pool);
     const created = await store.createRoom({

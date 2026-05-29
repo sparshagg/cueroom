@@ -25,6 +25,7 @@
 - [ ] Start Postgres with `docker compose -f infra/docker/compose.dev.yml up -d postgres`.
 - [ ] Run `POSTGRES_TEST_URL=postgres://cueroom:cueroom@localhost:5432/cueroom pnpm --filter @cueroom/api test`.
 - [ ] Confirm session token rows are stored as hashes, not raw `crs_` tokens.
+- [ ] Confirm concurrent API test workers can run migrations without deadlocks.
 
 ## Redis Verification
 
@@ -93,13 +94,15 @@
 - [ ] Confirm extension permissions did not broaden.
 - [ ] Confirm `artifacts/chrome-web-store` contains a versioned extension ZIP, `SHA256SUMS`, `release-manifest.json`, manifest, manifest audit, privacy policy, listing draft, and review checklist.
 - [ ] Confirm `artifacts/chrome-web-store/images` contains room, popup, small promo, and marquee promo PNG assets.
-- [ ] Generate changelog from Conventional Commits.
+- [ ] Run `pnpm release:notes -- --tag v0.1.0 --output artifacts/release-notes/v0.1.0.md`.
+- [ ] Review generated release notes for user-facing accuracy, legal/privacy blockers, and no Netflix-affiliation language.
 - [ ] Merge the release PR into protected `main` only after required checks and review pass.
 - [ ] From protected `main`, run `git tag -s v0.1.0 -m "CueRoom v0.1.0"` when a signing key is available.
 - [ ] If signing is not available, document the reason and use an annotated tag with a rollback trigger in `DECISIONS.md`.
 - [ ] Run `git verify-tag v0.1.0` for signed tags.
 - [ ] Push the release tag with `git push origin v0.1.0`.
 - [ ] Confirm the release workflow runs `pnpm release:check -- --require-annotated-tag --require-main --require-beta-gates`.
+- [ ] Confirm the release workflow attaches `release-notes.md` and uses it as the GitHub prerelease body.
 - [ ] Download the release artifact and run `gh attestation verify cueroom-extension-0.1.0.zip --repo sparshagg/cueroom`.
 - [ ] Confirm the GitHub prerelease includes the extension ZIP, `SHA256SUMS`, and `release-manifest.json`.
 
