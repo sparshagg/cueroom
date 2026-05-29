@@ -24,6 +24,40 @@ const requiredBeforeTaggingItems = [
   "No open high or critical security findings remain in CodeQL, Dependabot, DAST review, or manual security review.",
   "Release signing process is recorded in `RUNBOOK.md`, including the approved annotated-tag fallback if signing is unavailable."
 ];
+const requiredLegalPrivacyEvidenceItems = [
+  "Legal reviewer",
+  "Legal review date",
+  "Legal review scope",
+  "Privacy reviewer",
+  "Privacy review date",
+  "Privacy review scope",
+  "Public beta domain",
+  "Hosted privacy policy URL",
+  "Chrome Web Store developer account owner"
+];
+const requiredLegalReviewItems = [
+  "CueRoom name and logo do not imply Netflix affiliation.",
+  "README, Chrome Web Store listing, web UI, and extension popup include non-affiliation language.",
+  "Product copy does not claim to stream, proxy, redistribute, record, download, or bypass Netflix content.",
+  "Product behavior requires each viewer to use their own lawful Netflix session.",
+  "Netflix Terms boundary has been reviewed by a qualified human reviewer.",
+  "Trademark and brand review accepts avoiding Netflix-red branding and Netflix marks."
+];
+const requiredPrivacyReviewItems = [
+  "`PRIVACY.md` matches the current implementation.",
+  "Deployed `/privacy` page matches `PRIVACY.md` and Chrome Web Store privacy answers.",
+  "Chrome Web Store privacy answers in `docs/release/chrome-web-store-privacy-answers.md` match `PRIVACY.md`.",
+  "Extension data handling matches `docs/security/chrome-web-store-review.md`.",
+  "Room chat remains transient by default.",
+  "Abuse reports persist only bounded report metadata and optional reporter-provided details.",
+  "Account/session tokens are hashed server-side where persisted.",
+  "Magic-link tokens are sent in URL fragments and verified through request bodies.",
+  "LiveKit JWTs are short-lived and held in browser memory only.",
+  "CueRoom does not collect Netflix credentials, cookies, DRM keys, subtitles, screenshots, video, audio, or account data."
+];
+const requiredBeforeTaggingLegalReleaseEvidence = [
+  "`pnpm release:check -- --tag v0.1.0` passes locally before tagging."
+];
 
 if (!tag) {
   failures.push("Release tag is required. Pass --tag vX.Y.Z.");
@@ -73,6 +107,7 @@ if (args.requireBetaGates) {
     "Required Before Chrome Web Store Submission",
     requiredBeforeTaggingItems
   );
+  requireLegalPrivacyEvidence("docs/release/legal-privacy-review.md");
 }
 
 if (args.requireAnnotatedTag && tag) {
@@ -351,6 +386,82 @@ function requireCheckedSection(filePath, startHeading, endHeading, requiredItems
   if (unchecked.length > 0) {
     failures.push(`${filePath} has unchecked required release gates: ${unchecked.join("; ")}`);
   }
+}
+
+function requireLegalPrivacyEvidence(filePath) {
+  const content = readFileSync(filePath, "utf8");
+  requireCheckedEvidenceValues(filePath, content, requiredLegalPrivacyEvidenceItems);
+  requireCheckedSection(filePath, "Legal Checklist", "Privacy Checklist", requiredLegalReviewItems);
+  requireCheckedSection(
+    filePath,
+    "Privacy Checklist",
+    "Release Evidence",
+    requiredPrivacyReviewItems
+  );
+  requireCheckedItemsInSection(
+    filePath,
+    "Release Evidence",
+    undefined,
+    requiredBeforeTaggingLegalReleaseEvidence
+  );
+}
+
+function requireCheckedEvidenceValues(filePath, content, requiredItems) {
+  for (const item of requiredItems) {
+    const line = content
+      .split("\n")
+      .find((candidate) => candidate.startsWith(`- [`) && candidate.includes(`${item}:`));
+    if (!line) {
+      failures.push(`${filePath} is missing legal/privacy evidence field: ${item}.`);
+      continue;
+    }
+    if (!line.startsWith("- [x] ")) {
+      failures.push(`${filePath} evidence field must be checked before release: ${item}.`);
+      continue;
+    }
+    const value = line.slice(line.indexOf(`${item}:`) + item.length + 1).trim();
+    if (!isConcreteEvidenceValue(value)) {
+      failures.push(`${filePath} evidence field needs a concrete non-placeholder value: ${item}.`);
+    }
+  }
+}
+
+function requireCheckedItemsInSection(filePath, startHeading, endHeading, requiredItems) {
+  const content = readFileSync(filePath, "utf8");
+  const start = content.indexOf(`## ${startHeading}`);
+  if (start === -1) {
+    failures.push(`${filePath} is missing section: ${startHeading}`);
+    return;
+  }
+  const end = endHeading ? content.indexOf(`## ${endHeading}`, start + 1) : -1;
+  const section = content.slice(start, end === -1 ? undefined : end);
+  for (const item of requiredItems) {
+    if (!section.includes(`- [ ] ${item}`) && !section.includes(`- [x] ${item}`)) {
+      failures.push(`${filePath} is missing required release evidence: ${item}`);
+      continue;
+    }
+    if (!section.includes(`- [x] ${item}`)) {
+      failures.push(`${filePath} release evidence must be checked before tagging: ${item}`);
+    }
+  }
+}
+
+function isConcreteEvidenceValue(value) {
+  const normalized = value.replaceAll("`", "").replace(/\s+/g, " ").trim().toLowerCase();
+  if (normalized.length < 4) {
+    return false;
+  }
+  return ![
+    "tbd",
+    "todo",
+    "pending",
+    "not recorded",
+    "n/a",
+    "na",
+    "none",
+    "example",
+    "yyyy-mm-dd"
+  ].some((placeholder) => normalized.includes(placeholder));
 }
 
 function requireAnnotatedTag(tagName) {

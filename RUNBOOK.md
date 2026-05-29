@@ -116,7 +116,8 @@
 - [ ] Review `THREAT_MODEL.md` for changed assumptions.
 - [ ] Review `docs/release/public-beta-checklist.md` and leave any incomplete blocker unchecked.
 - [ ] Confirm the deployed web app renders `/privacy`, links it from the home page, and matches `PRIVACY.md` before entering the hosted privacy URL in external dashboards.
-- [ ] Review `docs/release/legal-privacy-review.md` and confirm real reviewer evidence is recorded before tagging.
+- [ ] Review `docs/release/legal-privacy-review.md` and confirm real reviewer, review date, review scope, public beta domain, hosted privacy policy URL, and Chrome Web Store developer owner evidence is recorded before tagging.
+- [ ] Confirm `pnpm release:check -- --tag v0.1.0 --require-beta-gates` fails while legal/privacy evidence is unchecked or placeholder-only, and passes only after real evidence is recorded.
 - [ ] Confirm no Netflix sensitive data is logged or stored.
 - [ ] Confirm extension permissions did not broaden.
 - [ ] Confirm `artifacts/chrome-web-store` contains a versioned extension ZIP, `SHA256SUMS`, `release-manifest.json`, manifest, manifest audit, privacy policy, listing draft, and review checklist.

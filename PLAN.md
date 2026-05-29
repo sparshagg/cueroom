@@ -78,6 +78,7 @@
 - [x] Package Chrome Web Store artifact with a repeatable release script.
 - [x] Generate Chrome Web Store screenshot and promo assets.
 - [x] Add deterministic release notes generation from Conventional Commits.
+- [x] Add release gate for concrete legal/privacy review evidence before beta tagging.
 - [ ] Complete human legal/privacy review.
 - [x] Publish public repository.
 - [ ] Tag first signed release.

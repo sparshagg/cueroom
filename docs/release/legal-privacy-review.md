@@ -11,6 +11,20 @@ This file records human review evidence before the first public beta. Do not che
 - [ ] Chrome Web Store developer account owner recorded.
 - [ ] Final extension ID recorded after first approved upload.
 
+## Evidence Record
+
+These fields are checked by `pnpm release:check -- --require-beta-gates`. Leave them unchecked until the values are real; placeholders intentionally fail the release gate.
+
+- [ ] Legal reviewer: `TBD`
+- [ ] Legal review date: `TBD`
+- [ ] Legal review scope: `TBD`
+- [ ] Privacy reviewer: `TBD`
+- [ ] Privacy review date: `TBD`
+- [ ] Privacy review scope: `TBD`
+- [ ] Public beta domain: `TBD`
+- [ ] Hosted privacy policy URL: `TBD`
+- [ ] Chrome Web Store developer account owner: `TBD`
+
 ## Legal Checklist
 
 - [ ] CueRoom name and logo do not imply Netflix affiliation.

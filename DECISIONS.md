@@ -324,3 +324,12 @@
 - [x] Reason: Internal networks reduce exposure but are not a sufficient secret boundary; secret-backed Redis auth is a small permanent hardening step while keeping self-hosting simple.
 - [x] Security/privacy impact: Redis-backed presence, rate limits, invites, and sync counters require credentials; API and LiveKit no longer assume unauthenticated Redis; default self-hosting documents direct ICE connectivity limits so restrictive-network support is not accidentally claimed without certificates/firewall coverage.
 - [x] Rollback trigger: A managed Redis/LiveKit platform provides equivalent authenticated Redis, firewall, and TURN/TLS controls with documented operational ownership.
+
+## ADR-037: Legal And Privacy Evidence Release Gate
+
+- [x] Problem: The public beta checklist requires human legal/privacy review, but a future release could accidentally check the beta gates without recording concrete reviewer, scope, date, domain, and Chrome Web Store owner evidence.
+- [x] Options: rely on maintainer discipline, require a separate legal tool, or extend the repo-owned release readiness gate to validate local evidence fields.
+- [x] Decision: Add checked evidence fields to `docs/release/legal-privacy-review.md` and make `pnpm release:check -- --require-beta-gates` reject unchecked or placeholder values plus unchecked legal/privacy checklist items.
+- [x] Reason: This preserves the human-review boundary while making checkbox-only beta sign-off fail before tagging.
+- [x] Security/privacy impact: Reduces the chance of publishing a beta with unreviewed non-affiliation language, mismatched privacy disclosures, or missing hosted policy ownership evidence.
+- [x] Rollback trigger: A maintained release governance system records equivalent reviewer, domain, and privacy-dashboard evidence before release tags are accepted.
