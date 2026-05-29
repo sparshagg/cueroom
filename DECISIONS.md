@@ -270,3 +270,12 @@
 - [x] Reason: A deterministic checker catches missing or stale review artifacts before maintainers upload the extension to the store.
 - [x] Security/privacy impact: Store review packages must carry non-affiliation text, no-sensitive-Netflix-data claims, exact checksums, matching source docs, and generated promo/screenshot assets.
 - [x] Rollback trigger: Chrome Web Store API publishing with first-party validation replaces the local evidence package.
+
+## ADR-031: Scanner-Safe CSP Nonce Encoding
+
+- [x] Problem: ZAP can misclassify hex CSP nonces as payment-card PII when a random nonce contains a long decimal digit run.
+- [x] Options: accept the false positive, suppress ZAP PII findings globally, or change nonce encoding and reject scanner-sensitive digit runs.
+- [x] Decision: Generate CSP nonces as base64url values and retry when the value contains an eight-or-more digit run.
+- [x] Reason: The nonce stays random and CSP-compatible while avoiding a noisy DAST false positive without weakening the PII gate.
+- [x] Security/privacy impact: Keeps nonce-based CSP enforcement and preserves DAST blocking for real PII disclosures.
+- [x] Rollback trigger: ZAP PII detection no longer flags nonce-like values or the CSP runtime rejects base64url nonces.

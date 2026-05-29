@@ -312,3 +312,7 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: GitHub exposes repository private vulnerability reporting through `/repos/{owner}/{repo}/private-vulnerability-reporting`, with `GET` returning the enabled state and `PUT` enabling the feature for authorized repository administrators.
   - Impact: Private vulnerability reporting was enabled for `sparshagg/cueroom` and the public beta checklist records the setting as complete.
+- [ ] Source: https://www.zaproxy.org/docs/alerts/10062/
+  - Stale-by: 2026-08-29
+  - Learning: ZAP's PII Disclosure rule flags payment-card-like digit sequences in responses and treats high-confidence matches as high risk.
+  - Impact: CueRoom encodes CSP nonces with base64url and rejects long digit runs so nonce randomness does not create false PII Disclosure failures.

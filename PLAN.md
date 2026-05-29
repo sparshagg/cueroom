@@ -57,6 +57,7 @@
 - [x] Close DAST security-header findings.
 - [x] Replace production `unsafe-inline` CSP with per-request nonces.
 - [x] Make authenticated DAST medium/high findings blocking in CI.
+- [x] Fix DAST PII false positives caused by long decimal runs in random CSP nonces.
 - [x] Make extension ZIP packaging deterministic for stable local SHA review.
 - [x] Make the local release readiness gate enforce release workflow checksum, attestation, and prerelease invariants.
 - [x] Split release workflow package-building and prerelease publishing into read-only and write-scoped jobs.

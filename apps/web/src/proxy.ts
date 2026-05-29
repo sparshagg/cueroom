@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { createCspNonce } from "@/lib/csp";
 
 export function proxy(request: NextRequest) {
-  const nonce = crypto.randomUUID().replaceAll("-", "");
+  const nonce = createCspNonce();
   const contentSecurityPolicy = buildContentSecurityPolicy(nonce);
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("Content-Security-Policy", contentSecurityPolicy);
