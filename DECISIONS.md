@@ -170,3 +170,12 @@
 - [x] Reason: This gives maintainers actionable room/participant metadata for beta abuse triage without building a broad moderation system before launch.
 - [x] Security/privacy impact: Reports reject unauthenticated sessions, self-reports, unknown participant IDs, and oversized details; API responses and logs omit free-text details by default.
 - [x] Rollback trigger: Legal/privacy review requires a different retention model or a dedicated abuse operations backend.
+
+## ADR-020: Authenticated Room-Session DAST Flow
+
+- [x] Problem: The ZAP baseline scan did not prove room-session paths for room creation, joining, and report-user submission were exercised before public beta.
+- [x] Options: API-only smoke, Playwright smoke without ZAP, ZAP Automation Framework full auth plan, or browser-driven smoke proxied through a local ZAP daemon.
+- [x] Decision: Run a Playwright browser flow through a local ZAP daemon before the existing baseline action, then upload sanitized ZAP evidence.
+- [x] Reason: The browser flow exercises the real UI and room-session API contract without introducing a test-only auth bypass or changing the production app.
+- [x] Security/privacy impact: Authenticated DAST artifacts redact room/session/invite/report identifiers and do not upload raw proxy traffic, Netflix traffic, LiveKit media, or extension traffic.
+- [x] Rollback trigger: ZAP Automation Framework replaces the custom daemon/export flow with equivalent authenticated coverage and redaction guarantees.

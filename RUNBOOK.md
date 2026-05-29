@@ -84,6 +84,7 @@
 - [ ] Run `pnpm extension:package`.
 - [ ] Run `cd artifacts/chrome-web-store && shasum -a 256 -c SHA256SUMS`.
 - [ ] Review the latest DAST workflow artifacts and `docs/security/dast.md`.
+- [ ] Confirm `cueroom-dast-authenticated-flow` proves `POST /v1/rooms`, `POST /v1/rooms/join`, and `POST /v1/rooms/:roomId/report` were observed through ZAP with redacted artifacts.
 - [ ] Review `LEARNINGS.md` for stale sources.
 - [ ] Review `THREAT_MODEL.md` for changed assumptions.
 - [ ] Review `docs/release/public-beta-checklist.md` and leave any incomplete blocker unchecked.

@@ -28,10 +28,14 @@ jobs:
         env:
           NEXT_PUBLIC_API_ORIGIN: http://127.0.0.1:4000
         run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
       - name: Start CueRoom web and API
         env:
           AUTH_REQUIRED: "false"
           HOST: 127.0.0.1
+          LIVEKIT_API_KEY: devkey
+          LIVEKIT_API_SECRET: secret
+          LIVEKIT_URL: ws://127.0.0.1:7880
           LOG_LEVEL: warn
           NEXT_PUBLIC_API_ORIGIN: http://127.0.0.1:4000
           PORT: 4000
@@ -48,6 +52,40 @@ jobs:
           cat /tmp/cueroom-api.log
           cat /tmp/cueroom-web.log
           exit 1
+      - name: Start ZAP daemon for authenticated flow capture
+        run: |
+          docker run --rm --detach --name cueroom-zap --network host ghcr.io/zaproxy/zaproxy:stable \
+            zap.sh -daemon -host 127.0.0.1 -port 8090 \
+            -config api.disablekey=true \
+            -config api.addrs.addr.name=127.0.0.1 \
+            -config api.addrs.addr.regex=false
+          for attempt in {1..60}; do
+            if curl -fsS http://127.0.0.1:8090/JSON/core/view/version/ >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs cueroom-zap
+          exit 1
+      - name: Authenticated create/join/report flow through ZAP
+        env:
+          DAST_API_ORIGIN: http://127.0.0.1:4000
+          DAST_OUTPUT_DIR: artifacts/dast
+          DAST_PROXY: http://127.0.0.1:8090
+          DAST_WEB_ORIGIN: http://127.0.0.1:3000
+        run: pnpm dast:authenticated-flows
+      - name: Export authenticated ZAP evidence
+        if: always()
+        env:
+          DAST_API_ORIGIN: http://127.0.0.1:4000
+          DAST_OUTPUT_DIR: artifacts/dast
+          DAST_REQUIRE_AUTHENTICATED_ZAP: "true"
+          DAST_WEB_ORIGIN: http://127.0.0.1:3000
+          DAST_ZAP_ORIGIN: http://127.0.0.1:8090
+        run: pnpm dast:export-zap-evidence
+      - name: Stop authenticated ZAP daemon
+        if: always()
+        run: docker rm -f cueroom-zap || true
       - name: ZAP baseline scan
         uses: zaproxy/action-baseline@v0.15.0
         with:
@@ -57,6 +95,13 @@ jobs:
           fail_action: false
           target: http://127.0.0.1:3000
           token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload authenticated DAST artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cueroom-dast-authenticated-flow
+          path: artifacts/dast
+          if-no-files-found: warn
       - name: Upload DAST server logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -66,3 +111,7 @@ jobs:
             /tmp/cueroom-api.log
             /tmp/cueroom-web.log
           if-no-files-found: warn
+      - name: Ensure authenticated ZAP daemon is stopped
+        if: always()
+        run: |
+          docker rm -f cueroom-zap || true

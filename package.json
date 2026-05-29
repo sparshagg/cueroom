@@ -25,6 +25,8 @@
     "security:licenses": "node scripts/check-licenses.mjs",
     "security:secrets": "node scripts/secret-scan.mjs",
     "security:supply-chain": "pnpm security:secrets && pnpm security:licenses && pnpm security:audit",
+    "dast:authenticated-flows": "node scripts/dast-authenticated-flows.mjs",
+    "dast:export-zap-evidence": "node scripts/export-zap-evidence.mjs",
     "store:assets": "node scripts/generate-store-assets.mjs",
     "extension:package": "node scripts/package-extension.mjs",
     "release:check": "node scripts/check-release-readiness.mjs",

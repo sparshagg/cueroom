@@ -240,3 +240,15 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: GitHub Actions workflow permissions can be explicitly narrowed, and unspecified scopes become unavailable when permissions are declared.
   - Impact: CueRoom's supply-chain workflow uses `contents: read` only because it does not need to write issues, releases, attestations, or security events.
+- [ ] Source: https://www.zaproxy.org/docs/automate/automation-framework/
+  - Stale-by: 2026-08-29
+  - Learning: ZAP's stable Docker image includes automation-oriented scanning support and jobs for request, spider, passive-scan wait, alert export, and report generation.
+  - Impact: CueRoom now runs authenticated room-session browser traffic through a local ZAP daemon and exports passive evidence instead of treating browser smoke coverage as separate from DAST.
+- [ ] Source: https://playwright.dev/docs/network
+  - Stale-by: 2026-08-29
+  - Learning: Playwright can configure HTTP(S) proxying at browser or context level, and tests can observe requests and responses from pages.
+  - Impact: The authenticated DAST script launches Chromium with a ZAP proxy and asserts that create, join, and report-user API requests were observed.
+- [ ] Source: https://learn.microsoft.com/en-us/microsoft-cloud/dev/dev-proxy/how-to/intercept-localhost-requests
+  - Stale-by: 2026-08-29
+  - Learning: Chromium-based browsers normally bypass proxies for localhost unless launched with loopback proxy-bypass settings.
+  - Impact: CueRoom's authenticated DAST script passes `--proxy-bypass-list=<-loopback>` so localhost web/API traffic reaches the ZAP proxy.
