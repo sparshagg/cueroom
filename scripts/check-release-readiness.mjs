@@ -34,7 +34,8 @@ for (const requiredFile of [
   "docs/release/chrome-web-store-listing.md",
   "docs/release/public-beta-checklist.md",
   "docs/security/chrome-web-store-review.md",
-  "docs/security/incident-response.md"
+  "docs/security/incident-response.md",
+  "docs/security/supply-chain.md"
 ]) {
   if (!existsSync(path.resolve(requiredFile))) {
     failures.push(`Missing release readiness file: ${requiredFile}`);

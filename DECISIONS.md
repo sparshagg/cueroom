@@ -152,3 +152,12 @@
 - [x] Reason: This is the smallest self-hostable path that proves what source produced the extension ZIP while the first Chrome Web Store submission remains a manual dashboard step.
 - [x] Security/privacy impact: Release tags must come from protected `main`, beta blockers stay explicit, sensitive security reports route through private vulnerability reporting, and public abuse reports are constrained to non-sensitive metadata.
 - [x] Rollback trigger: Chrome Web Store API automation or a dedicated release manager replaces manual dashboard upload and produces equal or stronger provenance evidence.
+
+## ADR-018: Supply Chain Gates
+
+- [x] Problem: The public beta needs CI evidence for dependency vulnerabilities, license compatibility, and accidental secret commits without adding a heavyweight third-party service.
+- [x] Options: rely on GitHub alerts only, add third-party scanners, or add repo-owned scripts plus `pnpm audit`.
+- [x] Decision: Add a dedicated supply-chain workflow using `pnpm security:secrets`, `pnpm security:licenses`, and `pnpm security:audit`.
+- [x] Reason: Repo-owned secret and license checks are reviewable and deterministic, while `pnpm audit` uses the package manager's advisory flow for installed dependencies.
+- [x] Security/privacy impact: Release artifacts are gated on no known dependency vulnerabilities, no denied licenses, and no high-confidence leaked secrets in tracked source.
+- [x] Rollback trigger: A maintained first-party GitHub or pnpm supply-chain gate replaces these scripts with equal or stronger evidence.

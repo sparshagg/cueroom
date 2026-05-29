@@ -78,6 +78,7 @@
 ## Release
 
 - [ ] Run `pnpm verify`.
+- [ ] Run `pnpm security:supply-chain`.
 - [ ] Run `pnpm release:check -- --tag v0.1.0` and confirm versions, release files, and checklist files are present.
 - [ ] Review the `cueroom-visual-regression` CI artifact for home, room, and extension popup screenshots.
 - [ ] Run `pnpm extension:package`.
@@ -121,6 +122,7 @@
 ## Dependency CVE
 
 - [ ] Follow `docs/security/incident-response.md` if released users may be affected.
+- [ ] Run `pnpm security:audit` and preserve the failing advisory output privately when exploit details are sensitive.
 - [ ] Confirm affected package and reachable code path.
 - [ ] Upgrade or remove dependency.
 - [ ] For transitive npm CVEs, prefer package-manager overrides only when the parent package has no safe release available and record the rollback trigger in `DECISIONS.md`.
@@ -139,6 +141,7 @@
 ## Chrome Web Store Submission
 
 - [ ] Run `pnpm extension:package`.
+- [ ] Confirm the release workflow and `docs/security/supply-chain.md` checks are green for the exact tag or commit.
 - [ ] Verify `SHA256SUMS` and `release-manifest.json` in `artifacts/chrome-web-store`.
 - [ ] Confirm `images/room-ui-1280x800.png`, `images/extension-popup-640x400.png`, `images/small-promo-440x280.png`, and `images/marquee-promo-1400x560.png` are present in the package evidence.
 - [ ] Verify minimum permissions.

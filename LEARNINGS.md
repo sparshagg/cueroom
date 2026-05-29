@@ -228,3 +228,15 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: Repository maintainers can enable private vulnerability reporting so external reporters can submit vulnerability details privately before public disclosure.
   - Impact: Public beta release gates now require private vulnerability reporting and maintainer security notifications before user installation.
+- [ ] Source: https://pnpm.io/cli/audit
+  - Stale-by: 2026-08-29
+  - Learning: `pnpm audit` checks installed packages for known security issues and fails when advisories meet the configured severity threshold.
+  - Impact: CueRoom adds a CI supply-chain gate that runs `pnpm audit` before release artifacts are built.
+- [ ] Source: https://pnpm.io/cli/licenses
+  - Stale-by: 2026-08-29
+  - Learning: `pnpm licenses list --json` is the official license-reporting surface, but it depends on installed package metadata being available in the local store.
+  - Impact: CueRoom uses a repo-owned license policy script over `pnpm list` package paths while preserving pnpm as the dependency graph source.
+- [ ] Source: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions
+  - Stale-by: 2026-08-29
+  - Learning: GitHub Actions workflow permissions can be explicitly narrowed, and unspecified scopes become unavailable when permissions are declared.
+  - Impact: CueRoom's supply-chain workflow uses `contents: read` only because it does not need to write issues, releases, attestations, or security events.
