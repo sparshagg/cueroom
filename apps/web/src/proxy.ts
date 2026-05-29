@@ -30,12 +30,14 @@ export const config = {
   ]
 };
 
-function buildContentSecurityPolicy(nonce: string) {
-  const isDev = process.env.NODE_ENV === "development";
+export function buildContentSecurityPolicy(
+  nonce: string,
+  isDev = process.env.NODE_ENV === "development"
+) {
   return [
     "default-src 'self'",
     "base-uri 'none'",
-    `connect-src ${buildConnectSources().join(" ")}`,
+    `connect-src ${buildConnectSources(isDev).join(" ")}`,
     "font-src 'self' data:",
     "form-action 'self'",
     "frame-ancestors 'none'",
@@ -48,13 +50,17 @@ function buildContentSecurityPolicy(nonce: string) {
   ].join("; ");
 }
 
-function buildConnectSources() {
+export function buildConnectSources(isDev = process.env.NODE_ENV === "development") {
   return [
     "'self'",
-    "http://localhost:4000",
-    "ws://localhost:4000",
-    "ws://localhost:7880",
-    "wss://localhost:7880",
+    ...(isDev
+      ? [
+          "http://localhost:4000",
+          "ws://localhost:4000",
+          "ws://localhost:7880",
+          "wss://localhost:7880"
+        ]
+      : []),
     ...readCspSources(process.env.NEXT_PUBLIC_API_ORIGIN),
     ...readCspSources(process.env.NEXT_PUBLIC_LIVEKIT_URL),
     ...readCspSources(process.env.NEXT_PUBLIC_CSP_CONNECT_SRC)

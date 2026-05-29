@@ -24,4 +24,6 @@ COPY --from=build /app/apps/web/public ./apps/web/public
 COPY --from=build /app/apps/web/package.json ./apps/web/package.json
 COPY --from=build /app/packages ./packages
 WORKDIR /app/apps/web
+USER node
+EXPOSE 3000
 CMD ["node", "node_modules/next/dist/bin/next", "start", "--port", "3000"]

@@ -306,3 +306,12 @@
 - [x] Reason: A first-party route gives maintainers the eventual `https://cueroom.app/privacy` URL without adding another hosting surface or external document workflow.
 - [x] Security/privacy impact: Makes the Limited Use disclosure one click from the home page and locks the no-sensitive-Netflix-data boundary into UI and docs freshness coverage.
 - [x] Rollback trigger: A managed legal/privacy portal becomes the authoritative hosted policy and is linked from the home page and Chrome Web Store dashboard.
+
+## ADR-035: Production Compose Secrets Boundary
+
+- [x] Problem: The repo had a loopback-bound development compose stack, but public beta needs a separate production self-hosting path with TLS routing and without plaintext secrets in compose.
+- [x] Options: document provider-specific deploy steps only, reuse the dev compose stack with production env values, or add a dedicated production compose/Caddy/secrets workflow.
+- [x] Decision: Add `infra/docker/compose.prod.yml`, `Caddyfile.prod`, secret-file scaffolding, API `*_FILE` loading, production runtime guards, non-root app containers, and `pnpm docker:prod-check`.
+- [x] Reason: A dedicated production stack keeps dev shortcuts out of public deployments while staying self-hostable and reviewable in source.
+- [x] Security/privacy impact: Postgres, Redis, API, and web stay off public host ports; Caddy owns HTTPS entry points; API secrets are read from Docker secret files; LiveKit production config is mounted as a secret file; production rejects memory room storage and localhost CSP connect sources.
+- [x] Rollback trigger: A managed deployment platform replaces compose and provides equivalent secret mounting, TLS, LiveKit media port, and no-public-database controls.

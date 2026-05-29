@@ -22,4 +22,6 @@ COPY --from=build /app/apps/api/migrations ./apps/api/migrations
 COPY --from=build /app/apps/api/package.json ./apps/api/package.json
 COPY --from=build /app/packages/shared/dist ./packages/shared/dist
 COPY --from=build /app/packages/shared/package.json ./packages/shared/package.json
+USER node
+EXPOSE 4000
 CMD ["node", "apps/api/dist/index.js"]

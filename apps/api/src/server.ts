@@ -11,6 +11,7 @@ import { createRedisRoomState } from "./redis-room-state.js";
 import { createRoomStore, type RoomStore } from "./room-store.js";
 import { createAuthStore, validateAuthConfig, type AuthStore } from "./auth-store.js";
 import { createConfiguredMailer, validateEmailConfig, type MagicLinkMailer } from "./email.js";
+import { loadSecretEnvFiles, validateProductionRuntimeConfig } from "./env.js";
 import { validateLiveKitConfig } from "./livekit.js";
 
 type RemoveLiveKitParticipant = (roomId: string, participantId: string) => Promise<void>;
@@ -23,6 +24,8 @@ type BuildServerOptions = {
 };
 
 export async function buildServer(options: BuildServerOptions = {}) {
+  loadSecretEnvFiles();
+  validateProductionRuntimeConfig();
   validateAuthConfig();
   validateEmailConfig();
   validateLiveKitConfig();

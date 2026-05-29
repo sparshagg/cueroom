@@ -1,0 +1,24 @@
+{
+  email {$ACME_EMAIL}
+}
+
+{$CUEROOM_DOMAIN} {
+  encode zstd gzip
+  header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+  reverse_proxy web:3000
+}
+
+{$CUEROOM_API_DOMAIN} {
+  encode zstd gzip
+  header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+  reverse_proxy api:4000
+}
+
+{$CUEROOM_LIVEKIT_DOMAIN} {
+  encode zstd gzip
+  header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+  reverse_proxy livekit:7880
+}

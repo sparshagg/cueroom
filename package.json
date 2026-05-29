@@ -33,9 +33,10 @@
     "extension:package": "node scripts/package-extension.mjs",
     "release:check": "node scripts/check-release-readiness.mjs",
     "release:notes": "node scripts/generate-release-notes.mjs",
+    "docker:prod-check": "node scripts/check-production-docker.mjs",
     "cleanup:check": "node scripts/cleanup-check.mjs",
     "docs:freshness": "node scripts/check-docs-freshness.mjs",
-    "verify": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm visual:test && pnpm security:extension && pnpm cleanup:check && pnpm docs:freshness"
+    "verify": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm visual:test && pnpm security:extension && pnpm cleanup:check && pnpm docker:prod-check && pnpm docs:freshness"
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",

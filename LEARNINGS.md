@@ -331,3 +331,23 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-30
   - Learning: Chrome Web Store privacy disclosures should stay consistent with the privacy policy URL supplied in the Developer Dashboard.
   - Impact: CueRoom prepares `https://cueroom.app/privacy` as the dashboard privacy policy URL and keeps the route aligned with `PRIVACY.md` and store privacy answers.
+- [ ] Source: https://docs.docker.com/reference/compose-file/secrets/
+  - Stale-by: 2026-08-30
+  - Learning: Docker Compose secrets are granted explicitly per service and are mounted from top-level secret definitions backed by files or host environment values.
+  - Impact: `compose.prod.yml` grants secret files only to Postgres, API, and LiveKit services that need them.
+- [ ] Source: https://hub.docker.com/_/postgres/
+  - Stale-by: 2026-08-30
+  - Learning: The Postgres official image supports `POSTGRES_PASSWORD_FILE` for loading the initial superuser password from a Docker secret file.
+  - Impact: The production Postgres service uses `POSTGRES_PASSWORD_FILE` instead of a plaintext password environment value.
+- [ ] Source: https://caddyserver.com/docs/quick-starts/reverse-proxy
+  - Stale-by: 2026-08-30
+  - Learning: Caddy serves HTTPS automatically for real domain names when DNS points to the host and public ports 80 and 443 reach Caddy.
+  - Impact: `Caddyfile.prod` routes the web, API, and LiveKit signal domains behind Caddy and the runbook requires DNS/firewall checks before startup.
+- [ ] Source: https://docs.livekit.io/transport/self-hosting/deployment/
+  - Stale-by: 2026-08-30
+  - Learning: Production LiveKit deployments need a trusted TLS domain for SDK connections, open WebRTC TCP/UDP media ports, a config file, and Redis for production coordination.
+  - Impact: The production compose stack proxies LiveKit signaling through Caddy, exposes LiveKit media ports, mounts production LiveKit config as a secret, and connects LiveKit to Redis.
+- [ ] Source: https://nextjs.org/docs/app/guides/content-security-policy
+  - Stale-by: 2026-08-30
+  - Learning: Nonce-based App Router CSP should be generated per request and scoped to the production resource origins the app actually needs.
+  - Impact: CueRoom keeps localhost connect sources only for development CSP and requires configured HTTPS/WSS origins for production.

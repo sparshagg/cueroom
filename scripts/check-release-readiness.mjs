@@ -55,6 +55,8 @@ for (const requiredFile of [
   "docs/security/chrome-web-store-review.md",
   "docs/security/incident-response.md",
   "docs/security/supply-chain.md",
+  "infra/docker/compose.prod.yml",
+  "infra/docker/caddy/Caddyfile.prod",
   ".github/workflows/release.yml"
 ]) {
   if (!existsSync(path.resolve(requiredFile))) {

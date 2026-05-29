@@ -20,6 +20,21 @@
 - [ ] Confirm the API container uses `ROOM_STORE=postgres` and `POSTGRES_URL=postgres://cueroom:cueroom@postgres:5432/cueroom`.
 - [ ] Use local LiveKit keys from `.env.example` only for development.
 
+## Docker Production
+
+- [ ] Copy `infra/docker/.env.prod.example` to `infra/docker/.env.prod` and set real `CUEROOM_DOMAIN`, `CUEROOM_API_DOMAIN`, `CUEROOM_LIVEKIT_DOMAIN`, `ACME_EMAIL`, `LIVEKIT_API_KEY`, SMTP, and extension ID values.
+- [ ] Create the secret files listed in `infra/docker/secrets/README.md`.
+- [ ] Copy `infra/docker/livekit/livekit.prod.example.yaml` to `infra/docker/secrets/livekit.yaml` and set the same LiveKit API secret recorded in `infra/docker/secrets/livekit_api_secret`.
+- [ ] Confirm DNS for `CUEROOM_DOMAIN`, `CUEROOM_API_DOMAIN`, and `CUEROOM_LIVEKIT_DOMAIN` points to the deployment host before starting Caddy.
+- [ ] Confirm ports 80 and 443 reach Caddy, LiveKit TCP port 7881 is reachable, and LiveKit UDP ports 50000-60000 are open on the host firewall.
+- [ ] Run `pnpm docker:prod-check`.
+- [ ] Run `docker compose --env-file infra/docker/.env.prod -f infra/docker/compose.prod.yml config` and confirm no plaintext secret values are printed.
+- [ ] Run `docker compose --env-file infra/docker/.env.prod -f infra/docker/compose.prod.yml up -d --build`.
+- [ ] Confirm Postgres, Redis, API, web, LiveKit, and Caddy containers are running.
+- [ ] Confirm Postgres, Redis, API, and web do not publish host ports in the production compose output.
+- [ ] Confirm API and web containers pass health checks while running as non-root users with dropped Linux capabilities and `no-new-privileges`.
+- [ ] Confirm `https://cueroom.app/privacy` renders the in-app privacy policy before entering the Chrome Web Store privacy policy URL.
+
 ## Postgres Verification
 
 - [ ] Start Postgres with `docker compose -f infra/docker/compose.dev.yml up -d postgres`.

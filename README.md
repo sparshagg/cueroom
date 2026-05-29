@@ -46,6 +46,12 @@ The development compose stack binds published ports to `127.0.0.1`. Use `.env.ex
 
 Production magic-link delivery uses SMTP. Set `SMTP_HOST`, `SMTP_FROM`, and provider credentials through deployment secrets; use implicit TLS on port 465 or require STARTTLS with `SMTP_REQUIRE_TLS=true`.
 
+For production self-hosting, copy `infra/docker/.env.prod.example`, create the secret files listed in `infra/docker/secrets/README.md`, and run:
+
+```bash
+docker compose --env-file infra/docker/.env.prod -f infra/docker/compose.prod.yml up -d --build
+```
+
 To build the Chrome Web Store beta package:
 
 ```bash
