@@ -30,6 +30,6 @@
 - [x] Attach deterministic release notes from `pnpm release:notes` to the GitHub prerelease.
 - [x] Include tester instructions from `docs/release/chrome-web-store-listing.md`.
 - [x] Include non-affiliation statement: CueRoom is not affiliated with Netflix.
-- [x] Latest local package review: `cueroom-extension-0.1.0.zip` SHA-256 `bdea30ed48264f9361917627f4438d7c40b670f3b72063e036f5728740836cb1`; `SHA256SUMS` verified; manifest audit passed; screenshots/promos are `1280x800`, `640x400`, `440x280`, and `1400x560`.
+- [x] Latest local package review: deterministic `cueroom-extension-0.1.0.zip` SHA-256 `f7efbbf59784ff3e845d8400f4445e0c7d8c043373a49543950bf8f5e6c0c8d8`; `SHA256SUMS` verified; manifest audit passed; screenshots/promos are `1280x800`, `640x400`, `440x280`, and `1400x560`.
 - [ ] Verify GitHub artifact attestation for the release ZIP before Chrome Web Store submission.
 - [ ] Include rollback package for the last approved version after first approval.

@@ -57,6 +57,7 @@
 - [x] Close DAST security-header findings.
 - [x] Replace production `unsafe-inline` CSP with per-request nonces.
 - [x] Make authenticated DAST medium/high findings blocking in CI.
+- [x] Make extension ZIP packaging deterministic for stable local SHA review.
 - [x] Run independent security review.
 - [x] Resolve Dependabot PostCSS CVE-2026-41305 alert with a workspace override.
 

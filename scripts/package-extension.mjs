@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readdir, readFile, rm, stat, utimes, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const extensionDist = path.join(repoRoot, "apps/extension/dist");
 const artifactDir = path.join(repoRoot, "artifacts/chrome-web-store");
+const deterministicZipDate = new Date("2026-01-01T00:00:00.000Z");
 
 function run(command, args, options = {}) {
   execFileSync(command, args, {
@@ -32,7 +33,9 @@ const version = manifest.version;
 const zipName = `cueroom-extension-${version}.zip`;
 const zipPath = path.join(artifactDir, zipName);
 
-run("zip", ["-qr", zipPath, "."], { cwd: extensionDist });
+await normalizePackageTimestamps(extensionDist);
+const zipEntries = await listPackageFiles(extensionDist);
+run("zip", ["-Xq", zipPath, ...zipEntries], { cwd: extensionDist });
 const zipSha256 = createHash("sha256")
   .update(await readFile(zipPath))
   .digest("hex");
@@ -100,3 +103,31 @@ await writeFile(
 );
 
 console.info(`Chrome Web Store package written to ${zipPath}`);
+
+async function normalizePackageTimestamps(directory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  for (const entry of entries) {
+    const entryPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      await normalizePackageTimestamps(entryPath);
+    }
+    await utimes(entryPath, deterministicZipDate, deterministicZipDate);
+  }
+  await utimes(directory, deterministicZipDate, deterministicZipDate);
+}
+
+async function listPackageFiles(directory, baseDirectory = directory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const files = [];
+  for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name))) {
+    const entryPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...(await listPackageFiles(entryPath, baseDirectory)));
+      continue;
+    }
+    if ((await stat(entryPath)).isFile()) {
+      files.push(path.relative(baseDirectory, entryPath));
+    }
+  }
+  return files;
+}

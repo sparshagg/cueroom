@@ -234,3 +234,12 @@
 - [x] Reason: CueRoom's authenticated browser flow is the meaningful beta security surface, and a repo-owned gate can enforce coverage and redaction rules that the generic baseline action does not know.
 - [x] Security/privacy impact: Prevents regressions in authenticated create/join/report flows without uploading raw proxy traffic or exposing room/session/report identifiers.
 - [x] Rollback trigger: A managed DAST service replaces this workflow and enforces equivalent coverage, redaction, and medium/high failure behavior.
+
+## ADR-027: Deterministic Extension ZIP Packaging
+
+- [x] Problem: Re-running `pnpm extension:package` changed the extension ZIP SHA because rebuilt files carried fresh timestamps.
+- [x] Options: accept per-run hashes, record only CI artifact IDs, or normalize package timestamps and zip a sorted file list.
+- [x] Decision: Normalize extension build output mtimes to a fixed timestamp and create the ZIP from a sorted file list with extra ZIP metadata disabled.
+- [x] Reason: A deterministic ZIP gives maintainers a stable `SHA256SUMS` value for the same source tree and makes package review reproducible.
+- [x] Security/privacy impact: Reduces release substitution and review drift risk without changing extension runtime permissions or data access.
+- [x] Rollback trigger: CI artifact attestations become the sole release integrity source and make local deterministic ZIP hashes redundant.
