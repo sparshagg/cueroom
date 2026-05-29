@@ -9,6 +9,7 @@
 - [x] Permissions exclude `cookies`, `webRequest`, `debugger`, `<all_urls>`, broad host access, and sensitive execution permissions.
 - [x] Extension CSP uses extension-local scripts only.
 - [x] Build audit: `pnpm security:extension`.
+- [x] Source audit rejects `eval`, `new Function`, remote code imports/scripts, runtime script injection, forbidden Chrome APIs, cookie/storage reads, subtitle/track inspection, and media/frame capture APIs.
 - [x] CI evidence artifact: `cueroom-chrome-web-store-review`.
 
 ## Data Handling

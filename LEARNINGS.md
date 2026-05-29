@@ -395,3 +395,11 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-30
   - Learning: `@fastify/rate-limit` supports route-level `config.rateLimit` overrides with per-route `max` and `timeWindow` values, and exceeded requests return HTTP 429 with rate-limit headers.
   - Impact: CueRoom now gives room creation, join, room reads, control actions, sync commands, reports, LiveKit token minting, and realtime handshakes explicit route-level rate limits backed by `pnpm security:api-rate-limits`.
+- [ ] Source: https://developer.chrome.com/docs/extensions/develop/migrate/improve-security
+  - Stale-by: 2026-08-30
+  - Learning: Chrome MV3 guidance removes arbitrary string execution through `eval()`, `new Function()`, and remote code loading; extension logic should live inside the packaged extension bundle.
+  - Impact: CueRoom now scans extension source for remote-code primitives, remote script imports, sensitive Chrome APIs, browser storage/cookie reads, subtitle/track inspection, and media/frame capture APIs as part of `pnpm security:extension`.
+- [ ] Source: https://developer.chrome.com/docs/webstore/program-policies/policies
+  - Stale-by: 2026-08-30
+  - Learning: Chrome Web Store MV3 policy requires extension functionality to be discernible from submitted code and treats remote logic execution mechanisms such as remote scripts and string execution as common violations.
+  - Impact: CueRoom treats extension source scanning as Chrome Web Store release evidence, not only a manifest permission review.

@@ -91,6 +91,7 @@
 - [ ] Load unpacked extension from `apps/extension/dist`.
 - [ ] Copy the loaded extension ID into `NEXT_PUBLIC_CUEROOM_EXTENSION_ID` or the room page extension ID field.
 - [ ] Confirm the manifest has no forbidden permissions with `pnpm security:extension`.
+- [ ] Confirm `pnpm security:extension` also rejects extension source use of remote-code primitives, forbidden Chrome APIs, browser cookie/storage reads, subtitle/track inspection, and media/frame capture APIs.
 - [ ] Confirm the manifest audit covers `permissions`, `optional_permissions`, `host_permissions`, `optional_host_permissions`, `content_scripts.matches`, content-script file paths, content-script world, CSP, and `externally_connectable.matches`.
 - [ ] Pair only with `http://localhost:3000` or approved CueRoom origins.
 - [ ] Confirm the extension WebSocket connects to `/v1/rooms/:roomId/realtime` only after a room pairing message.

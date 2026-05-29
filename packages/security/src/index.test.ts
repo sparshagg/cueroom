@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { auditExtensionManifest } from "./index";
+import { auditExtensionManifest, auditExtensionSource } from "./index";
 
 describe("auditExtensionManifest", () => {
   it("rejects broad and sensitive extension permissions", () => {
@@ -80,5 +80,103 @@ describe("auditExtensionManifest", () => {
       severity: "high",
       message: "Content scripts must run in the isolated world"
     });
+  });
+});
+
+describe("auditExtensionSource", () => {
+  it("rejects remote code execution primitives", () => {
+    const findings = auditExtensionSource([
+      {
+        path: "apps/extension/src/service-worker.ts",
+        content: `
+          eval("alert(1)");
+          new Function("return location.href");
+          import("https://cdn.example.com/remote.js");
+        `
+      }
+    ]);
+
+    expect(findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          severity: "critical",
+          message: expect.stringContaining("Extension source must not call eval()")
+        }),
+        expect.objectContaining({
+          severity: "critical",
+          message: expect.stringContaining("Extension source must not construct functions")
+        }),
+        expect.objectContaining({
+          severity: "critical",
+          message: expect.stringContaining(
+            "Extension source must not dynamically import remote code"
+          )
+        })
+      ])
+    );
+  });
+
+  it("rejects sensitive Netflix data and capture APIs", () => {
+    const findings = auditExtensionSource([
+      {
+        path: "apps/extension/src/content-script.ts",
+        content: `
+          document.cookie;
+          localStorage.getItem("netflix");
+          video.textTracks[0];
+          canvas.toDataURL();
+          navigator.mediaDevices.getDisplayMedia();
+          chrome.tabs.captureVisibleTab();
+        `
+      }
+    ]);
+
+    expect(findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          severity: "critical",
+          message: expect.stringContaining("cookies or browser storage")
+        }),
+        expect.objectContaining({
+          severity: "high",
+          message: expect.stringContaining("subtitle or media track data")
+        }),
+        expect.objectContaining({
+          severity: "critical",
+          message: expect.stringContaining("frames or screenshots")
+        }),
+        expect.objectContaining({
+          severity: "critical",
+          message: expect.stringContaining("video or audio")
+        }),
+        expect.objectContaining({
+          severity: "critical",
+          message: expect.stringContaining("capture tab screenshots")
+        })
+      ])
+    );
+  });
+
+  it("allows CueRoom playback sync source patterns", () => {
+    const findings = auditExtensionSource([
+      {
+        path: "apps/extension/src/content-script.ts",
+        content: `
+          const video = document.querySelector("video");
+          const safeUrl = new URL("/watch/123", "https://www.netflix.com");
+          void chrome.runtime.sendMessage({ type: "PLAYBACK_STATE", state: { url: safeUrl } });
+        `
+      },
+      {
+        path: "apps/extension/src/service-worker.ts",
+        content: `
+          const socket = new WebSocket("wss://api.cueroom.app/v1/rooms/demo/realtime");
+          await chrome.storage.local.set({ pairedRoom: { roomId: "room_demo" } });
+          await chrome.tabs.sendMessage(1, { type: "APPLY_SYNC_COMMAND", command: {} });
+        `
+      }
+    ]);
+
+    expect(findings).toEqual([]);
   });
 });

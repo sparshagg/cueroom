@@ -378,3 +378,12 @@
 - [x] Reason: Explicit per-route limits document the threat model and make future regressions visible in local verification and CI.
 - [x] Security/privacy impact: Reduces brute-force, invite guessing, token guessing, room-control abuse, and realtime handshake pressure before requests reach sensitive room/session authorization logic.
 - [x] Rollback trigger: A centralized typed route registry replaces source-text guarding while proving the same route coverage.
+
+## ADR-043: Extension Source Sensitive-API Audit
+
+- [x] Problem: The extension gate audited the manifest boundary, but did not inspect packaged extension source for remote-code execution primitives or APIs that could collect Netflix-sensitive data.
+- [x] Options: rely on manifest permissions only, add manual Chrome Web Store review notes, or make `pnpm security:extension` scan extension source for narrow forbidden patterns.
+- [x] Decision: Extend the shared security package with `auditExtensionSource` and run it from `scripts/audit-extension.mjs` over extension TypeScript, JavaScript, and HTML sources.
+- [x] Reason: Chrome Web Store review and MV3 security both care about source behavior, not only manifest permissions; a narrow source audit catches high-risk drift before packaging.
+- [x] Security/privacy impact: Reduces risk of accidentally adding remote code execution, forbidden Chrome APIs, cookie/storage reads, subtitle/track inspection, screenshots, or media capture to the Netflix content boundary.
+- [x] Rollback trigger: A stronger AST-based extension source scanner replaces the regex guard while proving the same or broader forbidden-behavior coverage.
