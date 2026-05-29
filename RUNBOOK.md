@@ -82,6 +82,7 @@
 - [ ] Confirm no Netflix sensitive data is logged or stored.
 - [ ] Confirm extension permissions did not broaden.
 - [ ] Confirm `artifacts/chrome-web-store` contains a versioned extension ZIP, manifest, manifest audit, privacy policy, listing draft, and review checklist.
+- [ ] Confirm `artifacts/chrome-web-store/images` contains room, popup, small promo, and marquee promo PNG assets.
 - [ ] Generate changelog from Conventional Commits.
 - [ ] Tag release from protected `main`.
 
@@ -119,6 +120,7 @@
 ## Chrome Web Store Submission
 
 - [ ] Run `pnpm extension:package`.
+- [ ] Confirm `images/room-ui-1280x800.png`, `images/extension-popup-640x400.png`, `images/small-promo-440x280.png`, and `images/marquee-promo-1400x560.png` are present in the package evidence.
 - [ ] Verify minimum permissions.
 - [ ] Review `docs/security/chrome-web-store-review.md` and the `cueroom-chrome-web-store-review` CI artifact.
 - [ ] Verify `PRIVACY.md` and Limited Use disclosure match Chrome Web Store privacy form answers.

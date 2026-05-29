@@ -21,6 +21,7 @@
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "security:extension": "pnpm --filter @cueroom/security build && node scripts/audit-extension.mjs",
+    "store:assets": "node scripts/generate-store-assets.mjs",
     "extension:package": "node scripts/package-extension.mjs",
     "cleanup:check": "node scripts/cleanup-check.mjs",
     "docs:freshness": "node scripts/check-docs-freshness.mjs",

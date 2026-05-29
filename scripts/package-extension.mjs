@@ -20,7 +20,10 @@ await mkdir(artifactDir, { recursive: true });
 
 run("pnpm", ["--filter", "@cueroom/shared", "build"]);
 run("pnpm", ["--filter", "@cueroom/security", "build"]);
+run("pnpm", ["--filter", "@cueroom/ui", "build"]);
+run("pnpm", ["--filter", "@cueroom/web", "build"]);
 run("pnpm", ["--filter", "@cueroom/extension", "build"]);
+run("node", ["scripts/generate-store-assets.mjs"]);
 
 const manifestPath = path.join(extensionDist, "manifest.json");
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
@@ -54,6 +57,7 @@ await writeFile(
     `- ZIP: \`${zipName}\``,
     `- Manifest version: \`${version}\``,
     "- Upload the ZIP itself; the manifest is at the ZIP root.",
+    "- Store screenshots and promo tiles are in `images/`.",
     "- Use the included privacy policy, listing draft, and review checklist for Developer Dashboard fields."
   ].join("\n") + "\n"
 );

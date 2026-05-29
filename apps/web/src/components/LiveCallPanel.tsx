@@ -67,17 +67,18 @@ export function LiveCallPanel({
       return call.participants;
     }
     if (session) {
-      return [
-        {
-          identity: session.participant.id,
-          name: session.participant.displayName,
-          isLocal: true,
-          isSpeaking: false,
-          cameraEnabled: false,
-          microphoneEnabled: false,
-          connectionQuality: "unknown"
-        }
-      ];
+      const participants =
+        session.room.participants.length > 0 ? session.room.participants : [session.participant];
+
+      return participants.map((participant) => ({
+        identity: participant.id,
+        name: participant.displayName,
+        isLocal: participant.id === session.participant.id,
+        isSpeaking: participant.id !== session.participant.id && participant.cameraEnabled,
+        cameraEnabled: participant.cameraEnabled,
+        microphoneEnabled: !participant.muted,
+        connectionQuality: participant.id === session.participant.id ? "local" : "good"
+      }));
     }
     return demoTiles;
   }, [call.participants, session]);

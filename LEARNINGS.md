@@ -12,6 +12,10 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: New shadcn projects use Tailwind v4, React 19, OKLCH tokens, `new-york` style, and Sonner instead of the old toast component.
   - Impact: UI primitives use Tailwind v4 tokens and Sonner is included.
+- [ ] Source: https://tailwindcss.com/docs/detecting-classes-in-source-files
+  - Stale-by: 2026-08-29
+  - Learning: Tailwind v4 automatically scans source files but ignores paths such as dependencies and `.gitignore` entries unless they are explicitly registered with `@source`.
+  - Impact: The web app registers `packages/ui/src` in `globals.css` so shared primitive utilities are emitted in the production CSS.
 - [ ] Source: https://docs.livekit.io/home/get-started/authentication
   - Stale-by: 2026-08-29
   - Learning: LiveKit access tokens must be generated server-side because they are signed with API secrets.
@@ -179,7 +183,7 @@ Append-only checklist of verified project learnings.
 - [ ] Source: https://developer.chrome.com/docs/webstore/images
   - Stale-by: 2026-08-29
   - Learning: Chrome Web Store requires an extension icon, a small promotional image, and at least one screenshot; the ZIP must include a 128x128 icon.
-  - Impact: The beta listing checklist tracks missing screenshots and promo assets separately from the extension ZIP, while the manifest keeps a 128 icon path.
+  - Impact: `pnpm extension:package` generates room, popup, small promo, and marquee promo image assets alongside the extension ZIP, while the manifest keeps a 128 icon path.
 - [ ] Source: https://developer.chrome.com/docs/webstore/program-policies/user-data-faq
   - Stale-by: 2026-08-29
   - Learning: Extensions handling personal or sensitive user data need a privacy policy, accurate privacy-tab disclosures, secure transmission, and consistency between product behavior, dashboard disclosures, and policy.

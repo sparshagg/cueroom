@@ -71,6 +71,11 @@ export function RoomExperience({ roomId }: { roomId: string }) {
   const participantCount = roomSession?.room.participants.length ?? (call.participants.length || 3);
   const cameraEnabled = roomSession ? call.localCameraEnabled : previewCameraEnabled;
   const micEnabled = roomSession ? call.localMicrophoneEnabled : previewMicEnabled;
+  const syncHeadline = syncWarning
+    ? "Switch to the host's Netflix title to rejoin sync."
+    : extensionPaired
+      ? "Everyone is synced on the host's Netflix title."
+      : "Open your Netflix title, then pair the extension.";
 
   useEffect(() => {
     setRoomSession(readRoomSession(roomId));
@@ -238,9 +243,7 @@ export function RoomExperience({ roomId }: { roomId: string }) {
                           : "Netflix tab not paired"}
                     </Badge>
                     <h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-normal md:text-6xl">
-                      {syncWarning
-                        ? "Switch to the host's Netflix title to rejoin sync."
-                        : "Open your Netflix title, then pair the extension."}
+                      {syncHeadline}
                     </h2>
                     {syncWarning && (
                       <div className="mt-5 max-w-2xl rounded-lg border border-amber-300/25 bg-amber-300/10 p-4 text-sm text-amber-50">
@@ -283,8 +286,10 @@ export function RoomExperience({ roomId }: { roomId: string }) {
                         {extensionPaired ? "Realtime sync connected" : "Netflix watch tab pending"}
                       </li>
                       <li className="flex items-center gap-2">
-                        <span className="size-2 rounded-full bg-white/25" />
-                        Pairing token ready
+                        <span
+                          className={`size-2 rounded-full ${roomSession ? "bg-emerald-300" : "bg-white/25"}`}
+                        />
+                        {roomSession ? "Pairing token ready" : "Pairing token pending"}
                       </li>
                     </ul>
                     <Input

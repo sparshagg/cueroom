@@ -36,16 +36,16 @@
 
 - [x] Extension icon in package: `apps/extension/src/icons/icon128.svg`.
 - [x] CI visual evidence artifact: `cueroom-visual-regression`.
-- [ ] Store screenshot: room UI with video call controls and sync health.
-- [ ] Store screenshot: extension popup paired to a room.
-- [ ] Small promo tile: 440x280.
-- [ ] Optional marquee promo tile: 1400x560.
+- [x] Store screenshot: room UI with video call controls and sync health, generated as `images/room-ui-1280x800.png`.
+- [x] Store screenshot: extension popup paired to a room, generated as `images/extension-popup-640x400.png`.
+- [x] Small promo tile: 440x280, generated as `images/small-promo-440x280.png`.
+- [x] Optional marquee promo tile: 1400x560, generated as `images/marquee-promo-1400x560.png`.
 - [ ] Optional YouTube demo video.
 
 ## Release Blockers
 
 - [ ] Hosted privacy policy URL is live.
 - [ ] Public beta domain is live and listed in `externally_connectable.matches`.
-- [ ] Store screenshots and promo tile are generated from the current UI.
+- [x] Store screenshots and promo tile are generated from the current UI/package.
 - [ ] Human legal review confirms non-affiliation, Netflix Terms boundary, and privacy disclosures.
 - [ ] First public beta tag is cut from protected `main`.

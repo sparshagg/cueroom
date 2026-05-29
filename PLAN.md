@@ -59,6 +59,7 @@
 
 - [x] Create public privacy policy draft and Chrome Web Store listing/privacy form checklist.
 - [x] Package Chrome Web Store artifact with a repeatable release script.
+- [x] Generate Chrome Web Store screenshot and promo assets.
 - [ ] Complete human legal/privacy review.
 - [x] Publish public repository.
 - [ ] Tag first signed release.
