@@ -57,8 +57,9 @@
 
 ## M6: Public Beta
 
-- [ ] Complete legal/privacy review.
-- [ ] Package Chrome Web Store artifact.
+- [x] Create public privacy policy draft and Chrome Web Store listing/privacy form checklist.
+- [x] Package Chrome Web Store artifact with a repeatable release script.
+- [ ] Complete human legal/privacy review.
 - [x] Publish public repository.
 - [ ] Tag first signed release.
 - [ ] Open beta with incident response and disclosure process ready.

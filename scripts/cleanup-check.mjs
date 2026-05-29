@@ -3,7 +3,14 @@ import { readdir, rm, stat } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 
-const generatedDirectoryNames = new Set([".next", ".turbo", "coverage", "dist", "build"]);
+const generatedDirectoryNames = new Set([
+  ".next",
+  ".turbo",
+  "coverage",
+  "dist",
+  "build",
+  "artifacts"
+]);
 const sourceRoots = ["apps", "packages", "scripts", "infra", "skills"];
 const findings = [];
 

@@ -43,6 +43,14 @@ docker compose -f infra/docker/compose.dev.yml up --build
 
 The development compose stack binds published ports to `127.0.0.1`. Use `.env.example` values only for local development, including `AUTH_DEV_MAGIC_LINKS=true`.
 
+To build the Chrome Web Store beta package:
+
+```bash
+pnpm extension:package
+```
+
+The package and review evidence are written under `artifacts/chrome-web-store`.
+
 ## Security Promise
 
 - [ ] No Netflix credentials.
@@ -56,3 +64,7 @@ The development compose stack binds published ports to `127.0.0.1`. Use `.env.ex
 ## Non-Affiliation
 
 CueRoom is not affiliated with, endorsed by, sponsored by, or approved by Netflix.
+
+## Privacy
+
+See `PRIVACY.md` for the beta privacy policy draft and Chrome Web Store Limited Use disclosure.

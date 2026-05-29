@@ -125,3 +125,12 @@
 - [x] Reason: The vulnerable version is transitive through the web framework, while pnpm overrides are the smallest repo-local control until upstream dependency metadata catches up.
 - [x] Security/privacy impact: Removes a known CSS stringification XSS advisory from the installed graph without changing CueRoom's runtime data boundaries.
 - [x] Rollback trigger: Upstream framework releases a compatible dependency update that resolves to patched `postcss` without an override.
+
+## ADR-015: Chrome Web Store Beta Package
+
+- [x] Problem: Public beta needs repeatable extension packaging and privacy/listing evidence instead of hand-built ZIP files.
+- [x] Options: keep CI inline packaging, add a dedicated packaging script, or publish manually from `apps/extension/dist`.
+- [x] Decision: Add `pnpm extension:package` to build the extension, create a versioned ZIP, and copy review evidence into `artifacts/chrome-web-store`.
+- [x] Reason: A single local/CI command reduces release drift and keeps the uploaded ZIP, manifest audit, privacy policy, and listing draft together.
+- [x] Security/privacy impact: Store submissions carry explicit least-permission, non-affiliation, no-sensitive-Netflix-data, and Limited Use evidence.
+- [x] Rollback trigger: Chrome Web Store API automation replaces manual artifact upload and produces equivalent evidence.

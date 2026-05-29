@@ -73,11 +73,13 @@
 ## Release
 
 - [ ] Run `pnpm verify`.
+- [ ] Run `pnpm extension:package`.
 - [ ] Review the latest DAST workflow artifacts and `docs/security/dast.md`.
 - [ ] Review `LEARNINGS.md` for stale sources.
 - [ ] Review `THREAT_MODEL.md` for changed assumptions.
 - [ ] Confirm no Netflix sensitive data is logged or stored.
 - [ ] Confirm extension permissions did not broaden.
+- [ ] Confirm `artifacts/chrome-web-store` contains a versioned extension ZIP, manifest, manifest audit, privacy policy, listing draft, and review checklist.
 - [ ] Generate changelog from Conventional Commits.
 - [ ] Tag release from protected `main`.
 
@@ -114,9 +116,11 @@
 
 ## Chrome Web Store Submission
 
+- [ ] Run `pnpm extension:package`.
 - [ ] Verify minimum permissions.
 - [ ] Review `docs/security/chrome-web-store-review.md` and the `cueroom-chrome-web-store-review` CI artifact.
-- [ ] Verify privacy policy and Limited Use disclosure.
+- [ ] Verify `PRIVACY.md` and Limited Use disclosure match Chrome Web Store privacy form answers.
+- [ ] Verify `docs/release/chrome-web-store-listing.md` matches the current manifest and release package.
 - [ ] Verify non-affiliation language.
-- [ ] Attach extension zip from CI artifact.
+- [ ] Attach versioned extension zip from `artifacts/chrome-web-store` or CI artifact.
 - [ ] Keep rollback package for prior approved version.

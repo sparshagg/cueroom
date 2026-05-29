@@ -168,3 +168,19 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: pnpm root `overrides` can enforce a dependency version across the dependency graph, including transitive dependencies.
   - Impact: CueRoom uses a workspace-level `postcss` override instead of editing framework internals or relying on a direct app dependency to affect transitive resolution.
+- [ ] Source: https://developer.chrome.com/docs/webstore/prepare/
+  - Stale-by: 2026-08-29
+  - Learning: Chrome Web Store uploads require a ZIP file with `manifest.json` at the archive root, and manifest metadata changes require editing the manifest and uploading a new versioned ZIP.
+  - Impact: `pnpm extension:package` zips the extension `dist` contents directly so the manifest is at the package root and names the ZIP with the manifest version.
+- [ ] Source: https://developer.chrome.com/docs/webstore/publish/
+  - Stale-by: 2026-08-29
+  - Learning: First-time Chrome Web Store publishing uses the Developer Dashboard Add New Item flow with a ZIP upload, and the dashboard rejects packages above the documented size limit.
+  - Impact: CueRoom keeps a manual dashboard runbook for the first beta instead of assuming programmatic publish is available before listing and privacy tabs are complete.
+- [ ] Source: https://developer.chrome.com/docs/webstore/images
+  - Stale-by: 2026-08-29
+  - Learning: Chrome Web Store requires an extension icon, a small promotional image, and at least one screenshot; the ZIP must include a 128x128 icon.
+  - Impact: The beta listing checklist tracks missing screenshots and promo assets separately from the extension ZIP, while the manifest keeps a 128 icon path.
+- [ ] Source: https://developer.chrome.com/docs/webstore/program-policies/user-data-faq
+  - Stale-by: 2026-08-29
+  - Learning: Extensions handling personal or sensitive user data need a privacy policy, accurate privacy-tab disclosures, secure transmission, and consistency between product behavior, dashboard disclosures, and policy.
+  - Impact: CueRoom adds `PRIVACY.md` and copies it into Chrome Web Store evidence artifacts so privacy answers align with the implementation boundary.

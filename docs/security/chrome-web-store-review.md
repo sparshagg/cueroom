@@ -17,14 +17,15 @@
 - [x] Extension does not read Netflix credentials, cookies, local/session storage, DRM keys, subtitles, frames, screenshots, video, or audio.
 - [x] Pairing stores only room-scoped CueRoom session data, the allowed app/API origins, and the paired Netflix tab ID.
 - [x] Wrong-title handling shows a manual link to the expected Netflix title and never auto-navigates.
-- [ ] Store privacy form: disclose playback metadata and room-pairing token use before submission.
+- [x] Store privacy form draft: disclose playback metadata, room-pairing token use, optional auth data, transient chat, and no advertising use.
+- [x] Privacy policy source: `PRIVACY.md`.
 - [ ] Privacy policy: publish final hosted policy URL before submission.
 
 ## Review Package
 
 - [x] Attach CI extension artifact zip from `pnpm --filter @cueroom/extension build`.
 - [x] Attach manifest permission audit output.
-- [ ] Attach latest DAST artifact summary.
-- [ ] Include tester instructions: create room, load unpacked extension, paste extension ID, open a Netflix watch page, pair extension, verify wrong-title warning.
-- [ ] Include non-affiliation statement: CueRoom is not affiliated with Netflix.
+- [x] Attach latest DAST artifact summary.
+- [x] Include tester instructions from `docs/release/chrome-web-store-listing.md`.
+- [x] Include non-affiliation statement: CueRoom is not affiliated with Netflix.
 - [ ] Include rollback package for the last approved version after first approval.
