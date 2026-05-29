@@ -14,8 +14,8 @@ This checklist is the source of truth for the first public beta release gate. It
 - [ ] Current `main` has green `verify`, `docker`, `CodeQL`, `cleanup`, `supply-chain`, and `zap-baseline` checks.
 - [x] DAST workflow includes authenticated room-session create, join, and report-user flow evidence.
 - [x] Latest DAST artifacts are reviewed, and every medium/high finding is either fixed or explicitly accepted in a tracked security note.
-- [ ] `pnpm extension:package` artifacts have been reviewed, including the ZIP, manifest audit, privacy policy copy, listing draft, and generated images.
-- [ ] Release package `SHA256SUMS` verifies locally.
+- [x] `pnpm extension:package` artifacts have been reviewed, including the ZIP, manifest audit, privacy policy copy, listing draft, and generated images.
+- [x] Release package `SHA256SUMS` verifies locally.
 - [ ] `pnpm release:notes -- --tag v0.1.0 --output artifacts/release-notes/v0.1.0.md` has been reviewed for user-facing accuracy.
 - [ ] `pnpm release:check -- --tag v0.1.0` passes before tagging.
 - [x] In-room report-user flow has API, UI, and regression coverage.
