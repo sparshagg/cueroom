@@ -268,3 +268,15 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: `pg_advisory_xact_lock` obtains an exclusive transaction-level advisory lock and automatically releases it at transaction end.
   - Impact: CueRoom's migration runner wraps migrations in a transaction and uses `pg_advisory_xact_lock` to release the migration lock automatically on commit or rollback.
+- [ ] Source: https://nextjs.org/docs/app/api-reference/config/next-config-js/headers
+  - Stale-by: 2026-08-29
+  - Learning: Next.js `headers()` in `next.config` applies custom HTTP response headers to matching paths through `source` and `headers` entries.
+  - Impact: CueRoom sets the web CSP through the existing Next.js header boundary so DAST scans and production pages receive the same baseline policy.
+- [ ] Source: https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP
+  - Stale-by: 2026-08-29
+  - Learning: CSP fetch directives such as `script-src`, `style-src`, and `img-src` constrain resource loading, while `frame-ancestors 'none'` provides clickjacking protection.
+  - Impact: CueRoom adds a source-limiting web CSP that blocks objects and framing while preserving current Next.js inline script/style requirements for the beta UI.
+- [ ] Source: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/X-Content-Type-Options
+  - Stale-by: 2026-08-29
+  - Learning: `X-Content-Type-Options: nosniff` tells browsers to respect declared MIME types instead of sniffing response bodies.
+  - Impact: CueRoom's API now sends `nosniff` on responses to close the ZAP low-risk API finding.

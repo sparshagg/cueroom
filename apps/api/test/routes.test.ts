@@ -3,6 +3,21 @@ import { TokenVerifier } from "livekit-server-sdk";
 import { buildServer } from "../src/server";
 
 describe("CueRoom API", () => {
+  it("sets baseline security headers on API responses", async () => {
+    const server = await buildServer();
+    try {
+      const response = await server.inject({
+        method: "GET",
+        url: "/health"
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers["x-content-type-options"]).toBe("nosniff");
+    } finally {
+      await server.close();
+    }
+  });
+
   it("requires an account session for room creation when auth is required", async () => {
     const previousAuthRequired = process.env.AUTH_REQUIRED;
     process.env.AUTH_REQUIRED = "true";

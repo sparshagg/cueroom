@@ -54,7 +54,7 @@ CueRoom is a web app, API, LiveKit deployment, and Chrome/Edge MV3 extension for
 - [ ] Extension applies targeted drift corrections only when the active watch ID matches the correction watch ID.
 - [ ] Wrong-title state produces a warning and manual navigation link, never automatic navigation.
 - [ ] Runtime schema validation at every trust boundary.
-- [ ] Strict CSP and no extension remote code.
+- [ ] Web source-limiting CSP plus strict extension CSP and no extension remote code.
 - [ ] Minimal Chrome permissions and manifest audits.
 - [ ] LiveKit tokens minted only by API.
 - [ ] LiveKit grants are scoped to one room and participant, disable data publishing, and only allow camera/microphone publish sources.

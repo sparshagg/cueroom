@@ -70,6 +70,9 @@ export async function buildServer(options: BuildServerOptions = {}) {
       maxPayload: 64 * 1024
     }
   });
+  server.addHook("onRequest", async (_request, reply) => {
+    reply.header("X-Content-Type-Options", "nosniff");
+  });
 
   const configuredStores = await createConfiguredStores(redis, options, mailer);
   const store = configuredStores.store;

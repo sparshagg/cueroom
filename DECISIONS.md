@@ -197,3 +197,12 @@
 - [x] Reason: The lock is a small production-safe guard that keeps migrations idempotent while preserving parallel test execution and startup behavior.
 - [x] Security/privacy impact: Reduces deployment and CI reliability risk without changing stored data, token handling, extension permissions, or CueRoom's Netflix data boundary.
 - [x] Rollback trigger: A dedicated migration tool replaces the current runner and provides equivalent distributed migration locking.
+
+## ADR-023: Web/API Security Headers
+
+- [x] Problem: Latest DAST evidence reported missing web CSP headers and missing API `X-Content-Type-Options`.
+- [x] Options: accept the scanner findings for beta, add a proxy-only header runbook, or set application-owned headers in Next.js and Fastify.
+- [x] Decision: Set a source-limiting web CSP through `next.config.ts` and add API `X-Content-Type-Options: nosniff` through a Fastify request hook.
+- [x] Reason: Application-owned headers keep local, CI, Docker, and production behavior aligned without depending on a specific edge proxy.
+- [x] Security/privacy impact: Reduces XSS, clickjacking, object embedding, and MIME-sniffing risk without changing CueRoom's no-Netflix-media/no-credentials data boundary.
+- [x] Rollback trigger: A deployment edge policy or nonce-based CSP replaces these app-level defaults with equal or stronger coverage.
