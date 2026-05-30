@@ -12,6 +12,10 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: New shadcn projects use Tailwind v4, React 19, OKLCH tokens, `new-york` style, and Sonner instead of the old toast component.
   - Impact: UI primitives use Tailwind v4 tokens and Sonner is included.
+- [ ] Source: https://tailwindcss.com/docs/detecting-classes-in-source-files
+  - Stale-by: 2026-08-29
+  - Learning: Tailwind v4 automatically scans source files but ignores paths such as dependencies and `.gitignore` entries unless they are explicitly registered with `@source`.
+  - Impact: The web app registers `packages/ui/src` in `globals.css` so shared primitive utilities are emitted in the production CSS.
 - [ ] Source: https://docs.livekit.io/home/get-started/authentication
   - Stale-by: 2026-08-29
   - Learning: LiveKit access tokens must be generated server-side because they are signed with API secrets.
@@ -36,3 +40,398 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-29
   - Learning: Netflix content and account access are governed by restrictive terms and content protection rules.
   - Impact: CueRoom never relays content and requires legal review before public extension release.
+- [ ] Source: https://node-postgres.com/features/queries
+  - Stale-by: 2026-08-29
+  - Learning: node-postgres supports parameterized queries so application values are sent separately from SQL text.
+  - Impact: Postgres room/session persistence uses placeholders for all user-controlled values.
+- [ ] Source: https://node-postgres.com/apis/pool
+  - Stale-by: 2026-08-29
+  - Learning: `pool.query` is suitable for single queries, but transactions must use one checked-out client.
+  - Impact: Multi-step room mutations use an explicit client transaction helper.
+- [ ] Source: https://hub.docker.com/_/postgres/
+  - Stale-by: 2026-08-29
+  - Learning: The official Postgres image initializes databases from `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB`, and can run SQL files from the init directory on first start.
+  - Impact: Docker dev keeps the official image and passes container-network Postgres URLs to the API service.
+- [ ] Source: https://github.com/fastify/fastify-rate-limit
+  - Stale-by: 2026-08-29
+  - Learning: `@fastify/rate-limit` uses in-memory storage by default, requires `ioredis` for Redis-backed distributed limits, and recommends tuning `connectTimeout` and `maxRetriesPerRequest`.
+  - Impact: API rate limits use one tuned ioredis connection when `REDIS_URL` is configured.
+- [ ] Source: https://redis.github.io/ioredis/interfaces/CommonRedisOptions.html
+  - Stale-by: 2026-08-29
+  - Learning: ioredis exposes connection and retry controls such as `connectTimeout`, `maxRetriesPerRequest`, and `retryStrategy`.
+  - Impact: CueRoom Redis clients use bounded retry behavior so outages fail predictably.
+- [ ] Source: https://redis.io/docs/latest/commands/incr/
+  - Stale-by: 2026-08-29
+  - Learning: Redis counters are atomic and `INCR` initializes missing values to zero.
+  - Impact: Sync sequence state uses Redis as the cross-process monotonic counter boundary.
+- [ ] Source: https://redis.io/docs/latest/commands/expire/
+  - Stale-by: 2026-08-29
+  - Learning: `EXPIRE` makes keys volatile and deletes them automatically when the timeout elapses.
+  - Impact: Invite indexes, presence, and sync sequence keys expire with room/session lifetimes.
+- [ ] Source: https://simplewebauthn.dev/docs/packages/server/
+  - Stale-by: 2026-08-29
+  - Learning: SimpleWebAuthn server helpers generate registration/authentication options and verify responses against stored challenges, expected origin, expected RP ID, stored credentials, and counters.
+  - Impact: CueRoom passkey routes store short-lived challenges, verify exact `AUTH_ORIGIN`/`AUTH_RP_ID`, and update credential counters after authentication.
+- [ ] Source: https://simplewebauthn.dev/docs/advanced/passkeys/
+  - Stale-by: 2026-08-29
+  - Learning: Passkey registration can require resident credentials and user verification for stronger account sign-in.
+  - Impact: CueRoom passkey options request resident credentials and required user verification.
+- [ ] Source: https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html
+  - Stale-by: 2026-08-29
+  - Learning: Email-token flows should use random, single-use, expiring tokens and avoid account enumeration.
+  - Impact: Magic-link tokens are random, hashed at rest, consumed once, and returned through uniform request responses.
+- [ ] Source: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+  - Stale-by: 2026-08-29
+  - Learning: Session identifiers need high entropy, server-side validation, expiration, and protection from logging or disclosure.
+  - Impact: Account session tokens use a distinct `cas_` prefix, are stored as hashes, expire server-side, and are redacted from logs.
+- [ ] Source: https://nodemailer.com/smtp
+  - Stale-by: 2026-08-29
+  - Learning: Nodemailer SMTP delivery uses `createTransport`; `secure: true` is required for implicit TLS on port 465, while `requireTLS` forces a STARTTLS upgrade when not using implicit TLS.
+  - Impact: CueRoom's production magic-link mailer uses explicit SMTP host, port, secure, and requireTLS settings and rejects missing or insecure production email config.
+- [ ] Source: https://nodemailer.com/message
+  - Stale-by: 2026-08-29
+  - Learning: Nodemailer messages can include both plaintext and HTML bodies, and `disableFileAccess` plus `disableUrlAccess` prevents message content from pulling local files or remote URLs.
+  - Impact: Magic-link emails include text and HTML alternatives, keep the token only in the link fragment, avoid passing raw tokens into the mailer, and disable file/URL access during message construction.
+- [ ] Source: https://developer.mozilla.org/en-US/docs/Web/API/Location/hash
+  - Stale-by: 2026-08-29
+  - Learning: `location.hash` exposes only the URL fragment identifier, including the leading `#` when present.
+  - Impact: CueRoom magic-link verification reads only `#token=...`, rejects query-string token flows, and clears the fragment before calling the API.
+- [ ] Source: https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage
+  - Stale-by: 2026-08-29
+  - Learning: `sessionStorage` is partitioned by origin and tab and is cleared when the tab/window session ends, unlike `localStorage`.
+  - Impact: Browser account sessions use `sessionStorage` instead of `localStorage` while the project remains on bearer-token auth.
+- [ ] Source: https://docs.livekit.io/intro/basics/connect/
+  - Stale-by: 2026-08-29
+  - Learning: LiveKit browser clients connect through a `Room` object with a server URL and a backend-generated access token; room state exposes local and remote participants.
+  - Impact: `apps/web` now keeps LiveKit JWTs in memory only, connects with `Room.connect`, and renders participants from SDK room state.
+- [ ] Source: https://docs.livekit.io/transport/media/publish/
+  - Stale-by: 2026-08-29
+  - Learning: The web SDK publishes camera and microphone only after explicit calls to `setCameraEnabled` and `setMicrophoneEnabled`, which trigger browser permission prompts.
+  - Impact: CueRoom does not auto-publish camera or microphone on room page load; users toggle media after the room-scoped call connection is established.
+- [ ] Source: https://docs.livekit.io/reference/client-sdk-js/classes/Room.html
+  - Stale-by: 2026-08-29
+  - Learning: LiveKit JS SDK 2.19.0 exposes room lifecycle events, participant maps, device switching, and disconnect handling on the `Room` class.
+  - Impact: The call hook listens for room/track/device events, refreshes participant tiles, and detaches media on unmount.
+- [ ] Source: https://docs.livekit.io/frontends/build/authentication/
+  - Stale-by: 2026-08-29
+  - Learning: Frontends must receive LiveKit JWTs from a backend token flow because token generation requires API keys.
+  - Impact: The web app fetches scoped call tokens from `/v1/livekit/token` with an existing room session instead of minting or storing LiveKit credentials client-side.
+- [ ] Source: https://www.npmjs.com/package/@testing-library/react
+  - Stale-by: 2026-08-29
+  - Learning: The current React Testing Library registry release checked for this slice is 16.3.2.
+  - Impact: `apps/web` uses React Testing Library for browser-like hook integration coverage around LiveKit controls.
+- [ ] Source: https://www.npmjs.com/package/jsdom
+  - Stale-by: 2026-08-29
+  - Learning: The current jsdom registry release checked for this slice is 29.1.1.
+  - Impact: Web tests run in a jsdom environment so React controls can exercise browser storage and media-device boundaries.
+- [ ] Source: https://developer.chrome.com/docs/extensions/how-to/web-platform/websockets
+  - Stale-by: 2026-08-29
+  - Learning: Chrome extension service-worker WebSockets remain active in Chrome 116+ when messages are exchanged more frequently than the worker inactivity window.
+  - Impact: The extension declares Chrome 116+ and sends room WebSocket pings every 20 seconds while paired.
+- [ ] Source: https://developer.chrome.com/docs/extensions/develop/concepts/messaging
+  - Stale-by: 2026-08-29
+  - Learning: Extension message endpoints should validate sender identity and explicitly handle external web-page messages separately from internal extension messages.
+  - Impact: CueRoom keeps external website messages limited to pairing/status/command relay, and applies automatic drift correction only from API WebSocket room events.
+- [ ] Source: https://github.com/fastify/fastify-websocket
+  - Stale-by: 2026-08-29
+  - Learning: `@fastify/websocket` exposes route-level `{ websocket: true }` handlers and `injectWS` for endpoint tests.
+  - Impact: The API exposes an authenticated room realtime endpoint and tests server-vetted playback state and command broadcasts without opening a network port.
+- [ ] Source: https://github.com/zaproxy/action-baseline/releases
+  - Stale-by: 2026-08-29
+  - Learning: The current ZAP baseline action release checked for this slice is v0.15.0 and uses Node 24.
+  - Impact: CueRoom adds a separate DAST workflow based on the reviewed ZAP baseline v0.15.0 release and pins the action to the resolved commit SHA through the workflow supply-chain policy.
+- [ ] Source: https://developer.chrome.com/docs/webstore/review-process/
+  - Stale-by: 2026-08-29
+  - Learning: Chrome Web Store reviews use automated and manual checks, and broad host permissions or sensitive execution permissions can increase review scrutiny and time.
+  - Impact: CueRoom records store-review evidence proving narrow Netflix watch-page scope and no sensitive extension permissions.
+- [ ] Source: https://nextjs.org/docs/app/api-reference/config/next-config-js/headers
+  - Stale-by: 2026-08-29
+  - Learning: Next.js supports project-wide custom HTTP headers through the `headers()` function in `next.config`.
+  - Impact: CueRoom adds baseline browser security headers for the web app before enabling DAST evidence.
+- [ ] Source: https://developer.chrome.com/docs/extensions/reference/api/tabs
+  - Stale-by: 2026-08-29
+  - Learning: Chrome's Tabs API namespace is available to extension service workers without the `tabs` permission; the `tabs` permission only grants access to sensitive tab properties unless host permissions already cover the page.
+  - Impact: CueRoom removes `activeTab` and relies on the narrow Netflix watch-page host permission for the paired tab flow.
+- [ ] Source: https://developer.chrome.com/docs/webstore/cws-dashboard-privacy
+  - Stale-by: 2026-08-29
+  - Learning: Chrome Web Store submissions require privacy disclosure fields for data collection and usage.
+  - Impact: CueRoom keeps a store-review checklist for playback metadata and room-pairing token disclosure before submission.
+- [ ] Source: https://developer.chrome.com/docs/webstore/program-policies/policies
+  - Stale-by: 2026-08-29
+  - Learning: Chrome Web Store policy review includes permission/data-use review and bars misleading or undisclosed behavior.
+  - Impact: CueRoom records non-affiliation, least-permission, and no-sensitive-Netflix-data evidence as release gates.
+- [ ] Source: https://developer.chrome.com/docs/extensions/develop/concepts/declare-permissions
+  - Stale-by: 2026-08-29
+  - Learning: Chrome MV3 permission surfaces include `permissions`, `optional_permissions`, `host_permissions`, `optional_host_permissions`, and `content_scripts.matches`; host and content-script match changes can trigger warnings.
+  - Impact: The extension manifest audit checks required, optional, host, and content-script permission surfaces instead of only required permissions.
+- [ ] Source: https://developer.chrome.com/docs/extensions/reference/manifest/content-scripts
+  - Stale-by: 2026-08-29
+  - Learning: Manifest content scripts must use extension-local file paths, match explicit URL patterns, and default to the isolated world; `MAIN` world lets the host page interfere with the script.
+  - Impact: The extension audit rejects remote content-script URLs, broad content-script matches, and `MAIN` world injection.
+- [ ] Source: https://docs.docker.com/reference/compose-file/services/#ports
+  - Stale-by: 2026-08-29
+  - Learning: Docker Compose port mappings without a host IP bind to all interfaces, while short syntax supports explicit `127.0.0.1:host:container` bindings and port ranges.
+  - Impact: The dev compose stack binds Postgres, Redis, LiveKit, API, and web ports to loopback.
+- [ ] Source: https://cornucopia.owasp.org/taxonomy/asvs-5.0/07-session-management/02-fundamental-session-management-security
+  - Stale-by: 2026-08-29
+  - Learning: ASVS requires session-token verification by a trusted backend service and dynamically generated session tokens.
+  - Impact: Realtime sockets recheck room sessions before accepting room-impacting messages instead of trusting only initial WebSocket auth.
+- [ ] Source: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+  - Stale-by: 2026-08-29
+  - Learning: Session tokens are equivalent to authentication credentials while active and must be protected from disclosure, logging, and unintended exchange channels.
+  - Impact: Magic-link dev token disclosure is opt-in and rejected in production config.
+- [ ] Source: https://github.com/advisories/GHSA-qx2v-qp2m-jg93
+  - Stale-by: 2026-06-29
+  - Learning: `postcss` versions before 8.5.10 are affected by CVE-2026-41305 / GHSA-qx2v-qp2m-jg93 when CSS is stringified into HTML style contexts.
+  - Impact: CueRoom forces transitive `postcss` resolution to a patched 8.5.x line even when framework dependencies request an older patched-incompatible version.
+- [ ] Source: https://pnpm.io/settings#overrides
+  - Stale-by: 2026-08-29
+  - Learning: pnpm root `overrides` can enforce a dependency version across the dependency graph, including transitive dependencies.
+  - Impact: CueRoom uses a workspace-level `postcss` override instead of editing framework internals or relying on a direct app dependency to affect transitive resolution.
+- [ ] Source: https://developer.chrome.com/docs/webstore/prepare/
+  - Stale-by: 2026-08-29
+  - Learning: Chrome Web Store uploads require a ZIP file with `manifest.json` at the archive root, and manifest metadata changes require editing the manifest and uploading a new versioned ZIP.
+  - Impact: `pnpm extension:package` zips the extension `dist` contents directly so the manifest is at the package root and names the ZIP with the manifest version.
+- [ ] Source: https://developer.chrome.com/docs/webstore/publish/
+  - Stale-by: 2026-08-29
+  - Learning: First-time Chrome Web Store publishing uses the Developer Dashboard Add New Item flow with a ZIP upload, and the dashboard rejects packages above the documented size limit.
+  - Impact: CueRoom keeps a manual dashboard runbook for the first beta instead of assuming programmatic publish is available before listing and privacy tabs are complete.
+- [ ] Source: https://developer.chrome.com/docs/webstore/images
+  - Stale-by: 2026-08-29
+  - Learning: Chrome Web Store requires an extension icon, a small promotional image, and at least one screenshot; the ZIP must include a 128x128 icon.
+  - Impact: `pnpm extension:package` generates room, popup, small promo, and marquee promo image assets alongside the extension ZIP, while the manifest keeps a 128 icon path.
+- [ ] Source: https://developer.chrome.com/docs/webstore/program-policies/user-data-faq
+  - Stale-by: 2026-08-29
+  - Learning: Extensions handling personal or sensitive user data need a privacy policy, accurate privacy-tab disclosures, secure transmission, and consistency between product behavior, dashboard disclosures, and policy.
+  - Impact: CueRoom adds `PRIVACY.md` and copies it into Chrome Web Store evidence artifacts so privacy answers align with the implementation boundary.
+- [ ] Source: https://playwright.dev/docs/test-configuration
+  - Stale-by: 2026-08-29
+  - Learning: Playwright test configuration supports browser projects, reporter settings, shared `baseURL`, and a `webServer` block that launches the app under test.
+  - Impact: CueRoom adds a root Playwright config that runs desktop and mobile Chromium visual contracts against the built Next.js web app.
+- [ ] Source: https://playwright.dev/docs/test-webserver
+  - Stale-by: 2026-08-29
+  - Learning: Playwright can launch and wait for a local web server before tests, with `reuseExistingServer` for local development and CI-specific startup behavior.
+  - Impact: CueRoom visual tests start `next start` on an isolated local port instead of depending on a manually running dev server.
+- [ ] Source: https://playwright.dev/docs/test-snapshots
+  - Stale-by: 2026-08-29
+  - Learning: Playwright screenshot comparisons are useful but browser rendering can vary by OS and environment, so baselines should be generated consistently.
+  - Impact: CueRoom starts with deterministic visual contracts and screenshot artifacts in CI rather than cross-OS golden files that would be noisy before the beta UI stabilizes.
+- [ ] Source: https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations
+  - Stale-by: 2026-08-29
+  - Learning: GitHub artifact attestations can generate signed provenance for workflow-built artifacts when the workflow grants `attestations: write` and `id-token: write`.
+  - Impact: CueRoom's release workflow attests the Chrome Web Store ZIP before a maintainer uploads it to the store.
+- [ ] Source: https://cli.github.com/manual/gh_release_create
+  - Stale-by: 2026-08-29
+  - Learning: `gh release create` supports `--verify-tag`, generated notes, prerelease marking, and attaching files with display labels.
+  - Impact: CueRoom creates prereleases only for existing release tags and attaches the extension ZIP, `SHA256SUMS`, and `release-manifest.json`.
+- [ ] Source: https://docs.github.com/en/code-security/how-tos/report-and-fix-vulnerabilities/configure-vulnerability-reporting/configuring-private-vulnerability-reporting-for-a-repository
+  - Stale-by: 2026-08-29
+  - Learning: Repository maintainers can enable private vulnerability reporting so external reporters can submit vulnerability details privately before public disclosure.
+  - Impact: Public beta release gates now require private vulnerability reporting and maintainer security notifications before user installation.
+- [ ] Source: https://pnpm.io/cli/audit
+  - Stale-by: 2026-08-29
+  - Learning: `pnpm audit` checks installed packages for known security issues and fails when advisories meet the configured severity threshold.
+  - Impact: CueRoom adds a CI supply-chain gate that runs `pnpm audit` before release artifacts are built.
+- [ ] Source: https://pnpm.io/cli/licenses
+  - Stale-by: 2026-08-29
+  - Learning: `pnpm licenses list --json` is the official license-reporting surface, but it depends on installed package metadata being available in the local store.
+  - Impact: CueRoom uses a repo-owned license policy script over `pnpm list` package paths while preserving pnpm as the dependency graph source.
+- [ ] Source: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions
+  - Stale-by: 2026-08-29
+  - Learning: GitHub Actions workflow permissions can be explicitly narrowed, and unspecified scopes become unavailable when permissions are declared.
+  - Impact: CueRoom's supply-chain workflow uses `contents: read` only because it does not need to write issues, releases, attestations, or security events.
+- [ ] Source: https://www.zaproxy.org/docs/automate/automation-framework/
+  - Stale-by: 2026-08-29
+  - Learning: ZAP's stable Docker image includes automation-oriented scanning support and jobs for request, spider, passive-scan wait, alert export, and report generation.
+  - Impact: CueRoom now runs authenticated room-session browser traffic through a local ZAP daemon and exports passive evidence instead of treating browser smoke coverage as separate from DAST.
+- [ ] Source: https://playwright.dev/docs/network
+  - Stale-by: 2026-08-29
+  - Learning: Playwright can configure HTTP(S) proxying at browser or context level, and tests can observe requests and responses from pages.
+  - Impact: The authenticated DAST script launches Chromium with a ZAP proxy and asserts that create, join, and report-user API requests were observed.
+- [ ] Source: https://learn.microsoft.com/en-us/microsoft-cloud/dev/dev-proxy/how-to/intercept-localhost-requests
+  - Stale-by: 2026-08-29
+  - Learning: Chromium-based browsers normally bypass proxies for localhost unless launched with loopback proxy-bypass settings.
+  - Impact: CueRoom's authenticated DAST script passes `--proxy-bypass-list=<-loopback>` so localhost web/API traffic reaches the ZAP proxy.
+- [ ] Source: https://www.conventionalcommits.org/en/v1.0.0/
+  - Stale-by: 2026-08-29
+  - Learning: Conventional Commits define `feat`, `fix`, optional scopes, `!`, and `BREAKING CHANGE` footers in a machine-readable format intended to support changelog generation and SemVer decisions.
+  - Impact: `pnpm release:notes` parses CueRoom commit subjects and breaking-change markers directly instead of relying on free-form release copy.
+- [ ] Source: https://cli.github.com/manual/gh_release_create
+  - Stale-by: 2026-08-29
+  - Learning: `gh release create` supports `--notes-file`, `--verify-tag`, and attached asset labels, while generated notes can be replaced by a maintained local notes file.
+  - Impact: CueRoom's release workflow now creates prerelease notes from the repo-owned generator and passes them through `--notes-file`.
+- [ ] Source: https://www.postgresql.org/docs/current/explicit-locking.html
+  - Stale-by: 2026-08-29
+  - Learning: PostgreSQL warns that deadlocks are best avoided by acquiring locks in a consistent order, and advisory locks are intended for application-defined locking strategies.
+  - Impact: CueRoom serializes schema migration execution with one app-scoped advisory lock instead of relying on every parallel worker to acquire catalog locks in the same order.
+- [ ] Source: https://www.postgresql.org/docs/current/functions-admin.html
+  - Stale-by: 2026-08-29
+  - Learning: `pg_advisory_xact_lock` obtains an exclusive transaction-level advisory lock and automatically releases it at transaction end.
+  - Impact: CueRoom's migration runner wraps migrations in a transaction and uses `pg_advisory_xact_lock` to release the migration lock automatically on commit or rollback.
+- [ ] Source: https://nextjs.org/docs/app/api-reference/config/next-config-js/headers
+  - Stale-by: 2026-08-29
+  - Learning: Next.js `headers()` in `next.config` applies custom HTTP response headers to matching paths through `source` and `headers` entries.
+  - Impact: CueRoom sets the web CSP through the existing Next.js header boundary so DAST scans and production pages receive the same baseline policy.
+- [ ] Source: https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP
+  - Stale-by: 2026-08-29
+  - Learning: CSP fetch directives such as `script-src`, `style-src`, and `img-src` constrain resource loading, while `frame-ancestors 'none'` provides clickjacking protection.
+  - Impact: CueRoom adds a source-limiting web CSP that blocks objects and framing while preserving current Next.js inline script/style requirements for the beta UI.
+- [ ] Source: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/X-Content-Type-Options
+  - Stale-by: 2026-08-29
+  - Learning: `X-Content-Type-Options: nosniff` tells browsers to respect declared MIME types instead of sniffing response bodies.
+  - Impact: CueRoom's API now sends `nosniff` on responses to close the ZAP low-risk API finding.
+- [ ] Source: https://nextjs.org/docs/app/guides/content-security-policy
+  - Stale-by: 2026-08-29
+  - Learning: Next.js App Router can apply CSP nonces from a per-request `Content-Security-Policy` header, but nonce-based CSP requires dynamic rendering.
+  - Impact: CueRoom now generates a per-request web CSP nonce in `src/proxy.ts` and calls `connection()` on App Router pages so production CSP can avoid `unsafe-inline`.
+- [ ] Source: https://nextjs.org/docs/app/api-reference/file-conventions/proxy
+  - Stale-by: 2026-08-29
+  - Learning: Next.js `proxy.ts` may live inside `src` when `src/app` is used, at the same level as the `app` directory, and can set request/response headers before route rendering.
+  - Impact: CueRoom uses `apps/web/src/proxy.ts` as the web CSP boundary instead of a static `next.config.ts` CSP, allowing request-specific nonces.
+- [ ] Source: https://www.postgresql.org/docs/current/static/sql-createtable.html
+  - Stale-by: 2026-08-29
+  - Learning: PostgreSQL `CREATE TABLE IF NOT EXISTS` avoids an error when the table already exists, and a `PRIMARY KEY` provides unique/not-null enforcement backed by an index.
+  - Impact: CueRoom records applied migration filenames in a `schema_migrations` table so startup/test workers skip already-applied DDL instead of replaying it under load.
+- [ ] Source: https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations
+  - Stale-by: 2026-08-29
+  - Learning: GitHub artifact attestations for binaries require workflow permissions for `id-token: write` and `attestations: write`, plus an `actions/attest` step with `subject-path` pointing at the artifact.
+  - Impact: `pnpm release:check` now guards CueRoom's release workflow so the extension ZIP attestation step and subject path cannot be removed silently.
+- [ ] Source: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions
+  - Stale-by: 2026-08-29
+  - Learning: When a workflow declares explicit `permissions`, unspecified token scopes are unavailable unless listed.
+  - Impact: CueRoom's release workflow keeps only the write scopes needed for GitHub prerelease creation and artifact attestation, and the release readiness check enforces those scopes.
+- [ ] Source: https://cli.github.com/manual/gh_attestation_verify
+  - Stale-by: 2026-08-29
+  - Learning: `gh attestation verify` can bind verification to a repository, signer workflow, and source ref with `--repo`, `--signer-workflow`, and `--source-ref`.
+  - Impact: CueRoom's runbook verifies the extension ZIP provenance against the release workflow and release tag before Chrome Web Store upload.
+- [ ] Source: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions
+  - Stale-by: 2026-08-29
+  - Learning: GitHub Actions supports job-specific `GITHUB_TOKEN` permissions, and unspecified scopes are set to `none` when permissions are explicitly declared.
+  - Impact: CueRoom splits the release workflow so package build/test steps run with read-only contents access and only the publish job can create releases or attest artifacts.
+- [ ] Source: https://docs.github.com/en/rest/repos/repos
+  - Stale-by: 2026-08-29
+  - Learning: GitHub exposes repository private vulnerability reporting through `/repos/{owner}/{repo}/private-vulnerability-reporting`, with `GET` returning the enabled state and `PUT` enabling the feature for authorized repository administrators.
+  - Impact: Private vulnerability reporting was enabled for `sparshagg/cueroom` and the public beta checklist records the setting as complete.
+- [ ] Source: https://www.zaproxy.org/docs/alerts/10062/
+  - Stale-by: 2026-08-29
+  - Learning: ZAP's PII Disclosure rule flags payment-card-like digit sequences in responses and treats high-confidence matches as high risk.
+  - Impact: CueRoom encodes CSP nonces with base64url and rejects long digit runs so nonce randomness does not create false PII Disclosure failures.
+- [ ] Source: https://developer.chrome.com/docs/webstore/cws-dashboard-privacy
+  - Stale-by: 2026-08-30
+  - Learning: Chrome Web Store requires publishers to fill out Privacy practices dashboard fields with data collection disclosures and Limited Use certification before publishing or updating an item.
+  - Impact: CueRoom adds a dedicated privacy answers draft that is copied into review artifacts and checked by `pnpm store:check-package`.
+
+## 2026-05-30
+
+- [ ] Source: https://developer.chrome.com/docs/webstore/program-policies/user-data-faq
+  - Stale-by: 2026-08-30
+  - Learning: Extensions that request personal or sensitive user data must show a Limited Use disclosure on the project home page or on a page one click away, such as the privacy policy.
+  - Impact: CueRoom links the `/privacy` route from the home page and includes the Chrome Web Store Limited Use disclosure there.
+- [ ] Source: https://developer.chrome.com/docs/webstore/cws-dashboard-privacy
+  - Stale-by: 2026-08-30
+  - Learning: Chrome Web Store privacy disclosures should stay consistent with the privacy policy URL supplied in the Developer Dashboard.
+  - Impact: CueRoom prepares `https://cueroom.app/privacy` as the dashboard privacy policy URL and keeps the route aligned with `PRIVACY.md` and store privacy answers.
+- [ ] Source: https://docs.docker.com/reference/compose-file/secrets/
+  - Stale-by: 2026-08-30
+  - Learning: Docker Compose secrets are granted explicitly per service and are mounted from top-level secret definitions backed by files or host environment values.
+  - Impact: `compose.prod.yml` grants secret files only to Postgres, API, and LiveKit services that need them.
+- [ ] Source: https://hub.docker.com/_/postgres/
+  - Stale-by: 2026-08-30
+  - Learning: The Postgres official image supports `POSTGRES_PASSWORD_FILE` for loading the initial superuser password from a Docker secret file.
+  - Impact: The production Postgres service uses `POSTGRES_PASSWORD_FILE` instead of a plaintext password environment value.
+- [ ] Source: https://caddyserver.com/docs/quick-starts/reverse-proxy
+  - Stale-by: 2026-08-30
+  - Learning: Caddy serves HTTPS automatically for real domain names when DNS points to the host and public ports 80 and 443 reach Caddy.
+  - Impact: `Caddyfile.prod` routes the web, API, and LiveKit signal domains behind Caddy and the runbook requires DNS/firewall checks before startup.
+- [ ] Source: https://docs.livekit.io/transport/self-hosting/deployment/
+  - Stale-by: 2026-08-30
+  - Learning: Production LiveKit deployments need a trusted TLS domain for SDK connections, open WebRTC TCP/UDP media ports, a config file, and Redis for production coordination.
+  - Impact: The production compose stack proxies LiveKit signaling through Caddy, exposes LiveKit media ports, mounts production LiveKit config as a secret, and connects LiveKit to Redis.
+- [ ] Source: https://nextjs.org/docs/app/guides/content-security-policy
+  - Stale-by: 2026-08-30
+  - Learning: Nonce-based App Router CSP should be generated per request and scoped to the production resource origins the app actually needs.
+  - Impact: CueRoom keeps localhost connect sources only for development CSP and requires configured HTTPS/WSS origins for production.
+- [ ] Source: https://redis.io/tutorials/operate/orchestration/docker/
+  - Stale-by: 2026-08-30
+  - Learning: Redis Docker deployments can enable persistence with volumes and AOF, and can secure the server with a password argument.
+  - Impact: CueRoom keeps production Redis ephemeral for presence/rate-limit/sync state, but requires a secret-backed password before API or LiveKit can connect.
+- [ ] Source: https://hub.docker.com/_/redis/
+  - Stale-by: 2026-08-30
+  - Learning: The official Redis image disables protected mode for Docker networking convenience, recommends setting a password if Redis is exposed, and drops privileges by default unless overridden.
+  - Impact: CueRoom production compose keeps Redis off host ports, requires authentication, and adds container hardening without overriding the image's default user handling.
+- [ ] Source: https://redis.io/docs/latest/operate/oss_and_stack/management/security/
+  - Stale-by: 2026-08-30
+  - Learning: Redis should be reachable only by trusted clients, should be firewalled from untrusted networks, and `requirepass` makes unauthenticated clients fail before commands run.
+  - Impact: CueRoom production compose keeps Redis internal, requires a secret-backed password, and checks API Redis connectivity before returning healthy.
+- [ ] Source: https://docs.livekit.io/transport/self-hosting/ports-firewall/
+  - Stale-by: 2026-08-30
+  - Learning: LiveKit self-hosting requires firewall access for configured ICE UDP ports, ICE/TCP fallback, and optional TURN/TLS or TURN/UDP ports.
+  - Impact: CueRoom's production runbook requires explicit firewall checks and a public-beta TURN strategy before inviting broad external users.
+- [ ] Source: https://github.com/livekit/livekit/blob/master/config-sample.yaml
+  - Stale-by: 2026-08-30
+  - Learning: LiveKit's sample configuration supports Redis `username` and `password` fields and documents ICE/TCP fallback, UDP port ranges, and optional TURN server settings.
+  - Impact: CueRoom's production LiveKit example includes a Redis password placeholder and TURN comments instead of assuming unauthenticated Redis.
+- [ ] Source: https://developer.chrome.com/docs/webstore/cws-dashboard-privacy
+  - Stale-by: 2026-08-30
+  - Learning: Chrome Web Store privacy practice disclosures shown to users should be consistent with the privacy policy URL supplied in the Developer Dashboard.
+  - Impact: `pnpm docs:freshness` now checks source-level parity between `PRIVACY.md`, the in-app `/privacy` route, and the Chrome Web Store privacy answers draft.
+- [ ] Source: https://developer.chrome.com/docs/webstore/program-policies/user-data-faq
+  - Stale-by: 2026-08-30
+  - Learning: The Chrome Web Store User Data FAQ expects privacy policies to explain what data is collected, how it is used, what is shared, retention, security handling, and Limited Use constraints for personal or sensitive user data.
+  - Impact: CueRoom treats privacy disclosure categories, no-sale/no-ads claims, transient chat, abuse-report metadata, and no-sensitive-Netflix-data exclusions as checked release evidence.
+- [ ] Source: https://help.netflix.com/en/legal/termsofuse
+  - Stale-by: 2026-08-30
+  - Learning: Netflix Terms continue to restrict redistribution, reproduction, modification, public performance, content protection circumvention, automated access, and code/product manipulation of the Netflix service.
+  - Impact: `pnpm docs:freshness` now checks public CueRoom surfaces for non-affiliation language, negative Netflix content-boundary statements, and possible positive Netflix streaming/redistribution/bypass claims.
+- [ ] Source: https://developer.chrome.com/docs/extensions/develop/concepts/messaging
+  - Stale-by: 2026-08-30
+  - Learning: Chrome extension messaging crosses execution contexts, so website-to-extension communication should be restricted to deliberate, allowlisted extension origins and validated message paths.
+  - Impact: `pnpm docs:freshness` now verifies the public `externally_connectable.matches` origin stays aligned with the Chrome Web Store listing, production domain example, and public-beta release checklist.
+- [ ] Source: https://developer.chrome.com/docs/webstore/program-policies/user-data-faq
+  - Stale-by: 2026-08-30
+  - Learning: Chrome treats authentication data, website content/resources, browsing activity, personal communications, and user-generated content as personal or sensitive user data that should be accurately disclosed and securely handled.
+  - Impact: CueRoom now keeps an automated privacy implementation evidence index linking core privacy claims to source files, tests/checks, and verification commands.
+- [ ] Source: https://github.com/fastify/fastify-rate-limit
+  - Stale-by: 2026-08-30
+  - Learning: `@fastify/rate-limit` supports route-level `config.rateLimit` overrides with per-route `max` and `timeWindow` values, and exceeded requests return HTTP 429 with rate-limit headers.
+  - Impact: CueRoom now gives room creation, join, room reads, control actions, sync commands, reports, LiveKit token minting, and realtime handshakes explicit route-level rate limits backed by `pnpm security:api-rate-limits`.
+- [ ] Source: https://developer.chrome.com/docs/extensions/develop/migrate/improve-security
+  - Stale-by: 2026-08-30
+  - Learning: Chrome MV3 guidance removes arbitrary string execution through `eval()`, `new Function()`, and remote code loading; extension logic should live inside the packaged extension bundle.
+  - Impact: CueRoom now scans extension source for remote-code primitives, remote script imports, sensitive Chrome APIs, browser storage/cookie reads, subtitle/track inspection, and media/frame capture APIs as part of `pnpm security:extension`.
+- [ ] Source: https://developer.chrome.com/docs/webstore/program-policies/policies
+  - Stale-by: 2026-08-30
+  - Learning: Chrome Web Store MV3 policy requires extension functionality to be discernible from submitted code and treats remote logic execution mechanisms such as remote scripts and string execution as common violations.
+  - Impact: CueRoom treats extension source scanning as Chrome Web Store release evidence, not only a manifest permission review.
+- [ ] Source: https://playwright.dev/docs/network
+  - Stale-by: 2026-08-30
+  - Learning: Playwright can monitor page request/response events, wait for specific responses after UI actions, route or abort requests through a browser context, and configure a browser or context HTTP proxy; blocking service workers keeps routed network traffic visible.
+  - Impact: CueRoom's DAST flow now drives magic-link sign-in through the browser UI, waits for API responses, blocks service workers, and sends the account-authenticated room flow through the configured ZAP proxy.
+- [ ] Source: https://developer.chrome.com/docs/extensions/develop/concepts/messaging
+  - Stale-by: 2026-08-30
+  - Learning: Chrome extension messages are JSON-serialized one-time or port messages across extension contexts, and sender-side success depends on recipient responses or rejected listener errors.
+  - Impact: CueRoom will keep playback command messages explicit and serializable, and content-script command handlers must return deterministic success/failure responses after checking the active watch target.
+- [ ] Source: https://developer.chrome.com/docs/extensions/develop/concepts/content-scripts
+  - Stale-by: 2026-08-30
+  - Learning: Content scripts run with isolated extension execution but share access to the host page DOM, so any page mutation must be tightly scoped to the active matched page and current local state.
+  - Impact: CueRoom's Netflix content script must validate the current watch ID before applying host play/pause/seek commands, not only before reporting playback state.
+- [ ] Source: https://knip.dev/reference/configuration
+  - Stale-by: 2026-08-30
+  - Learning: Knip workspaces configure `entry` and `project` patterns per workspace, with the root workspace represented as `"."`.
+  - Impact: CueRoom's dead-code check now covers root scripts, visual tests, web, API, extension, shared, UI, and security workspaces instead of only a subset.
+- [ ] Source: https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions
+  - Stale-by: 2026-08-30
+  - Learning: GitHub Actions `permissions` can be set per job, and specifying permissions narrows unspecified scopes to `none`; scheduled workflows run from the latest default-branch commit.
+  - Impact: CueRoom's cleanup workflow keeps pull-request detection read-only and grants write scopes only to the scheduled generated-artifact cleanup PR job.
+- [ ] Source: https://docs.github.com/actions/security-guides/security-hardening-for-github-actions
+  - Stale-by: 2026-08-30
+  - Learning: GitHub recommends pinning actions to full-length commit SHAs for immutable action references and verifying that selected SHAs come from the intended action repositories.
+  - Impact: CueRoom now pins external GitHub Actions to reviewed 40-character SHAs and enforces the action allowlist plus permitted workflow/job write grants with `pnpm security:actions`.
+- [ ] Source: https://docs.github.com/en/rest/repos/repos
+  - Stale-by: 2026-08-30
+  - Learning: GitHub repository REST responses expose repository security and analysis settings, and repository endpoints include private vulnerability reporting and vulnerability-alert checks.
+  - Impact: CueRoom now has `pnpm security:github` to verify private vulnerability reporting, Dependabot security updates, secret scanning, and push protection before public beta.
+- [ ] Source: https://docs.github.com/rest/activity/watching
+  - Stale-by: 2026-08-30
+  - Learning: GitHub repository subscription APIs report `subscribed` and `ignored` status for the authenticated user, and setting a subscription uses `subscribed: true` and `ignored: false`.
+  - Impact: CueRoom's `pnpm security:github -- --require-watch` provides a repeatable maintainer watch verification gate after the GitHub CLI has notification scope.

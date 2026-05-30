@@ -20,4 +20,8 @@ describe("extension manifest", () => {
       "https://cueroom.app/*"
     ]);
   });
+
+  it("requires a Chrome version that keeps active service-worker WebSockets alive", () => {
+    expect(Number(manifest.minimum_chrome_version)).toBeGreaterThanOrEqual(116);
+  });
 });

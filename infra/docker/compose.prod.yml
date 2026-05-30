@@ -1,0 +1,195 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: cueroom
+      POSTGRES_DB: cueroom
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cueroom -d cueroom"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    command: ["redis-server", "/run/secrets/redis.conf"]
+    secrets:
+      - source: redis_config
+        target: redis.conf
+      - redis_password
+    tmpfs:
+      - /tmp
+      - /data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'REDISCLI_AUTH="$$(cat /run/secrets/redis_password)" redis-cli ping | grep PONG'
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  livekit:
+    image: livekit/livekit-server:v1.9.2
+    restart: unless-stopped
+    command: --config /run/secrets/livekit.yaml
+    secrets:
+      - source: livekit_config
+        target: livekit.yaml
+    ports:
+      - "7881:7881/tcp"
+      - "50000-60000:50000-60000/udp"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  api:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 4000
+      LOG_LEVEL: info
+      ROOM_STORE: postgres
+      POSTGRES_AUTO_MIGRATE: "true"
+      POSTGRES_URL_FILE: /run/secrets/postgres_url
+      REDIS_URL_FILE: /run/secrets/redis_url
+      WEB_ORIGIN: https://${CUEROOM_DOMAIN:?set CUEROOM_DOMAIN}
+      AUTH_REQUIRED: "true"
+      AUTH_RP_NAME: CueRoom
+      AUTH_RP_ID: ${CUEROOM_DOMAIN:?set CUEROOM_DOMAIN}
+      AUTH_ORIGIN: https://${CUEROOM_DOMAIN:?set CUEROOM_DOMAIN}
+      SMTP_HOST: ${SMTP_HOST:?set SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_FROM: ${SMTP_FROM:?set SMTP_FROM}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD_FILE: /run/secrets/smtp_password
+      SMTP_REQUIRE_TLS: "true"
+      LIVEKIT_URL: wss://${CUEROOM_LIVEKIT_DOMAIN:?set CUEROOM_LIVEKIT_DOMAIN}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:?set LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET_FILE: /run/secrets/livekit_api_secret
+    secrets:
+      - postgres_url
+      - redis_url
+      - livekit_api_secret
+      - smtp_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      livekit:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4000/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_ORIGIN: https://${CUEROOM_API_DOMAIN:?set CUEROOM_API_DOMAIN}
+      NEXT_PUBLIC_LIVEKIT_URL: wss://${CUEROOM_LIVEKIT_DOMAIN:?set CUEROOM_LIVEKIT_DOMAIN}
+      NEXT_PUBLIC_CUEROOM_EXTENSION_ID: ${NEXT_PUBLIC_CUEROOM_EXTENSION_ID:-}
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/privacy').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      CUEROOM_DOMAIN: ${CUEROOM_DOMAIN:?set CUEROOM_DOMAIN}
+      CUEROOM_API_DOMAIN: ${CUEROOM_API_DOMAIN:?set CUEROOM_API_DOMAIN}
+      CUEROOM_LIVEKIT_DOMAIN: ${CUEROOM_LIVEKIT_DOMAIN:?set CUEROOM_LIVEKIT_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+      livekit:
+        condition: service_started
+
+volumes:
+  postgres-data:
+  caddy-data:
+  caddy-config:
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password
+  postgres_url:
+    file: ./secrets/postgres_url
+  redis_password:
+    file: ./secrets/redis_password
+  redis_config:
+    file: ./secrets/redis.conf
+  redis_url:
+    file: ./secrets/redis_url
+  livekit_api_secret:
+    file: ./secrets/livekit_api_secret
+  livekit_config:
+    file: ./secrets/livekit.yaml
+  smtp_password:
+    file: ./secrets/smtp_password

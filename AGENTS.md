@@ -25,7 +25,7 @@ CueRoom is a security-first, open-source co-watch companion. The product is not 
 ## Repo Map
 
 - [ ] `apps/web`: Next.js product UI and LiveKit client integration.
-- [ ] `apps/api`: Fastify API, room state, auth stubs, sync authorization, LiveKit tokens.
+- [ ] `apps/api`: Fastify API, room state, auth, sync authorization, reports, and LiveKit tokens.
 - [ ] `apps/extension`: Chrome/Edge MV3 extension for pairing and Netflix playback observation.
 - [ ] `packages/shared`: shared TypeScript contracts and runtime validation.
 - [ ] `packages/ui`: CueRoom UI primitives built in the shadcn/Radix style.

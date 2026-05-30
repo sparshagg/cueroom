@@ -1,0 +1,41 @@
+# Public Beta Checklist
+
+This checklist is the source of truth for the first public beta release gate. Items in "Required Before Tagging" must be checked before pushing the first `v0.1.0` release tag.
+
+## Required Before Tagging
+
+- [ ] PR branch is approved and merged into protected `main` (tracked in [#19](https://github.com/sparshagg/cueroom/issues/19)).
+- [ ] Human legal review confirms non-affiliation language, Netflix Terms boundary, and no content redistribution claim (tracked in [#17](https://github.com/sparshagg/cueroom/issues/17)).
+- [ ] Human privacy review confirms `PRIVACY.md`, Chrome Web Store privacy answers, and in-app data boundary match current behavior (tracked in [#17](https://github.com/sparshagg/cueroom/issues/17)).
+- [x] In-app `/privacy` route is linked from the home page and includes the Chrome Web Store Limited Use disclosure.
+- [ ] Hosted privacy policy URL is live and matches `PRIVACY.md` (tracked in [#18](https://github.com/sparshagg/cueroom/issues/18)).
+- [ ] Public beta web domain is live and matches `apps/extension/src/manifest.json` `externally_connectable.matches`. Tracked in [#18](https://github.com/sparshagg/cueroom/issues/18).
+- [x] Maintainer has enabled GitHub private vulnerability reporting for the public repository.
+- [ ] Maintainer has watched the repository for security notifications (tracked in [#21](https://github.com/sparshagg/cueroom/issues/21)).
+- [ ] Current `main` has green `verify`, `docker`, `CodeQL`, `cleanup`, `supply-chain`, and `zap-baseline` checks (tracked in [#19](https://github.com/sparshagg/cueroom/issues/19)).
+- [x] DAST workflow includes account-authenticated room create, join, and report-user flow evidence.
+- [x] Latest DAST artifacts are reviewed, and every medium/high finding is either fixed or explicitly accepted in a tracked security note.
+- [x] `pnpm extension:package` artifacts have been reviewed, including the ZIP, manifest audit, privacy policy copy, listing draft, and generated images.
+- [x] Release package `SHA256SUMS` verifies locally.
+- [x] `pnpm release:notes -- --tag v0.1.0 --output artifacts/release-notes/v0.1.0.md` has been reviewed for user-facing accuracy.
+- [x] `pnpm release:check -- --tag v0.1.0` passes before tagging.
+- [x] In-room report-user flow has API, UI, and regression coverage.
+- [x] No open high or critical security findings remain in CodeQL, Dependabot, DAST review, or manual security review.
+- [x] Release signing process is recorded in `RUNBOOK.md`, including the approved annotated-tag fallback if signing is unavailable.
+
+## Required Before Chrome Web Store Submission
+
+- [x] `artifacts/chrome-web-store/cueroom-extension-0.1.0.zip` is attached to the GitHub prerelease or CI artifact.
+- [ ] Artifact attestation is available for the extension ZIP and can be verified with `gh attestation verify` (tracked in [#19](https://github.com/sparshagg/cueroom/issues/19)).
+- [x] Chrome Web Store listing copy matches `docs/release/chrome-web-store-listing.md`.
+- [x] Chrome Web Store privacy answers match `PRIVACY.md`.
+- [x] Review package includes screenshots and promo assets from `artifacts/chrome-web-store/images`.
+- [x] Review package includes non-affiliation statement and no-sensitive-Netflix-data explanation.
+- [ ] Rollback plan points to the last approved extension package, once one exists (tracked in [#20](https://github.com/sparshagg/cueroom/issues/20)).
+
+## Required After Beta Opens
+
+- [ ] Confirm the GitHub prerelease notes link the Chrome Web Store listing, privacy policy, and security reporting path after those URLs are live (tracked in [#19](https://github.com/sparshagg/cueroom/issues/19)).
+- [ ] Monitor GitHub private vulnerability reports, Dependabot alerts, CodeQL, DAST artifacts, and abuse reports daily for the first week (tracked in [#21](https://github.com/sparshagg/cueroom/issues/21)).
+- [ ] Track Chrome Web Store rejection or policy feedback in a public issue unless it contains sensitive details (tracked in [#20](https://github.com/sparshagg/cueroom/issues/20)).
+- [ ] Record any material release finding in `LEARNINGS.md` and update this checklist before the next beta (tracked in [#21](https://github.com/sparshagg/cueroom/issues/21)).

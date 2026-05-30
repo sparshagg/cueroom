@@ -1,0 +1,158 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing signed or annotated tag to release, for example v0.1.0.
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-package:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      zip_name: ${{ steps.packaged-extension.outputs.zip_name }}
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: cueroom
+          POSTGRES_PASSWORD: cueroom
+          POSTGRES_DB: cueroom
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cueroom -d cueroom"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      POSTGRES_TEST_URL: postgres://cueroom:cueroom@localhost:5432/cueroom
+      REDIS_TEST_URL: redis://localhost:6379/1
+      REDIS_URL: redis://localhost:6379/1
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+      - run: git fetch origin main --tags --force
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+        with:
+          version: 10.12.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm security:supply-chain
+      - name: Check release gates
+        run: >
+          pnpm release:check --
+          --tag "$RELEASE_TAG"
+          --require-annotated-tag
+          --require-main
+          --require-beta-gates
+      - run: pnpm verify
+      - run: pnpm extension:package
+      - run: pnpm store:check-package
+      - name: Generate release notes
+        run: pnpm release:notes -- --tag "$RELEASE_TAG" --output artifacts/chrome-web-store/release-notes.md
+      - name: Verify packaged checksum
+        run: cd artifacts/chrome-web-store && sha256sum -c SHA256SUMS
+      - name: Resolve packaged extension
+        id: packaged-extension
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          ZIP_PATH="artifacts/chrome-web-store/cueroom-extension-${VERSION}.zip"
+          ZIP_COUNT="$(find artifacts/chrome-web-store -maxdepth 1 -type f -name 'cueroom-extension-*.zip' | wc -l | tr -d ' ')"
+          test "$ZIP_COUNT" = "1"
+          test -f "$ZIP_PATH"
+          grep -F "  cueroom-extension-${VERSION}.zip" artifacts/chrome-web-store/SHA256SUMS
+          echo "zip_path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
+          echo "zip_name=cueroom-extension-${VERSION}.zip" >> "$GITHUB_OUTPUT"
+      - name: Upload Chrome Web Store release package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: cueroom-chrome-web-store-${{ env.RELEASE_TAG }}
+          path: artifacts/chrome-web-store
+          if-no-files-found: error
+
+  publish-prerelease:
+    needs: build-package
+    runs-on: ubuntu-latest
+    permissions:
+      attestations: write
+      contents: write
+      id-token: write
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+      ZIP_PATH: artifacts/chrome-web-store/${{ needs.build-package.outputs.zip_name }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+      - run: git fetch origin main --tags --force
+      - name: Check release gates before publishing
+        run: >
+          node scripts/check-release-readiness.mjs --
+          --tag "$RELEASE_TAG"
+          --require-annotated-tag
+          --require-main
+          --require-beta-gates
+      - name: Download Chrome Web Store release package
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: cueroom-chrome-web-store-${{ env.RELEASE_TAG }}
+          path: artifacts/chrome-web-store
+      - name: Verify downloaded checksum
+        run: cd artifacts/chrome-web-store && sha256sum -c SHA256SUMS
+      - name: Check downloaded Chrome Web Store package
+        run: node scripts/check-store-package.mjs
+      - name: Resolve downloaded extension
+        id: packaged-extension
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          ZIP_PATH="artifacts/chrome-web-store/cueroom-extension-${VERSION}.zip"
+          ZIP_COUNT="$(find artifacts/chrome-web-store -maxdepth 1 -type f -name 'cueroom-extension-*.zip' | wc -l | tr -d ' ')"
+          test "$ZIP_COUNT" = "1"
+          test -f "$ZIP_PATH"
+          test "$ZIP_PATH" = "${{ env.ZIP_PATH }}"
+          grep -F "  cueroom-extension-${VERSION}.zip" artifacts/chrome-web-store/SHA256SUMS
+          echo "zip_path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
+      - name: Generate artifact attestation
+        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26
+        with:
+          subject-path: ${{ steps.packaged-extension.outputs.zip_path }}
+      - name: Create GitHub prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$RELEASE_TAG" \
+            "${{ steps.packaged-extension.outputs.zip_path }}#CueRoom Chrome Web Store extension ZIP" \
+            "artifacts/chrome-web-store/SHA256SUMS#SHA256SUMS" \
+            "artifacts/chrome-web-store/release-manifest.json#Release manifest" \
+            "artifacts/chrome-web-store/release-notes.md#Release notes" \
+            --notes-file artifacts/chrome-web-store/release-notes.md \
+            --prerelease \
+            --title "CueRoom ${RELEASE_TAG}" \
+            --verify-tag

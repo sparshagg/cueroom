@@ -6,19 +6,22 @@ CueRoom does not stream Netflix content. Every participant watches through their
 
 ## Status
 
-- [x] Monorepo scaffold.
-- [x] Web UI v0.
-- [x] API room/sync skeleton.
-- [x] Chrome/Edge MV3 extension skeleton.
-- [x] Docker and CI skeleton.
-- [ ] Production auth and persistence.
+- [x] Monorepo structure.
+- [x] Web UI for room creation, joining, calls, chat, sync health, and extension pairing.
+- [x] API room, auth, realtime sync, report, and LiveKit token paths.
+- [x] Postgres-backed room/session persistence.
+- [x] Chrome/Edge MV3 extension pairing, popup, Netflix playback observation, and sync relay.
+- [x] Docker stack and CI/release security gates.
+- [x] Redis presence/rate limits/sync counters.
+- [x] Passkey and magic-link auth foundation.
+- [x] SMTP-backed magic-link delivery and account UI.
 - [ ] Public beta.
 
 ## Apps
 
-- [ ] `apps/web`: Next.js app for lobby, room, call controls, chat, and extension pairing.
-- [ ] `apps/api`: Fastify API for rooms, invites, sync authorization, and LiveKit tokens.
-- [ ] `apps/extension`: Chrome/Edge MV3 extension for Netflix playback observation.
+- [x] `apps/web`: Next.js app for lobby, room, call controls, chat, and extension pairing.
+- [x] `apps/api`: Fastify API for rooms, invites, auth, sync authorization, reports, and LiveKit tokens.
+- [x] `apps/extension`: Chrome/Edge MV3 extension for Netflix playback observation, pairing, popup state, and room sync relay.
 
 ## Quick Start
 
@@ -33,16 +36,52 @@ Then open:
 - Web: http://localhost:3000
 - API health: http://localhost:4000/health
 
+For the containerized stack with Postgres, Redis, and LiveKit:
+
+```bash
+docker compose -f infra/docker/compose.dev.yml up --build
+```
+
+The development compose stack binds published ports to `127.0.0.1`. Use `.env.example` values only for local development, including `AUTH_DEV_MAGIC_LINKS=true`.
+
+Production magic-link delivery uses SMTP. Set `SMTP_HOST`, `SMTP_FROM`, and provider credentials through deployment secrets; use implicit TLS on port 465 or require STARTTLS with `SMTP_REQUIRE_TLS=true`.
+
+For production self-hosting, follow the Docker Production checklist in `RUNBOOK.md` first: set DNS, create Docker secret files, choose a LiveKit TURN strategy, and confirm the firewall matrix. The final startup command is:
+
+```bash
+docker compose --env-file infra/docker/.env.prod -f infra/docker/compose.prod.yml up -d --build
+```
+
+To build the Chrome Web Store beta package:
+
+```bash
+pnpm extension:package
+pnpm store:check-package
+```
+
+The package and review evidence are written under `artifacts/chrome-web-store`.
+
+To draft deterministic release notes from Conventional Commits:
+
+```bash
+pnpm release:notes -- --tag v0.1.0 --output artifacts/release-notes/v0.1.0.md
+```
+
 ## Security Promise
 
-- [ ] No Netflix credentials.
-- [ ] No Netflix cookies.
-- [ ] No video/audio capture from Netflix.
-- [ ] No DRM bypass.
-- [ ] No call recording.
-- [ ] No chat persistence by default.
-- [ ] Minimum extension permissions only.
+- [x] No Netflix credentials.
+- [x] No Netflix cookies.
+- [x] No video/audio capture from Netflix.
+- [x] No DRM bypass.
+- [x] No call recording.
+- [x] No chat persistence by default.
+- [x] Minimum extension permissions only.
 
 ## Non-Affiliation
 
 CueRoom is not affiliated with, endorsed by, sponsored by, or approved by Netflix.
+
+## Privacy
+
+See `PRIVACY.md` for the beta privacy policy and Chrome Web Store Limited Use disclosure.
+The web app exposes the same policy at `/privacy` and links it from the home page.

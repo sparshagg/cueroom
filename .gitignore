@@ -4,9 +4,13 @@ node_modules/
 dist/
 build/
 coverage/
+playwright-report/
+test-results/
+artifacts/
 .env
 .env.*
 !.env.example
+!infra/docker/.env.prod.example
 *.log
 *.tsbuildinfo
 .DS_Store

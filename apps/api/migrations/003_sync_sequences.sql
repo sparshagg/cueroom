@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS room_sync_sequences (
+  room_id TEXT PRIMARY KEY REFERENCES rooms(id) ON DELETE CASCADE,
+  last_sequence BIGINT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

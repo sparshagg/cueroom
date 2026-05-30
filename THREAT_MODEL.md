@@ -19,11 +19,14 @@ CueRoom is a web app, API, LiveKit deployment, and Chrome/Edge MV3 extension for
 
 - [ ] Camera and microphone streams.
 - [ ] Room membership and invite links.
+- [ ] Account sessions, magic-link tokens, and passkey credentials.
 - [ ] Host/co-host authority.
 - [ ] LiveKit API keys and participant tokens.
+- [ ] LiveKit room grants and media device permissions.
 - [ ] Extension permissions and release pipeline.
 - [ ] Minimal user account metadata.
 - [ ] Watch metadata such as title fingerprint and playback position.
+- [ ] Abuse report metadata and optional bounded report details.
 
 ## Attacker Stories
 
@@ -34,17 +37,37 @@ CueRoom is a web app, API, LiveKit deployment, and Chrome/Edge MV3 extension for
 - [ ] A dependency or build script tries to broaden extension permissions.
 - [ ] An XSS payload tries to steal room tokens or issue commands.
 - [ ] A replayed WebSocket message tries to rewind or pause a room.
+- [ ] A leaked magic-link or account session token tries to create rooms as another host.
+- [ ] A malicious site tries to complete passkey authentication for the wrong origin or RP ID.
+- [ ] A guest tries to use LiveKit data channels or broad media grants to bypass CueRoom's server-authorized sync/chat path.
+- [ ] A trusted CueRoom web origin tries to send a direct extension playback command that bypasses server role checks.
+- [ ] A guest tries to establish playback authority by sending fake `sync.state` messages.
+- [ ] A follower is on the wrong Netflix title and receives drift correction for the host title.
+- [ ] A participant submits abusive or sensitive content through a report form to force over-collection.
 
 ## Required Controls
 
 - [ ] Short-lived invite tokens and room lock/rotate/kick controls.
 - [ ] Server-side RBAC on every command.
+- [ ] Extension applies only server-broadcast sync commands, never raw website-originated commands.
+- [ ] API sends automatic drift corrections only from host playback authority; guest playback state cannot establish authority.
+- [ ] Extension applies host sync commands only when the active watch ID matches the command watch ID.
+- [ ] Extension applies targeted drift corrections only when the active watch ID matches the correction watch ID.
+- [ ] Wrong-title state produces a warning and manual navigation link, never automatic navigation.
 - [ ] Runtime schema validation at every trust boundary.
-- [ ] Strict CSP and no extension remote code.
+- [ ] Web nonce-based source-limiting CSP plus strict extension CSP and no extension remote code.
 - [ ] Minimal Chrome permissions and manifest audits.
 - [ ] LiveKit tokens minted only by API.
+- [ ] LiveKit grants are scoped to one room and participant, disable data publishing, and only allow camera/microphone publish sources.
+- [ ] Realtime room sockets recheck membership before accepting room-impacting messages and close kicked participants.
+- [ ] Account tokens and room tokens have separate prefixes and verification paths.
+- [ ] Magic-link tokens are single-use, short-lived, and hashed at rest.
+- [ ] Development magic-link token disclosure is opt-in only and rejected in production configuration.
+- [ ] Passkey verification checks stored challenge, exact origin, exact RP ID, credential ownership, and counter updates.
 - [ ] No call recording or chat persistence by default.
 - [ ] Logs exclude secrets, credentials, content, and detailed message payloads.
+- [ ] Abuse report responses and logs exclude free-text report details by default.
+- [ ] Abuse report submission is authenticated, bounded, and endpoint-rate-limited.
 
 ## Severity Calibration
 

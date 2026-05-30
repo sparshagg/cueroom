@@ -39,13 +39,56 @@ export type JoinRoomRequest = z.infer<typeof joinRoomRequestSchema>;
 export const roomSessionSchema = z.object({
   room: roomSchema,
   participant: participantSchema,
-  sessionToken: z.string().min(24)
+  sessionToken: z.string().startsWith("crs_").min(24)
 });
 export type RoomSession = z.infer<typeof roomSessionSchema>;
 
 export const liveKitTokenRequestSchema = z.object({
   roomId: z.string().min(8),
   participantId: z.string().min(8),
-  sessionToken: z.string().min(24)
+  sessionToken: z.string().startsWith("crs_").min(24)
 });
 export type LiveKitTokenRequest = z.infer<typeof liveKitTokenRequestSchema>;
+
+export const liveKitTokenResponseSchema = z.object({
+  url: z
+    .string()
+    .url()
+    .refine((url) => url.startsWith("ws://") || url.startsWith("wss://"), {
+      message: "LiveKit URL must use ws:// or wss://"
+    }),
+  token: z.string().min(20)
+});
+export type LiveKitTokenResponse = z.infer<typeof liveKitTokenResponseSchema>;
+
+export const abuseReportReasonSchema = z.enum([
+  "harassment",
+  "spam",
+  "impersonation",
+  "unsafe_behavior",
+  "other"
+]);
+export type AbuseReportReason = z.infer<typeof abuseReportReasonSchema>;
+
+export const roomReportRequestSchema = z.object({
+  sessionToken: z.string().startsWith("crs_").min(24),
+  targetParticipantId: z.string().min(8),
+  reason: abuseReportReasonSchema,
+  details: z.string().trim().max(500).optional()
+});
+export type RoomReportRequest = z.infer<typeof roomReportRequestSchema>;
+
+export const roomReportSchema = z.object({
+  id: z.string().startsWith("report_").min(12),
+  roomId: z.string().min(8),
+  reporterParticipantId: z.string().min(8),
+  targetParticipantId: z.string().min(8),
+  reason: abuseReportReasonSchema,
+  createdAt: z.string().datetime()
+});
+export type RoomReport = z.infer<typeof roomReportSchema>;
+
+export const roomReportResponseSchema = z.object({
+  report: roomReportSchema
+});
+export type RoomReportResponse = z.infer<typeof roomReportResponseSchema>;
