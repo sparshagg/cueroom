@@ -9,6 +9,7 @@
 - [x] License policy: `pnpm security:licenses`.
 - [x] Dependency audit: `pnpm security:audit`.
 - [x] GitHub Actions policy: `pnpm security:actions`.
+- [x] GitHub repository security settings evidence: `pnpm security:github`.
 - [x] External workflow actions are pinned to reviewed full-length commit SHAs and restricted to an explicit allowlist.
 - [x] Workflow write permissions are restricted to approved workflow/job grants for release publishing, CodeQL upload, and generated-cleanup automation.
 - [x] Release workflow runs `pnpm security:supply-chain` before building release artifacts.
@@ -28,6 +29,13 @@
 - [x] Run `pnpm audit` against the installed workspace.
 - [x] Treat any reported vulnerability as a CI failure unless a maintainer records a GHSA-specific exception and rollback trigger.
 - [x] Prefer dependency upgrades or pnpm overrides over suppressions.
+
+## GitHub Security Settings Policy
+
+- [x] Verify private vulnerability reporting is enabled before public beta.
+- [x] Verify Dependabot security updates are enabled before public beta.
+- [x] Verify secret scanning and push protection are enabled before public beta.
+- [x] Verify maintainer repository watch status with `pnpm security:github -- --require-watch` after refreshing the GitHub CLI `notifications` scope.
 
 ## Secret Scan Policy
 

@@ -112,8 +112,8 @@
 
 ## Release
 
-- [ ] Confirm `gh api repos/sparshagg/cueroom/private-vulnerability-reporting` returns `{"enabled":true}`.
-- [ ] If repo watch verification is needed, refresh GitHub CLI with `gh auth refresh -h github.com -s notifications`, then run `gh api repos/sparshagg/cueroom/subscription`.
+- [ ] Run `pnpm security:github` and confirm GitHub private vulnerability reporting, Dependabot security updates, secret scanning, and push protection are enabled.
+- [ ] If repo watch verification is needed, refresh GitHub CLI with `gh auth refresh -h github.com -s notifications`, then run `pnpm security:github -- --require-watch`.
 - [ ] Run `pnpm verify`.
 - [ ] Run `pnpm security:supply-chain`.
 - [ ] Run `pnpm security:actions` and confirm every external GitHub Action is allowlisted, full-SHA pinned, and uses only approved workflow/job write grants.

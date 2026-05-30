@@ -427,3 +427,11 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-30
   - Learning: GitHub recommends pinning actions to full-length commit SHAs for immutable action references and verifying that selected SHAs come from the intended action repositories.
   - Impact: CueRoom now pins external GitHub Actions to reviewed 40-character SHAs and enforces the action allowlist plus permitted workflow/job write grants with `pnpm security:actions`.
+- [ ] Source: https://docs.github.com/en/rest/repos/repos
+  - Stale-by: 2026-08-30
+  - Learning: GitHub repository REST responses expose repository security and analysis settings, and repository endpoints include private vulnerability reporting and vulnerability-alert checks.
+  - Impact: CueRoom now has `pnpm security:github` to verify private vulnerability reporting, Dependabot security updates, secret scanning, and push protection before public beta.
+- [ ] Source: https://docs.github.com/rest/activity/watching
+  - Stale-by: 2026-08-30
+  - Learning: GitHub repository subscription APIs report `subscribed` and `ignored` status for the authenticated user, and setting a subscription uses `subscribed: true` and `ignored: false`.
+  - Impact: CueRoom's `pnpm security:github -- --require-watch` provides a repeatable maintainer watch verification gate after the GitHub CLI has notification scope.
