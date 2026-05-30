@@ -84,7 +84,85 @@ test("rejects unexpected write permissions", async () => {
 
   const result = runCheck(root);
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /write permission checks is not approved/);
+  assert.match(result.stderr, /write permission checks is not approved for jobs\.verify/);
+});
+
+test("rejects unexpected flow-style write permissions", async () => {
+  const root = await makeFixture({
+    "ci.yml": workflow([
+      "permissions: { contents: read }",
+      "jobs:",
+      "  verify:",
+      "    permissions: { checks: write }",
+      "    steps:",
+      `      - uses: actions/checkout@${checkoutSha}`
+    ])
+  });
+
+  const result = runCheck(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /write permission checks is not approved for jobs\.verify/);
+});
+
+test("rejects write-all permissions with comments", async () => {
+  const root = await makeFixture({
+    "ci.yml": workflow([
+      'permissions: "write-all" # never approved',
+      "jobs:",
+      "  verify:",
+      "    steps:",
+      `      - uses: actions/checkout@${checkoutSha}`
+    ])
+  });
+
+  const result = runCheck(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /permissions must not use write-all/);
+});
+
+test("rejects approved workflow write scopes on the wrong job", async () => {
+  const root = await makeFixture({
+    "release.yml": workflow([
+      "permissions:",
+      "  contents: read",
+      "jobs:",
+      "  build-package:",
+      "    permissions:",
+      '      "contents": "write"',
+      "      id-token: write",
+      "    steps:",
+      `      - uses: actions/checkout@${checkoutSha}`,
+      "  publish-prerelease:",
+      "    permissions:",
+      "      attestations: write",
+      "      contents: write",
+      "      id-token: write",
+      "    steps:",
+      `      - uses: actions/checkout@${checkoutSha}`
+    ])
+  });
+
+  const result = runCheck(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /write permission contents is not approved for jobs\.build-package/);
+  assert.match(result.stderr, /write permission id-token is not approved for jobs\.build-package/);
+});
+
+test("rejects approved workflow write scopes in the wrong flow-style job", async () => {
+  const root = await makeFixture({
+    "release.yml": workflow([
+      "permissions: { contents: read }",
+      "jobs:",
+      "  build-package:",
+      "    permissions: { id-token: write }",
+      "    steps:",
+      `      - uses: actions/checkout@${checkoutSha}`
+    ])
+  });
+
+  const result = runCheck(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /write permission id-token is not approved for jobs\.build-package/);
 });
 
 test("accepts approved pinned actions and write permission map", async () => {
@@ -111,6 +189,17 @@ test("accepts approved pinned actions and write permission map", async () => {
       "    steps:",
       `      - uses: actions/checkout@${checkoutSha}`,
       `      - uses: actions/github-script@${githubScriptSha}`
+    ]),
+    "release.yml": workflow([
+      "permissions: { contents: read }",
+      "jobs:",
+      "  publish:",
+      "    steps:",
+      `      - uses: actions/checkout@${checkoutSha}`,
+      "  publish-prerelease:",
+      "    permissions: { attestations: write, contents: write, id-token: write }",
+      "    steps:",
+      `      - uses: actions/checkout@${checkoutSha}`
     ])
   });
 

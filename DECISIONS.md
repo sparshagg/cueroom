@@ -419,7 +419,7 @@
 
 - [x] Problem: Workflows used scoped permissions, but external actions were still referenced by mutable version tags and no repo-owned check enforced an action allowlist.
 - [x] Options: trust action tags and manual review, add a third-party pinning action, or add a repo-owned policy checker.
-- [x] Decision: Pin every external workflow action to a reviewed full-length commit SHA and enforce an explicit action allowlist plus approved write scopes with `pnpm security:actions`.
-- [x] Reason: A local checker keeps the policy reviewable, avoids adding another workflow dependency to enforce workflow dependencies, and fails future action or permission drift in CI.
+- [x] Decision: Pin every external workflow action to a reviewed full-length commit SHA and enforce an explicit action allowlist plus approved workflow/job write grants with `pnpm security:actions`.
+- [x] Reason: A local checker keeps the policy reviewable, avoids adding another workflow dependency to enforce workflow dependencies, and fails future action or permission drift in CI, including write scopes moved into the wrong job.
 - [x] Security/privacy impact: Reduces risk of workflow supply-chain compromise, unexpected action changes, and accidental write-token broadening before release or cleanup jobs run.
 - [x] Rollback trigger: Repository-level GitHub Actions policies or a maintained scanner enforce equivalent SHA pinning, allowlisting, and write-scope controls.

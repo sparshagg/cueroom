@@ -426,4 +426,4 @@ Append-only checklist of verified project learnings.
 - [ ] Source: https://docs.github.com/actions/security-guides/security-hardening-for-github-actions
   - Stale-by: 2026-08-30
   - Learning: GitHub recommends pinning actions to full-length commit SHAs for immutable action references and verifying that selected SHAs come from the intended action repositories.
-  - Impact: CueRoom now pins external GitHub Actions to reviewed 40-character SHAs and enforces the action allowlist plus permitted write scopes with `pnpm security:actions`.
+  - Impact: CueRoom now pins external GitHub Actions to reviewed 40-character SHAs and enforces the action allowlist plus permitted workflow/job write grants with `pnpm security:actions`.

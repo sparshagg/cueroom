@@ -16,10 +16,19 @@ const allowedActions = new Map([
   ["pnpm/action-setup", "b906affcce14559ad1aafd4ab0e942779e9f58b1"],
   ["zaproxy/action-baseline", "de8ad967d3548d44ef623df22cf95c3b0baf8b25"]
 ]);
-const allowedWriteScopes = new Map([
-  [".github/workflows/cleanup.yml", new Set(["contents", "issues", "pull-requests"])],
-  [".github/workflows/codeql.yml", new Set(["security-events"])],
-  [".github/workflows/release.yml", new Set(["attestations", "contents", "id-token"])]
+const allowedWriteGrants = new Map([
+  [
+    ".github/workflows/cleanup.yml",
+    new Map([
+      ["jobs.scheduled-cleanup-issue", new Set(["issues"])],
+      ["jobs.scheduled-generated-prune", new Set(["contents", "pull-requests"])]
+    ])
+  ],
+  [".github/workflows/codeql.yml", new Map([["workflow", new Set(["security-events"])]])],
+  [
+    ".github/workflows/release.yml",
+    new Map([["jobs.publish-prerelease", new Set(["attestations", "contents", "id-token"])]])
+  ]
 ]);
 const failures = [];
 
@@ -88,24 +97,103 @@ function checkActionReferences(repoPath, content) {
 }
 
 function checkPermissionWrites(repoPath, content) {
-  const allowedScopes = allowedWriteScopes.get(repoPath) ?? new Set();
+  const allowedContexts = allowedWriteGrants.get(repoPath) ?? new Map();
+  let inJobs = false;
+  let currentJob = null;
+  let activePermissions = null;
+
   for (const [lineIndex, line] of content.split("\n").entries()) {
+    const indent = leadingSpaces(line);
     const trimmed = line.trim();
-    if (/^permissions:\s*write-all\s*$/.test(trimmed)) {
+
+    if (!trimmed || trimmed.startsWith("#")) {
+      continue;
+    }
+
+    if (activePermissions && indent <= activePermissions.indent) {
+      activePermissions = null;
+    }
+
+    if (indent === 0) {
+      inJobs = /^jobs:\s*(?:#.*)?$/.test(trimmed);
+      currentJob = null;
+    } else if (inJobs && indent === 2) {
+      const jobMatch = trimmed.match(/^([a-zA-Z0-9_-]+):\s*(?:#.*)?$/);
+      if (jobMatch) {
+        currentJob = jobMatch[1];
+      }
+    }
+
+    const permissionsContext = getPermissionsContext(indent, inJobs, currentJob);
+
+    if (/^permissions:\s*["']?write-all["']?\s*(?:#.*)?$/.test(trimmed)) {
       failures.push(`${repoPath}:${lineIndex + 1}: permissions must not use write-all.`);
       continue;
     }
 
-    const match = trimmed.match(/^([a-z][a-z-]*):\s*write\s*(?:#.*)?$/);
-    if (!match) {
+    const flowPermissions = trimmed.match(/^permissions:\s*\{(?<body>.*)\}\s*(?:#.*)?$/);
+    if (flowPermissions?.groups?.body) {
+      for (const scope of parseFlowWriteScopes(flowPermissions.groups.body)) {
+        recordWriteScope(repoPath, lineIndex, permissionsContext, scope, allowedContexts);
+      }
       continue;
     }
 
-    const scope = match[1];
-    if (!allowedScopes.has(scope)) {
-      failures.push(`${repoPath}:${lineIndex + 1}: write permission ${scope} is not approved.`);
+    if (/^permissions:\s*(?:#.*)?$/.test(trimmed)) {
+      activePermissions = {
+        context: permissionsContext,
+        indent
+      };
+      continue;
+    }
+
+    if (!activePermissions) {
+      continue;
+    }
+
+    const writeScope = trimmed.match(/^["']?([a-z][a-z-]*)["']?:\s*["']?write["']?\s*(?:#.*)?$/);
+    if (writeScope) {
+      recordWriteScope(
+        repoPath,
+        lineIndex,
+        activePermissions.context,
+        writeScope[1],
+        allowedContexts
+      );
     }
   }
+}
+
+function parseFlowWriteScopes(body) {
+  return Array.from(
+    body.matchAll(/["']?(?<scope>[a-z][a-z-]*)["']?\s*:\s*["']?write["']?/g),
+    (match) => match.groups.scope
+  );
+}
+
+function recordWriteScope(repoPath, lineIndex, context, scope, allowedContexts) {
+  const allowedScopes = allowedContexts.get(context) ?? new Set();
+  if (!allowedScopes.has(scope)) {
+    failures.push(
+      `${repoPath}:${lineIndex + 1}: write permission ${scope} is not approved for ${context}.`
+    );
+  }
+}
+
+function getPermissionsContext(indent, inJobs, currentJob) {
+  if (indent === 0) {
+    return "workflow";
+  }
+
+  if (inJobs && currentJob && indent >= 4) {
+    return `jobs.${currentJob}`;
+  }
+
+  return "unknown";
+}
+
+function leadingSpaces(line) {
+  return line.length - line.trimStart().length;
 }
 
 function parseActionReference(reference) {
