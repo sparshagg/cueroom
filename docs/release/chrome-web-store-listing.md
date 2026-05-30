@@ -46,13 +46,13 @@
 
 ## Release Blockers
 
-- [ ] Hosted privacy policy URL is live.
+- [ ] Hosted privacy policy URL is live (tracked in [#18](https://github.com/sparshagg/cueroom/issues/18)).
 - [x] Hosted privacy policy route exists at `/privacy` and is linked one click from the home page.
-- [ ] Public beta domain is live and listed in `externally_connectable.matches`.
-- [ ] `docs/release/public-beta-checklist.md` Required Before Tagging section is fully checked.
+- [ ] Public beta domain is live and listed in `externally_connectable.matches` (tracked in [#18](https://github.com/sparshagg/cueroom/issues/18)).
+- [ ] `docs/release/public-beta-checklist.md` Required Before Tagging section is fully checked (tracked in [#17](https://github.com/sparshagg/cueroom/issues/17), [#18](https://github.com/sparshagg/cueroom/issues/18), [#19](https://github.com/sparshagg/cueroom/issues/19), and [#21](https://github.com/sparshagg/cueroom/issues/21)).
 - [x] GitHub private vulnerability reporting is enabled for the public repository.
 - [x] Store screenshots and promo tile are generated from the current UI/package.
 - [x] Release package includes `SHA256SUMS` and `release-manifest.json`.
-- [ ] Human legal review confirms non-affiliation, Netflix Terms boundary, and privacy disclosures.
-- [ ] First public beta tag is cut from protected `main`.
-- [ ] Release artifact attestation verifies for the uploaded extension ZIP.
+- [ ] Human legal review confirms non-affiliation, Netflix Terms boundary, and privacy disclosures (tracked in [#17](https://github.com/sparshagg/cueroom/issues/17)).
+- [ ] First public beta tag is cut from protected `main` (tracked in [#19](https://github.com/sparshagg/cueroom/issues/19)).
+- [ ] Release artifact attestation verifies for the uploaded extension ZIP (tracked in [#19](https://github.com/sparshagg/cueroom/issues/19)).

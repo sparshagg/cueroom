@@ -89,7 +89,7 @@
 - [x] Add privacy implementation evidence index and automated source/test coverage check.
 - [x] Add explicit API route-level rate limits for room/session authorization endpoints.
 - [x] Add extension source audit for remote-code primitives and sensitive Netflix data APIs.
-- [ ] Complete human legal/privacy review.
+- [ ] Complete human legal/privacy review (tracked in [#17](https://github.com/sparshagg/cueroom/issues/17)).
 - [x] Publish public repository.
-- [ ] Tag first signed release.
-- [ ] Open beta with incident response and disclosure process ready.
+- [ ] Tag first signed release (tracked in [#19](https://github.com/sparshagg/cueroom/issues/19)).
+- [ ] Open beta with incident response and disclosure process ready (tracked in [#20](https://github.com/sparshagg/cueroom/issues/20) and [#21](https://github.com/sparshagg/cueroom/issues/21)).
