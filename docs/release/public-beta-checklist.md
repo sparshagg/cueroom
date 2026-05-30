@@ -27,8 +27,8 @@ This checklist is the source of truth for the first public beta release gate. It
 
 - [x] `artifacts/chrome-web-store/cueroom-extension-0.1.0.zip` is attached to the GitHub prerelease or CI artifact.
 - [ ] Artifact attestation is available for the extension ZIP and can be verified with `gh attestation verify`.
-- [ ] Chrome Web Store listing copy matches `docs/release/chrome-web-store-listing.md`.
-- [ ] Chrome Web Store privacy answers match `PRIVACY.md`.
+- [x] Chrome Web Store listing copy matches `docs/release/chrome-web-store-listing.md`.
+- [x] Chrome Web Store privacy answers match `PRIVACY.md`.
 - [x] Review package includes screenshots and promo assets from `artifacts/chrome-web-store/images`.
 - [x] Review package includes non-affiliation statement and no-sensitive-Netflix-data explanation.
 - [ ] Rollback plan points to the last approved extension package, once one exists.
