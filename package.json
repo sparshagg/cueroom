@@ -22,10 +22,12 @@
     "format:write": "prettier --write .",
     "security:extension": "pnpm --filter @cueroom/security build && node scripts/audit-extension.mjs",
     "security:api-rate-limits": "node scripts/check-api-rate-limits.mjs",
+    "security:actions": "node scripts/check-github-actions-supply-chain.mjs",
+    "security:actions:test": "node --test scripts/check-github-actions-supply-chain.test.mjs",
     "security:audit": "pnpm audit",
     "security:licenses": "node scripts/check-licenses.mjs",
     "security:secrets": "node scripts/secret-scan.mjs",
-    "security:supply-chain": "pnpm security:secrets && pnpm security:licenses && pnpm security:audit",
+    "security:supply-chain": "pnpm security:actions && pnpm security:secrets && pnpm security:licenses && pnpm security:audit",
     "dast:authenticated-flows": "node scripts/dast-authenticated-flows.mjs",
     "dast:export-zap-evidence": "node scripts/export-zap-evidence.mjs",
     "dast:check-zap-evidence": "node scripts/check-zap-evidence.mjs",
@@ -43,7 +45,7 @@
     "cleanup:verify": "pnpm cleanup:prune && pnpm cleanup:check",
     "privacy:evidence": "node scripts/check-privacy-evidence.mjs",
     "docs:freshness": "node scripts/check-docs-freshness.mjs",
-    "verify": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm visual:test && pnpm security:extension && pnpm security:api-rate-limits && pnpm cleanup:test && pnpm cleanup:verify && pnpm docker:prod-check && pnpm docs:freshness && pnpm privacy:evidence"
+    "verify": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm visual:test && pnpm security:extension && pnpm security:api-rate-limits && pnpm security:actions:test && pnpm cleanup:test && pnpm cleanup:verify && pnpm docker:prod-check && pnpm docs:freshness && pnpm privacy:evidence"
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",

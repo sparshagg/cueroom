@@ -8,6 +8,9 @@
 - [x] Secret scan: `pnpm security:secrets`.
 - [x] License policy: `pnpm security:licenses`.
 - [x] Dependency audit: `pnpm security:audit`.
+- [x] GitHub Actions policy: `pnpm security:actions`.
+- [x] External workflow actions are pinned to reviewed full-length commit SHAs and restricted to an explicit allowlist.
+- [x] Workflow write permissions are restricted to approved release, CodeQL, and generated-cleanup scopes.
 - [x] Release workflow runs `pnpm security:supply-chain` before building release artifacts.
 - [x] Release readiness check fails if the release workflow drops checksum verification, artifact upload, attestation, or prerelease attachment steps.
 - [x] Release workflow keeps install, test, build, package, and artifact upload steps in a read-only `build-package` job.

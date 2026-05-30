@@ -64,6 +64,7 @@
 - [x] Require production Redis auth through Docker secrets and document LiveKit TURN/firewall strategy gates.
 - [x] Replace production `unsafe-inline` CSP with per-request nonces.
 - [x] Make authenticated DAST medium/high findings blocking in CI.
+- [x] Pin GitHub Actions to reviewed full-length SHAs and enforce workflow action/permission policy.
 - [x] Fix DAST PII false positives caused by long decimal runs in random CSP nonces.
 - [x] Make extension ZIP packaging deterministic for stable local SHA review.
 - [x] Make the local release readiness gate enforce release workflow checksum, attestation, and prerelease invariants.

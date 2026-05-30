@@ -139,7 +139,7 @@ Append-only checklist of verified project learnings.
 - [ ] Source: https://github.com/zaproxy/action-baseline/releases
   - Stale-by: 2026-08-29
   - Learning: The current ZAP baseline action release checked for this slice is v0.15.0 and uses Node 24.
-  - Impact: CueRoom adds a separate DAST workflow pinned to `zaproxy/action-baseline@v0.15.0`.
+  - Impact: CueRoom adds a separate DAST workflow based on the reviewed ZAP baseline v0.15.0 release and pins the action to the resolved commit SHA through the workflow supply-chain policy.
 - [ ] Source: https://developer.chrome.com/docs/webstore/review-process/
   - Stale-by: 2026-08-29
   - Learning: Chrome Web Store reviews use automated and manual checks, and broad host permissions or sensitive execution permissions can increase review scrutiny and time.
@@ -423,3 +423,7 @@ Append-only checklist of verified project learnings.
   - Stale-by: 2026-08-30
   - Learning: GitHub Actions `permissions` can be set per job, and specifying permissions narrows unspecified scopes to `none`; scheduled workflows run from the latest default-branch commit.
   - Impact: CueRoom's cleanup workflow keeps pull-request detection read-only and grants write scopes only to the scheduled generated-artifact cleanup PR job.
+- [ ] Source: https://docs.github.com/actions/security-guides/security-hardening-for-github-actions
+  - Stale-by: 2026-08-30
+  - Learning: GitHub recommends pinning actions to full-length commit SHAs for immutable action references and verifying that selected SHAs come from the intended action repositories.
+  - Impact: CueRoom now pins external GitHub Actions to reviewed 40-character SHAs and enforces the action allowlist plus permitted write scopes with `pnpm security:actions`.

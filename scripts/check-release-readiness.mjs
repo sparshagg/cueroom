@@ -266,16 +266,16 @@ function requireReleaseWorkflowIntegrity(filePath) {
       "generate release notes into the package evidence directory"
     ],
     ["sha256sum -c SHA256SUMS", "verify packaged checksums"],
-    ["actions/upload-artifact@v4", "upload Chrome Web Store evidence artifact"],
+    ["actions/upload-artifact@", "upload Chrome Web Store evidence artifact"],
     ["publish-prerelease:", "enter the write-scoped publish job only after the build job"],
     ["node scripts/check-release-readiness.mjs --", "re-run release gates before publishing"],
-    ["actions/download-artifact@v4", "download the package artifact in the publish job"],
+    ["actions/download-artifact@", "download the package artifact in the publish job"],
     ["Verify downloaded checksum", "verify downloaded checksums before attestation"],
     [
       "node scripts/check-store-package.mjs",
       "recheck downloaded package evidence before attestation"
     ],
-    ["actions/attest@v4", "generate package provenance attestation"],
+    ["actions/attest@", "generate package provenance attestation"],
     [
       "subject-path: ${{ steps.packaged-extension.outputs.zip_path }}",
       "attest the resolved extension ZIP"
